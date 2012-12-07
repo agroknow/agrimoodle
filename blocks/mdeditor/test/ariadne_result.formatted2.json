@@ -1,0 +1,26 @@
+{
+    "result": {
+        "nrOfResults": 3,
+        "id": [309178,712463,760358],
+        "metadata":[
+            {
+                "title":"Letters from the Past&#058; A PRL Retrospective",
+                "description":"As part of the celebration of the 50th anniversary of Physical Review Letter &#040;PRL&#041;&#044; the American Physical Society is presenting throughout 2008 a series of milestone Letters that made long&#045;lived contributions to physics&#059; the selected Letters either announced significant discoveries&#044; or initiated new areas of research&#046; A number of these brief articles report on work that was later recognized with the award of a Nobel Prize to one or more of the authors&#046;",
+                "keywords":"physics",
+                "location":"http://prl.aps.org/50years/milestones",
+                "identifier":"oai&#058;nsdl&#046;org&#058;ncs&#058;PHYSICS&#045;000&#045;000&#045;000&#045;022"
+             },
+            {
+                "title":"It's all Greek to me! What about you? Μια κωμωδία",
+                "description":"Lorem ipsum dolor sit amet, consetetur sadipscing ",
+                "keywords":"Ελλάδα",
+                "location":"http://www.noesi.gr",
+                "identifier":"oai&#158;nsdl&#046;org&#058;ncs&#058;PHYSICS&#045;000&#045;000&#045;000&#045;022"
+             }
+        ],
+        "facets":[],
+        "error":"",
+        "errorMessage":"",
+        "processingTime":2
+    }
+}

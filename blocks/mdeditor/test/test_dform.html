@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title></title>
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery-1.7.2.dev.js"></script>
+		
+		<!-- Note: jQuery UI has to be loaded before the dForm plugin. -->
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery-ui-1.8.21.custom.min.js"></script>
+
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery.dform-1.0.0.min.js"></script>
+
+
+<!--
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery.validate.js"></script>
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery.toChecklist.js"></script>
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery.fluidtags.js"></script>
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery.dform_custom-subscribers.js"></script>
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery-1.7.2.dev.js"></script>
+-->		
+
+		<link href='../../../local/agrimoodle/css/jquery-ui-1.8.21.custom.css' rel='stylesheet' type='text/css'>
+
+		
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery.multiselect.min.js"></script>
+		<link href='../../../local/agrimoodle/css/jquery.multiselect.css' rel='stylesheet' type='text/css'>
+
+		<script type="text/javascript" src="../../../local/agrimoodle/js/jquery.multiselect.filter.min.js"></script>
+		<link href='../../../local/agrimoodle/css/jquery.multiselect.filter.css' rel='stylesheet' type='text/css'>
+		
+		
+<!--		
+		<link href='/agrimoodle/local/agrimoodle/css/jquery-ui3.css' rel='stylesheet' type='text/css'>
+		<link href='/agrimoodle/local/agrimoodle/css/custom.css' rel='stylesheet' type='text/css'>
+		<link href='/agrimoodle/local/agrimoodle/css/jquery.toChecklist.css' rel='stylesheet' type='text/css'>
+-->		
+<script type="text/javascript">//<![CDATA[ 
+$.dform.options.prefix = null;
+$(window).load(function(){
+    $(function() {
+		// Load the form object from path/to/form.json
+        $("#myform").dform('form1.json', function(data) {
+          this;
+          data 
+        });
+
+		$("#example1").multiselect({
+			header: "Choose some options!",
+			minWidth : 250,
+			selectedList : 2
+		});
+		
+		$("#example2").multiselect().multiselectfilter();
+		$("#example3").multiselect().multiselectfilter();
+    });
+});//]]> 
+</script>			
+    </head>
+	
+    <body>
+		<h2>LOM Editor (mockup)</h2>
+		<form id="myform" class="ui-widget"></form>
+		
+		<h2>Multi-select mockup</h2>
+		<form id="ms_form" class="ui-widget">
+			<select id="example1" name="example" multiple="multiple">
+				<option value="1">Option 1</option>
+				<option value="2">Option 2</option>
+				<option value="3">Option 3</option>
+				<option value="4">Option 4</option>
+				<option value="5">Option 5</option>
+			</select>
+			<text
+		</form>	
+
+		<h2>Multi-select filtered</h2>
+		<form style="margin:20px 0" class="ui-widget">
+			<p>
+				<select id="example2" multiple="multiple" style="width:370px">
+					<option value="red">Red</option>
+					<option value="green">Green</option>
+					<option value="blue">Blue</option>
+					<option value="orange">Orange</option>
+					<option value="purple">Purple</option>
+					<option value="yellow">Yellow</option>
+					<option value="brown">Brown</option>
+					<option value="black">Black</option>
+				</select>
+			</p>
+			<p>
+				<select  id="example3" multiple="multiple" style="width:370px">
+					<optgroup label="test">
+						<option value="red">Red</option>
+						<option value="green">Green</option>
+						<option value="blue">Blue</option>
+					</optgroup>
+					<optgroup label="foo">
+						<option value="orange">Orange</option>
+						<option value="purple">Purple</option>
+						<option value="yellow">Yellow</option>
+						<option value="brown">Brown</option>
+						<option value="black">Black</option>
+					</optgroup>
+				</select>
+			</p>
+		</form>
+		
+		
+		
+	</body>
+</html>

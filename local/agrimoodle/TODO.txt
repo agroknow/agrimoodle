@@ -1,0 +1,23 @@
+- move jquery staff into main agrimoodle module !!!
+- merge common lang strings into the main agrimoodle module
+
+
+LEGEND
+======
+
+Start of line
+-------------
+- undone
++ done
+> later
+< will not do
+~ note
+
+Inline
+------
+@ who's responsible
+# date (deadline, etc.)
+
+End of line
+-----------
+! urgency (add as many ! to indicate higher urgency)

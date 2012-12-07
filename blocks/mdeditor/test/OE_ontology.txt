@@ -1,0 +1,293 @@
+Activity
+	food activity
+		animal production activity
+			animal husbandry
+			apiculture
+			aquaculture
+			breeding
+			dairy production
+			disease control
+			disease prevention
+			disease treatment
+			egg production
+			feather production
+			feeding
+			fodder management
+			livestock housing
+			meat production
+			milk production
+		plant production activity
+			crop rotation
+			cultivation of cereals
+			energy crops cultivation
+			fertilizing
+			field crops cultivation
+			floriculture
+			fruit production
+			gardening
+			herb cultivation
+			horticulture
+			multicropping
+			pest control
+			plowing
+			post harvest
+			sowing
+			tillage
+			viticulture
+		processing activity
+			animal feed processing
+			dairy processing
+			food processing
+			meat processing
+	non production activity
+		educational activity
+			green care
+			learning
+			research
+			teaching
+			training
+		service oriented activity
+			community service
+			ecotourism
+Entity
+	natural person
+		consumer
+		distributor
+		farmer
+		land owner
+		learner
+		processor
+		teacher
+		trader
+	juridical entity
+		certification agency
+		commercial enterprise
+		educational establishment
+		farm
+		government body
+Issue
+	consumption issue
+		consumer attitudes
+		consumer knowledge
+		quality perception
+		traceability
+	distribution issue
+		alternative distribution
+		farm sale
+		food shed
+		import-export issue
+		local market
+		market
+		traceability
+	environmental issue
+		biodiversity
+		climate change mitigation
+		cultural landscapes
+		ecological footprint
+		energy efficiency
+		environmental impact
+		pollution
+		recycling
+		renewable resources
+		sustainability
+		water quality
+	ethical issue
+		poverty alleviation
+		rural livelihoods
+		sustainability
+	food issue
+		food availability
+		food nutrition
+		food quality
+		food safety
+		food security
+		food sufficiency
+		food system
+		natural food
+		poverty alleviation
+	health issue
+		animal health
+		human health
+		plant health
+		well being
+	learning issue
+		action learning
+		action research
+		school garden
+	marketing issue
+		direct marketing
+		market trend
+	processing issue
+		post harvest handling
+		pre cooling
+		pre storage
+		storage
+	benefits of organic agriculture
+		benefits of organic agriculture
+		organic-conventional agriculture comparison
+		organic principle
+	production issue
+		genetically modified organism
+		local production
+		local resources
+		product origin
+		rural livelihoods
+		animal production issue
+			animal behavior
+			animal diet
+			animal ethics
+			animal nutrition
+			animal welfare
+			housing
+			local breeds
+			outdoor keeping
+		plant production issue
+			alternative crop
+			crop ecology
+			diversity
+			genetic resistance
+			plant nutrition
+			plant protection
+	soil issue
+		diminution of humus
+		humus
+		nitrogen fixation
+		nutrient deficiency
+		nutrient recycling
+		organic matter
+		soil acidification
+		soil biological activity
+		soil compaction
+		soil conservation
+		soil degradation
+		soil erosion
+		soil fertility
+		soil health
+		soil husbandry
+		soil structure
+	transport issue
+		transport of animals
+		transport of products
+	waste management issue
+		biosolids
+		recycling
+		slaughter house waste
+Method
+	agricultural method
+		alternative farming
+		companion planting
+		extensive farming
+		intensive farming
+		intercropping
+		monoculture
+		pasture management
+		permaculture
+		polyculture
+		soiless culture
+		subsistence farming
+		sustainable farming
+	pest control technique
+		biological pest control
+		chemical pest control
+		direct pest control
+		preventive pest control
+		weed control
+		weed control technique
+Policy
+	regulation
+		certification
+		certification of organic agriculture
+		labeling
+		legislation
+		legislation on organic agriculture
+	standard
+		organic standard
+Process
+	accreditation
+	certification process
+	organic conversion
+	recycling
+Product
+	animal origin product
+		animal origin processed product
+			dairy product
+			leather
+			meat product
+		animal origin unprocessed product
+			egg
+			feather
+			fish
+			honey
+			meat
+			milk
+			shellfish
+			wool
+	fertilizer
+		biological fertilizer
+			manure-animal
+			compost
+			green manure
+			manure
+			peat
+			commercial biological fertilizer
+				bone meal
+				meal fertilizer
+				pellets
+		chemical compound
+			nitrogen
+			phosphorus
+			potassium
+			salt
+			urea
+		mineral fertilizer
+	plant origin unprocessed product
+		crop residue
+		plant origin processed product
+			beer
+			fodder
+			olive oil
+			wine
+		plant origin unprocessed product
+			energy crop
+				rape
+				sugar beet
+			feed crop
+				alfalfa
+				clover
+				festuca
+				ryegrass
+				vetch
+				grass
+				pulse
+			fibre crop
+				cotton
+				fiber flax
+				hemp
+			food crop
+				berry
+				cereal
+					barley
+					bread cereal
+					fodder cereal
+					maize
+					pseudocereal
+					rice
+					rye
+					spelt
+					wheat
+				fruit
+					apple
+					citrus species
+				herb
+				oil crop
+					olive
+					rape
+					soybean
+					sunflower
+				pulse
+					beans
+					lentil
+					pea
+					vetch
+				vegetable
+					potato

@@ -1,0 +1,187 @@
+
+/* Custom tentative styles
+--------------------------------- */
+
+form#block_mdeditor_dialog_form h3 {
+    border-bottom: 1.5px solid #999;
+    padding-bottom: 0.1em;
+    margin-top: 1em;
+/*    text-shadow: 0px 0px 5px #63AB74;*/
+}
+
+form#block_mdeditor_dialog_form .error {
+    color: red;
+}
+
+form#block_mdeditor_dialog_form .bordering-button {
+    margin-bottom: 1em;
+}
+
+form#block_mdeditor_dialog_form h5 {
+     margin-top: 1em;
+}
+
+form#block_mdeditor_dialog_form h6 {
+     margin-top: 1em;
+}
+
+.small-button {
+    margin: 0.2em 0.2em 0 0;
+}
+
+.block_mdeditor_control {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+}
+
+.ui-dform-radiobuttons label {
+    margin-right: 0.5em;
+}
+
+ol.block_mdeditor_container-b {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+}
+
+.block_mdeditor_container-a {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+}
+
+/************************************************/
+
+/* the style for each heading of the elements (eg 'Title', 'Description) */
+.block_mdeditor-element_heading {
+    margin-top : 0.3em;
+    margin-bottom : 0;
+}
+
+/* input field that appear in one line with their caption/label */
+.block_mdeditor-element_oneline {
+	vertical-align: top;
+}
+
+.block_mdeditor-element_oneline > input[type="text"] {
+	width: 250px;
+}
+
+select[class~='role']  {
+	width: 250px;
+	font-size: 1em;
+	margin-bottom: 5px;
+}
+
+select.block_mdeditor-element_oneline {
+	width: 250px;
+	font-size: 1em;
+	margin-bottom: 5px;	
+}
+
+input.block_mdeditor-element_oneline[class~='date'] {
+	width: 250px;
+}
+
+.block_mdeditor-element_twoline {
+	width: 250px;
+}
+
+.block_mdeditor-element_twoline > select {
+	width: 250px;
+}
+
+
+
+/* usually for group: [langString][-][+] */
+.block_mdeditor-element_top {
+    vertical-align : top;
+	position: absolute;
+	margin-top: 0;
+}
+
+/* typically: [-], [+] */
+.block_mdeditor-multiplicity_icons {
+    display: inline-block;
+    vertical-align : sub;
+}
+
+.block_mdeditor-container {
+}
+
+#block_mdeditor-edit_form fieldset {
+    border: 1px dotted;
+    padding-bottom: 8px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 4px;
+}
+
+/* used at elements that support multiple values, especially LangStrings */
+ol.block_mdeditor-multiple_values {
+    margin: 0 0 0 0;
+}
+
+ol.block_mdeditor-multiple_values > li {
+    padding-bottom: 0.3em;
+	list-style-type: upper-roman;
+	list-style-position: inside;
+	left: 2px
+}
+
+ol.block_mdeditor-multiple_values > li > a {
+	font-style: italic;
+	font-size: 0.6em;
+	color: #003333;
+}
+
+.ui-widget {
+    font-size: 1em;
+}
+
+#block_mdeditor-edit_form .error_container {
+    margin-top: 0.5em;
+}
+
+#block_mdeditor-edit_form .error {
+	background-color: lightsalmon;
+}
+
+#block_mdeditor-edit_form .success {
+    color: green;
+}
+
+
+.block_mdeditor-resources .status_complete {
+    background-color: darkolivegreen;
+	color: white;
+}
+.block_mdeditor-resources .status_partial {
+    font-style: italic;
+	background-color: goldenrod;
+	color: white;
+}
+
+div.block_mdeditor-block {
+    padding : 5px;
+	margin-bottom: 5px;
+}
+span.rule_mandatory > div {
+	background-color: #eec;
+}
+
+
+select.block_mdeditor-language_selector {
+    font-size: 0.8em;
+	border: 1px dotted;
+	width: 70px;
+	margin: 0 2px 0 5px;
+	padding: 0px;
+	background-color: transparent;
+}
+
+.block_mdeditor-minus_plus {
+	padding: 0px 1px 7px 1px;
+}
+
+ol.block_mdeditor-multiple_values :first-child > a.block_mdeditor-cardinality_hide {
+	background-color: transparent; color: transparent;
+}

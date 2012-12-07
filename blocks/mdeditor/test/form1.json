@@ -1,0 +1,158 @@
+{
+	"action" : "index.html",
+	"method" : "get",
+	"html" :
+	[
+		{
+		    "type" : "a",
+			"dialog" :
+			{
+				 "title":"Resource metadata",
+				 "position" : "top",
+				 "width" : "600",
+				 "show" : "drop:down",
+				 "closeOnEscape" : false
+			},
+			"html" :
+			[
+{
+	"type" : "fieldset",
+	"caption" : "1. General",
+	"html" : [
+		{
+			"type"        : "text",
+			"name"        : "Title",
+			"id"		  : "lom-title",
+			"caption"	  : "Title",
+			"size"        : 60,
+			"placeholder" : "Please provide the title"
+		},
+		{
+			"type"        : "textarea",
+			"caption"	  : "Description",
+			"name"        : "Description",
+			"id"		  : "lom-description",
+			"rows"        : 3,
+			"cols"        : 60,
+			"placeholder" : "Please provide the description"
+		}
+	]
+},
+
+{
+	"type" : "text",
+	"caption" : "Date",
+	"datepicker" : {
+		"minDate" : "+1"
+	}
+},
+{
+	"type" : "fieldset",
+	"caption" : "X. OTHER", 
+	"html" : [
+		{
+			"name"        : "Region",
+			"id"          : "lom-region",
+			"caption"	  : "Region",
+			"type"		  : "select",
+			"options"     :	{
+				"us" : "USA",
+				"ca" : "Canada",
+				"de" : {
+					"selected" : "selected",
+					"html" : "Germany"
+				}
+			}
+		},
+		{
+			"name"        : "cost",
+			"id"          : "lom-cost",
+			"caption"     : "Cost related",
+			"type"        : "checkbox"
+		},	
+		{
+			"name"        : "cost",
+			"id"          : "lom-cost",
+			"caption"     : "Radio",
+			"type"        : "radiobuttons",
+			"options"	  : {
+				"yes" : "yes",
+				"no" : "no",
+				"maybe" : "maybe",
+				"unclear" : "unclear"
+			}		
+		},	
+		{
+			"name"        : "cost",
+			"id"          : "lom-cost",
+			"caption"     : "checkboxes",
+			"type"        : "checkboxes",
+			"options"	  : {
+				"yes" : "yes",
+				"no" : "no",
+				"maybe" : "maybe",
+				"unclear" : "unclear"
+			}
+		},	
+		{
+			"name"        : "age",
+			"id"          : "lom-age",
+			"caption"     : "Typical age",
+			"type"        : "number",
+			"placeholder" : "12"
+		},		
+		{
+			"type" : "slider",
+			"caption" : "Slider",
+			"range" : true,
+			"step" : 5,
+			"values" : [25, 35],
+			"min" : 0,
+			"max" : 100,
+			"slide" : "function( event, ui ) { $( '#amount' ).val( '$' + ui.values[ 0 ] + ' - $' + ui.values[ 1 ] ); }"
+		},
+		{
+			"caption"     : "END",
+			"type"        : "p"
+		}
+	]
+},
+{
+	"name"        : "URL",
+	"id"          : "lom-url",
+	"caption"     : "URL",
+	"type"        : "url",
+	"placeholder" : "http://www.example.com"
+},
+{
+	"name"        : "email",
+	"id"          : "lom-email",
+	"caption"     : "e-mail",
+	"type"        : "email",
+	"placeholder" : "E.g. user@example.com"
+},
+
+{
+	"type" : "submit",
+	"value" : "Send"
+}
+			]
+		},
+{
+	"type" : "tabs",
+	"animated" : "bounceslide",
+	"html" : [
+		{
+		"type" : "div",
+		"caption" : "First entry",
+		"html" : "Content 1"
+		},
+		{
+		"type" : "div",
+		"caption" : "Second entry",
+		"html" : "Content 2"
+		}
+	]
+}
+	]
+}

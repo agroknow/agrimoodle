@@ -26,3 +26,4 @@ CVS
 /.buildpath
 /.cache
 phpunit.xml
+/0misc
