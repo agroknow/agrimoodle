@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="blocks/oerfinder/db" VERSION="20121114_2" COMMENT="XMLDB file for Moodle blocks/oerfinder"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="block_oerfinder_logs" COMMENT="The Table with the logs of the OER Finder experiment">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="blockid"/>
+        <FIELD NAME="blockid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0" PREVIOUS="id" NEXT="user"/>
+        <FIELD NAME="user" TYPE="char" LENGTH="30" NOTNULL="true" SEQUENCE="false" COMMENT="current Moodle user" PREVIOUS="blockid" NEXT="course"/>
+        <FIELD NAME="course" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="The current Moodle course" PREVIOUS="user" NEXT="timestamp"/>
+        <FIELD NAME="timestamp" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Date and time" PREVIOUS="course" NEXT="searchstring"/>
+        <FIELD NAME="searchstring" TYPE="text" NOTNULL="false" SEQUENCE="false" PREVIOUS="timestamp" NEXT="actionsource"/>
+        <FIELD NAME="actionsource" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The source of the action, valid values are:
+0- undefined
+1- suggestion (real)
+2- experiment (fake)
+3- userClick" PREVIOUS="searchstring" NEXT="resourceid"/>
+        <FIELD NAME="resourceid" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="The ID of the displayed resource" PREVIOUS="actionsource" NEXT="comment"/>
+        <FIELD NAME="comment" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Other useful information" PREVIOUS="resourceid"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+  </TABLES>
+</XMLDB>
