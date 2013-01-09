@@ -19,6 +19,7 @@
 /.patches/
 /.idea/
 /nbproject/
+/tmp/
 CVS
 .DS_Store
 /.settings/
@@ -27,3 +28,11 @@ CVS
 /.cache
 phpunit.xml
 /0misc
+/0marinos/
+
+
+# sublime text project's files
+*.sublime-project
+*.sublime-workspace
+Drupal.sublime-projectcompletions
+/blocks/oerfinder/NOTES.md
