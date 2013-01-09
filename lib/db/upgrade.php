@@ -227,17 +227,10 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2012030100.01);
     }
 
-    if ($oldversion < 2012030100.02) {
-        // migrate all numbers to signed - it should be safe to interrupt this and continue later
-        upgrade_mysql_fix_unsigned_columns();
-
-        // Main savepoint reached
-        upgrade_main_savepoint(true, 2012030100.02);
-    }
-
     if ($oldversion < 2012030900.01) {
-        // migrate all texts and binaries to big size - it should be safe to interrupt this and continue later
-        upgrade_mysql_fix_lob_columns();
+        // Migrate all numbers to signed & all texts and binaries to big size.
+        // It should be safe to interrupt this and continue later.
+        upgrade_mysql_fix_unsigned_and_lob_columns();
 
         // Main savepoint reached
         upgrade_main_savepoint(true, 2012030900.01);
@@ -1412,6 +1405,123 @@ function xmldb_main_upgrade($oldversion) {
 
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2012110700.01);
+    }
+
+    if ($oldversion < 2012111200.00) {
+
+        // Define table temp_enroled_template to be created
+        $table = new xmldb_table('temp_enroled_template');
+
+        // Adding fields to table temp_enroled_template
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('roleid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table temp_enroled_template
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Adding indexes to table temp_enroled_template
+        $table->add_index('userid', XMLDB_INDEX_NOTUNIQUE, array('userid'));
+        $table->add_index('courseid', XMLDB_INDEX_NOTUNIQUE, array('courseid'));
+        $table->add_index('roleid', XMLDB_INDEX_NOTUNIQUE, array('roleid'));
+
+        // Conditionally launch create table for temp_enroled_template
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table temp_log_template to be created
+        $table = new xmldb_table('temp_log_template');
+
+        // Adding fields to table temp_log_template
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('course', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('action', XMLDB_TYPE_CHAR, '40', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table temp_log_template
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Adding indexes to table temp_log_template
+        $table->add_index('action', XMLDB_INDEX_NOTUNIQUE, array('action'));
+        $table->add_index('course', XMLDB_INDEX_NOTUNIQUE, array('course'));
+        $table->add_index('user', XMLDB_INDEX_NOTUNIQUE, array('userid'));
+        $table->add_index('usercourseaction', XMLDB_INDEX_NOTUNIQUE, array('userid', 'course', 'action'));
+
+        // Conditionally launch create table for temp_log_template
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Main savepoint reached
+        upgrade_main_savepoint(true, 2012111200.00);
+    }
+
+    if ($oldversion < 2012111200.01) {
+        // Force the rebuild of the cache of every courses, some cached information could contain wrong icon references.
+        rebuild_course_cache();
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2012111200.01);
+    }
+
+    if ($oldversion < 2012111601.01) {
+        // Clea up after old shared memory caching support.
+        unset_config('cachetype');
+        unset_config('rcache');
+        unset_config('rcachettl');
+        unset_config('intcachemax');
+        unset_config('memcachedhosts');
+        unset_config('memcachedpconn');
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2012111601.01);
+    }
+
+    if ($oldversion < 2012112100.00) {
+
+        // Define field eventtype to be added to event_subscriptions.
+        $table = new xmldb_table('event_subscriptions');
+        $field = new xmldb_field('eventtype', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null, 'userid');
+
+        // Conditionally launch add field eventtype.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2012112100.00);
+    }
+
+    // Moodle v2.4.0 release upgrade line
+    // Put any upgrade step following this
+
+
+    if ($oldversion < 2012120300.01) {
+        // Make sure site-course has format='site' //MDL-36840
+
+        if ($SITE->format !== 'site') {
+            $DB->set_field('course', 'format', 'site', array('id' => $SITE->id));
+            $SITE->format = 'site';
+        }
+
+        // Main savepoint reached
+        upgrade_main_savepoint(true, 2012120300.01);
+    }
+
+    if ($oldversion < 2012120300.04) {
+        // Remove "_utf8" suffix from all langs in course table.
+        $langs = $DB->get_records_sql("SELECT DISTINCT lang FROM {course} WHERE lang LIKE ?", array('%_utf8'));
+
+        foreach ($langs as $lang=>$unused) {
+            $newlang = str_replace('_utf8', '', $lang);
+            $sql = "UPDATE {course} SET lang = :newlang WHERE lang = :lang";
+            $DB->execute($sql, array('newlang'=>$newlang, 'lang'=>$lang));
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2012120300.04);
     }
 
     return true;

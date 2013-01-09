@@ -1134,7 +1134,7 @@ function clean_param($param, $type) {
 
         case PARAM_TIMEZONE:    //can be int, float(with .5 or .0) or string seperated by '/' and can have '-_'
             $param = fix_utf8($param);
-            $timezonepattern = '/^(([+-]?(0?[0-9](\.[5|0])?|1[0-3]|1[0-2]\.5))|(99)|[[:alnum:]]+(\/?[[:alpha:]_-])+)$/';
+            $timezonepattern = '/^(([+-]?(0?[0-9](\.[5|0])?|1[0-3](\.0)?|1[0-2]\.5))|(99)|[[:alnum:]]+(\/?[[:alpha:]_-])+)$/';
             if (preg_match($timezonepattern, $param)) {
                 return $param;
             } else {
@@ -1589,7 +1589,7 @@ function set_cache_flag($type, $name, $value, $expiry=NULL) {
 
     if ($f = $DB->get_record('cache_flags', array('name'=>$name, 'flagtype'=>$type), '*', IGNORE_MULTIPLE)) { // this is a potential problem in DEBUG_DEVELOPER
         if ($f->value == $value and $f->expiry == $expiry and $f->timemodified == $timemodified) {
-            return true; //no need to update; helps rcache too
+            return true; //no need to update
         }
         $f->value        = $value;
         $f->expiry       = $expiry;
@@ -2810,7 +2810,7 @@ function require_login($courseorid = NULL, $autologinguest = true, $cm = NULL, $
     }
 
     // Redirect to the login page if session has expired, only with dbsessions enabled (MDL-35029) to maintain current behaviour.
-    if (!empty($SESSION->has_timed_out) && !$preventredirect && !empty($CFG->dbsessions)) {
+    if ((!isloggedin() or isguestuser()) && !empty($SESSION->has_timed_out) && !$preventredirect && !empty($CFG->dbsessions)) {
         if ($setwantsurltome) {
             $SESSION->wantsurl = qualified_me();
         }
@@ -4572,7 +4572,8 @@ function delete_course($courseorid, $showfeedback = true) {
     // which should know about this updated property, as this event is meant to pass the full course record
     $course->timemodified = time();
 
-    $DB->delete_records("course", array("id"=>$courseid));
+    $DB->delete_records("course", array("id" => $courseid));
+    $DB->delete_records("course_format_options", array("courseid" => $courseid));
 
     //trigger events
     $course->context = $context; // you can not fetch context in the event because it was already deleted
@@ -6489,7 +6490,11 @@ class core_string_manager implements string_manager {
             $this->cache = cache::make('core', 'string');
         } else {
             // We only want a cache for the length of the request, create a static cache.
-            $this->cache = cache::make_from_params(cache_store::MODE_REQUEST, 'core', 'string');
+            $options = array(
+                'simplekeys' => true,
+                'simpledata' => true
+            );
+            $this->cache = cache::make_from_params(cache_store::MODE_REQUEST, 'core', 'string', array(), $options);
         }
     }
 
@@ -8543,17 +8548,25 @@ function check_php_version($version='5.2.4') {
           if (strpos($agent, 'Opera') !== false) {     // Reject Opera
               return false;
           }
-          // in case of IE we have to deal with BC of the version parameter
+          // In case of IE we have to deal with BC of the version parameter.
           if (is_null($version)) {
-              $version = 5.5; // anything older is not considered a browser at all!
+              $version = 5.5; // Anything older is not considered a browser at all!
           }
-
-          //see: http://www.useragentstring.com/pages/Internet%20Explorer/
+          // IE uses simple versions, let's cast it to float to simplify the logic here.
+          $version = round($version, 1);
+          // See: http://www.useragentstring.com/pages/Internet%20Explorer/
           if (preg_match("/MSIE ([0-9\.]+)/", $agent, $match)) {
-              if (version_compare($match[1], $version) >= 0) {
-                  return true;
-              }
+              $browser = $match[1];
+          } else {
+              return false;
           }
+          // IE8 and later versions may pretend to be IE7 for intranet sites, use Trident version instead,
+          // the Trident should always describe the capabilities of IE in any emulation mode.
+          if ($browser === '7.0' and preg_match("/Trident\/([0-9\.]+)/", $agent, $match)) {
+              $browser = $match[1] + 4; // NOTE: Hopefully this will work also for future IE versions.
+          }
+          $browser = round($browser, 1);
+          return ($browser >= $version);
           break;
 
 
@@ -8831,14 +8844,11 @@ function get_browser_version_classes() {
 
     if (check_browser_version("MSIE", "0")) {
         $classes[] = 'ie';
-        if (check_browser_version("MSIE", 9)) {
-            $classes[] = 'ie9';
-        } else if (check_browser_version("MSIE", 8)) {
-            $classes[] = 'ie8';
-        } elseif (check_browser_version("MSIE", 7)) {
-            $classes[] = 'ie7';
-        } elseif (check_browser_version("MSIE", 6)) {
-            $classes[] = 'ie6';
+        for($i=12; $i>=6; $i--) {
+            if (check_browser_version("MSIE", $i)) {
+                $classes[] = 'ie'.$i;
+                break;
+            }
         }
 
     } else if (check_browser_version("Firefox") || check_browser_version("Gecko") || check_browser_version("Camino")) {
@@ -10471,15 +10481,6 @@ function get_performance_info() {
         $info['html'] .= '<span class="sessionsize">Session: ' . $info['sessionsize'] . '</span> ';
         $info['txt'] .= "Session: {$info['sessionsize']} ";
     }
-
-/*    if (isset($rcache->hits) && isset($rcache->misses)) {
-        $info['rcachehits'] = $rcache->hits;
-        $info['rcachemisses'] = $rcache->misses;
-        $info['html'] .= '<span class="rcache">Record cache hit/miss ratio : '.
-            "{$rcache->hits}/{$rcache->misses}</span> ";
-        $info['txt'] .= 'rcache: '.
-            "{$rcache->hits}/{$rcache->misses} ";
-    }*/
 
     if ($stats = cache_helper::get_stats()) {
         $html = '<span class="cachesused">';

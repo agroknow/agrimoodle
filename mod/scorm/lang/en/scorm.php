@@ -180,6 +180,7 @@ $string['interactionsweight'] = 'Weight assigned to the element';
 $string['interactionslearnerresponse'] = 'Learner\'s Response';
 $string['invalidactivity'] = 'Scorm activity is incorrect';
 $string['invalidurl'] = 'Invalid URL specified';
+$string['invalidurlhttpcheck'] = 'Invalid URL specified. Debug message:<pre>{$a->cmsg}</pre>';
 $string['invalidhacpsession'] = 'Invalid HACP Session';
 $string['invalidmanifestresource'] = 'WARNING: The following resources were referenced in your manifest but couldn\'t be found:';
 $string['last'] = 'Last accessed on';
@@ -339,6 +340,7 @@ $string['viewallreports'] = 'View reports for {$a} attempts';
 $string['viewalluserreports'] = 'View reports for {$a} users';
 $string['whatgrade'] = 'Attempts grading';
 $string['whatgrade_help'] = 'If multiple attempts are allowed, this setting specifies whether the highest, average (mean), first or last completed attempt is recorded in the gradebook.
+The last completed attempt option does not include attempts with a \'failed\' status.
 
 Handling of Multiple Attempts
 

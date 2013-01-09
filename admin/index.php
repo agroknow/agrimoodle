@@ -193,6 +193,7 @@ if (empty($CFG->version)) {
 
 if ($version > $CFG->version) {  // upgrade
     purge_all_caches();
+
     $PAGE->set_pagelayout('maintenance');
     $PAGE->set_popup_notification_allowed(false);
 
@@ -375,6 +376,10 @@ if (during_initial_install()) {
             unset($SESSION->sessionverify);
         }
     }
+
+    // Cleanup SESSION to make sure other code does not complain in the future.
+    unset($SESSION->has_timed_out);
+    unset($SESSION->wantsurl);
 
     // at this stage there can be only one admin unless more were added by install - users may change username, so do not rely on that
     $adminids = explode(',', $CFG->siteadmins);

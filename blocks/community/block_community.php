@@ -69,10 +69,10 @@ class block_community extends block_list {
         }
 
         $icon = html_writer::empty_tag('img', array('src' => $OUTPUT->pix_url('i/group'),
-                    'class' => 'icon', 'alt' => get_string('addcourse', 'block_community')));
+                    'class' => 'icon', 'alt' => ""));
         $addcourseurl = new moodle_url('/blocks/community/communitycourse.php',
                         array('add' => true, 'courseid' => $this->page->course->id));
-        $searchlink = html_writer::tag('a', $icon . '&nbsp;' . get_string('addcourse', 'block_community'),
+        $searchlink = html_writer::tag('a', $icon . get_string('addcourse', 'block_community'),
                         array('href' => $addcourseurl->out(false)));
         $this->content->items[] = $searchlink;
 

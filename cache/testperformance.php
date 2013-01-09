@@ -47,9 +47,9 @@ $sessiontable = clone($applicationtable);
 $requesttable = clone($applicationtable);
 
 
-$application = cache_definition::load_adhoc(cache_store::MODE_APPLICATION, 'cache', 'applicationtest', null, false);
-$session = cache_definition::load_adhoc(cache_store::MODE_SESSION, 'cache', 'sessiontest', null, false);
-$request = cache_definition::load_adhoc(cache_store::MODE_REQUEST, 'cache', 'requesttest', null, false);
+$application = cache_definition::load_adhoc(cache_store::MODE_APPLICATION, 'cache', 'applicationtest');
+$session = cache_definition::load_adhoc(cache_store::MODE_SESSION, 'cache', 'sessiontest');
+$request = cache_definition::load_adhoc(cache_store::MODE_REQUEST, 'cache', 'requesttest');
 
 $strinvalidplugin = new lang_string('invalidplugin', 'cache');
 $strunsupportedmode = new lang_string('unsupportedmode', 'cache');
@@ -61,7 +61,7 @@ foreach (get_plugin_list_with_file('cachestore', 'lib.php', true) as $plugin => 
     $class = 'cachestore_'.$plugin;
     $plugin = get_string('pluginname', 'cachestore_'.$plugin);
 
-    if (!class_exists($class) || !method_exists($class, 'initialise_test_instance')) {
+    if (!class_exists($class) || !method_exists($class, 'initialise_test_instance') || !$class::are_requirements_met()) {
         $applicationtable->data[] = array($plugin, $strinvalidplugin, '-', '-', '-', '-');
         $sessiontable->data[] = array($plugin, $strinvalidplugin, '-', '-', '-', '-');
         $requesttable->data[] = array($plugin, $strinvalidplugin, '-', '-', '-', '-');

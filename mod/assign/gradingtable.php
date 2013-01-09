@@ -318,6 +318,22 @@ class assign_grading_table extends table_sql implements renderable {
     }
 
     /**
+     * Before adding each row to the table make sure rownum is incremented
+     *
+     * @param array $row row of data from db used to make one row of the table.
+     * @return array one row for the table
+     */
+    function format_row($row) {
+        if ($this->rownum < 0) {
+            $this->rownum = $this->currpage * $this->pagesize;
+        } else {
+            $this->rownum += 1;
+        }
+
+        return parent::format_row($row);
+    }
+
+    /**
      * Add a column with an ID that uniquely identifies this user in this assignment
      *
      * @return string
@@ -491,7 +507,7 @@ class assign_grading_table extends table_sql implements renderable {
 
 
     /**
-     * Format a user picture for display (and update rownum as a sideeffect)
+     * Format a user picture for display
      *
      * @param stdClass $row
      * @return string
@@ -569,7 +585,11 @@ class assign_grading_table extends table_sql implements renderable {
         $gradingdisabled = $this->assignment->grading_disabled($row->id);
 
         if (!$this->is_downloading()) {
-            $icon = $this->output->pix_icon('gradefeedback', get_string('grade'), 'mod_assign');
+            $name = fullname($row);
+            if ($this->assignment->is_blind_marking()) {
+                $name = get_string('hiddenuser', 'assign') . $this->assignment->get_uniqueid_for_user($row->userid);
+            }
+            $icon = $this->output->pix_icon('gradefeedback', get_string('gradeuser', 'assign', $name), 'mod_assign');
             $url = new moodle_url('/mod/assign/view.php',
                                             array('id' => $this->assignment->get_course_module()->id,
                                                   'rownum'=>$this->rownum,'action'=>'grade'));
@@ -686,11 +706,6 @@ class assign_grading_table extends table_sql implements renderable {
      */
     function col_userid(stdClass $row) {
         $edit = '';
-        if ($this->rownum < 0) {
-            $this->rownum = $this->currpage * $this->pagesize;
-        } else {
-            $this->rownum += 1;
-        }
 
         $actions = array();
 
@@ -757,7 +772,7 @@ class assign_grading_table extends table_sql implements renderable {
         $edit .= html_writer::start_tag('ul');
         $edit .= html_writer::start_tag('li', array('class'=>'menuicon'));
 
-        $menuicon = $this->output->pix_icon('i/menu', get_string('actions'));
+        $menuicon = $this->output->pix_icon('t/contextmenu', get_string('actions'));
         $edit .= $this->output->action_link('#menu' . $row->id, $menuicon, null, array('class'=>'yui3-menu-label'));
         $edit .= $this->output->container_start(array('yui3-menu', 'yui3-loading'), 'menu' . $row->id);
         $edit .= $this->output->container_start(array('yui3-menu-content'));

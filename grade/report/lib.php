@@ -333,10 +333,11 @@ abstract class grade_report {
      */
     protected function get_sort_arrow($direction='move', $sortlink=null) {
         global $OUTPUT;
+        $pix = array('up' => 't/sort_desc', 'down' => 't/sort_asc', 'move' => 't/sort');
         $matrix = array('up' => 'desc', 'down' => 'asc', 'move' => 'desc');
         $strsort = $this->get_lang_string('sort' . $matrix[$direction]);
 
-        $arrow = print_arrow($direction, $strsort, true);
+        $arrow = $OUTPUT->pix_icon($pix[$direction], $strsort, '', array('class' => 'sorticon'));
         return html_writer::link($sortlink, $arrow, array('title'=>$strsort));
     }
 
@@ -351,17 +352,21 @@ abstract class grade_report {
         global $CFG, $DB;
         static $hiding_affected = null;//array of items in this course affected by hiding
 
-        //if we're dealing with multiple users we need to know when we've moved on to a new user
+        // If we're dealing with multiple users we need to know when we've moved on to a new user.
         static $previous_userid = null;
+
+        // If we're dealing with multiple courses we need to know when we've moved on to a new course.
+        static $previous_courseid = null;
 
         if( $this->showtotalsifcontainhidden==GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN ) {
             return $finalgrade;
         }
 
-        //if we've moved on to another user don't return the previous user's affected grades
-        if ($previous_userid!=$this->user->id) {
+        // If we've moved on to another course or user, reload the grades.
+        if ($previous_userid != $this->user->id || $previous_courseid != $courseid) {
             $hiding_affected = null;
             $previous_userid = $this->user->id;
+            $previous_courseid = $courseid;
         }
 
         if( !$hiding_affected ) {

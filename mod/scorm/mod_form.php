@@ -393,14 +393,28 @@ class mod_scorm_mod_form extends moodleform_mod {
 
         } else if ($type === SCORM_TYPE_EXTERNAL) {
             $reference = $data['packageurl'];
+            // Syntax check.
             if (!preg_match('/(http:\/\/|https:\/\/|www).*\/imsmanifest.xml$/i', $reference)) {
                 $errors['packageurl'] = get_string('invalidurl', 'scorm');
+            } else {
+                // Availability check.
+                $result = scorm_check_url($reference);
+                if (is_string($result)) {
+                    $errors['packageurl'] = $result;
+                }
             }
 
         } else if ($type === 'packageurl') {
             $reference = $data['reference'];
+            // Syntax check.
             if (!preg_match('/(http:\/\/|https:\/\/|www).*(\.zip|\.pif)$/i', $reference)) {
                 $errors['packageurl'] = get_string('invalidurl', 'scorm');
+            } else {
+                // Availability check.
+                $result = scorm_check_url($reference);
+                if (is_string($result)) {
+                    $errors['packageurl'] = $result;
+                }
             }
 
         } else if ($type === SCORM_TYPE_IMSREPOSITORY) {
@@ -408,11 +422,20 @@ class mod_scorm_mod_form extends moodleform_mod {
             if (stripos($reference, '#') !== 0) {
                 $errors['packageurl'] = get_string('invalidurl', 'scorm');
             }
+
         } else if ($type === SCORM_TYPE_AICCURL) {
             $reference = $data['packageurl'];
+            // Syntax check.
             if (!preg_match('/(http:\/\/|https:\/\/|www).*/', $reference)) {
                 $errors['packageurl'] = get_string('invalidurl', 'scorm');
+            } else {
+                // Availability check.
+                $result = scorm_check_url($reference);
+                if (is_string($result)) {
+                    $errors['packageurl'] = $result;
+                }
             }
+
         }
 
         return $errors;
@@ -499,7 +522,7 @@ class mod_scorm_mod_form extends moodleform_mod {
         }
 
         // Turn off completion settings if the checkboxes aren't ticked
-        $autocompletion = !empty($data->completion) && $data->completion == COMPLETION_TRACKING_AUTOMATIC;
+        $autocompletion = isset($data->completion) && $data->completion == COMPLETION_TRACKING_AUTOMATIC;
 
         if (isset($data->completionstatusrequired) && is_array($data->completionstatusrequired)) {
             $total = 0;

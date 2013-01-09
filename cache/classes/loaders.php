@@ -18,7 +18,7 @@
  * Cache loaders
  *
  * This file is part of Moodle's cache API, affectionately called MUC.
- * It contains the components that are requried in order to use caching.
+ * It contains the components that are required in order to use caching.
  *
  * @package    core
  * @category   cache
@@ -176,12 +176,15 @@ class cache implements cache_loader {
      * @param string $component The component this cache relates to.
      * @param string $area The area this cache relates to.
      * @param array $identifiers Any additional identifiers that should be provided to the definition.
-     * @param bool $persistent If set to true the cache will persist construction requests.
+     * @param array $options An array of options, available options are:
+     *   - simplekeys : Set to true if the keys you will use are a-zA-Z0-9_
+     *   - simpledata : Set to true if the type of the data you are going to store is scalar, or an array of scalar vars
+     *   - persistent : If set to true the cache will persist construction requests.
      * @return cache_application|cache_session|cache_store
      */
-    public static function make_from_params($mode, $component, $area, array $identifiers = array(), $persistent = false) {
+    public static function make_from_params($mode, $component, $area, array $identifiers = array(), array $options = array()) {
         $factory = cache_factory::instance();
-        return $factory->create_cache_from_params($mode, $component, $area, $identifiers, $persistent);
+        return $factory->create_cache_from_params($mode, $component, $area, $identifiers, $options);
     }
 
     /**
@@ -272,11 +275,11 @@ class cache implements cache_loader {
         // 1. Parse the key.
         $parsedkey = $this->parse_key($key);
         // 2. Get it from the persist cache if we can (only when persist is enabled and it has already been requested/set).
-        $result = $this->get_from_persist_cache($parsedkey);
+        $result = false;
+        if ($this->is_using_persist_cache()) {
+            $result = $this->get_from_persist_cache($parsedkey);
+        }
         if ($result !== false) {
-            if ($this->perfdebug) {
-                cache_helper::record_cache_hit('** static persist **', $this->definition->get_id());
-            }
             if (!is_scalar($result)) {
                 // If data is an object it will be a reference.
                 // If data is an array if may contain references.
@@ -285,8 +288,6 @@ class cache implements cache_loader {
                 $result = $this->unref($result);
             }
             return $result;
-        } else if ($this->perfdebug) {
-            cache_helper::record_cache_miss('** static persist **', $this->definition->get_id());
         }
         // 3. Get it from the store. Obviously wasn't in the persist cache.
         $result = $this->store->get($parsedkey);
@@ -637,19 +638,22 @@ class cache implements cache_loader {
     public function has($key, $tryloadifpossible = false) {
         $parsedkey = $this->parse_key($key);
         if ($this->is_in_persist_cache($parsedkey)) {
+            // Hoorah, that was easy. It exists in the persist cache so we definitely have it.
             return true;
         }
-        if (($this->has_a_ttl() && !$this->store_supports_native_ttl()) || !$this->store_supports_key_awareness()) {
-            if ($this->store_supports_key_awareness() && !$this->store->has($parsedkey)) {
-                return false;
-            }
+        if ($this->has_a_ttl() && !$this->store_supports_native_ttl()) {
+            // The data has a TTL and the store doesn't support it natively.
+            // We must fetch the data and expect a ttl wrapper.
             $data = $this->store->get($parsedkey);
-            if (!$this->store_supports_native_ttl()) {
-                $has = ($data instanceof cache_ttl_wrapper && !$data->has_expired());
-            } else {
-                $has = ($data !== false);
-            }
+            $has = ($data instanceof cache_ttl_wrapper && !$data->has_expired());
+        } else if (!$this->store_supports_key_awareness()) {
+            // The store doesn't support key awareness, get the data and check it manually... puke.
+            // Either no TTL is set of the store supports its handling natively.
+            $data = $this->store->get($parsedkey);
+            $has = ($data !== false);
         } else {
+            // The store supports key awareness, this is easy!
+            // Either no TTL is set of the store supports its handling natively.
             $has = $this->store->has($parsedkey);
         }
         if (!$has && $tryloadifpossible) {
@@ -795,7 +799,7 @@ class cache implements cache_loader {
      */
     protected function parse_key($key) {
         // First up if the store supports multiple keys we'll go with that.
-        if ($this->store->supports_multiple_indentifiers()) {
+        if ($this->store->supports_multiple_identifiers()) {
             $result = $this->definition->generate_multi_key_parts();
             $result['key'] = $key;
             return $result;
@@ -906,23 +910,34 @@ class cache implements cache_loader {
             $key = $key['key'];
         }
         if (!$this->persist || !array_key_exists($key, $this->persistcache)) {
-            return false;
-        }
-        $data = $this->persistcache[$key];
-        if (!$this->has_a_ttl() || !$data instanceof cache_ttl_wrapper) {
-            if ($data instanceof cache_cached_object) {
-                $data = $data->restore_object();
-            }
-            return $data;
-        }
-        if ($data->has_expired()) {
-            $this->delete_from_persist_cache($key);
-            return false;
+            $result = false;
         } else {
-            if ($data instanceof cache_cached_object) {
-                $data = $data->restore_object();
+            $data = $this->persistcache[$key];
+            if (!$this->has_a_ttl() || !$data instanceof cache_ttl_wrapper) {
+                if ($data instanceof cache_cached_object) {
+                    $data = $data->restore_object();
+                }
+                $result = $data;
+            } else if ($data->has_expired()) {
+                $this->delete_from_persist_cache($key);
+                $result = false;
+            } else {
+                if ($data instanceof cache_cached_object) {
+                    $data = $data->restore_object();
+                }
+                $result = $data->data;
             }
-            return $data->data;
+        }
+        if ($result) {
+            if ($this->perfdebug) {
+                cache_helper::record_cache_hit('** static persist **', $this->definition->get_id());
+            }
+            return $result;
+        } else {
+            if ($this->perfdebug) {
+                cache_helper::record_cache_miss('** static persist **', $this->definition->get_id());
+            }
+            return false;
         }
     }
 
@@ -1078,6 +1093,10 @@ class cache_application extends cache implements cache_loader_with_locking {
             $todelete = array();
             // Iterate the returned data for the events.
             foreach ($events as $event => $keys) {
+                if ($keys === false) {
+                    // There are no keys.
+                    continue;
+                }
                 // Look at each key and check the timestamp.
                 foreach ($keys as $key => $timestamp) {
                     // If the timestamp of the event is more than or equal to the last invalidation (happened between the last
