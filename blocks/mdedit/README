@@ -1,0 +1,9 @@
+mdedit: a Moodle widget for editing and enriching metadata for resources and courses.
+
+
+TODO @Ahmad: When the "Edit metadata..." is pressed, bring up a modal dialog, using the Boxy with a form pre-filled with the details that are displayed in the widget (resource title, intro, date, etc.)
+
+@TODO 
+  * Enhance form L&F
+  * Submit Data To Server 
+ 

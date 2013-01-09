@@ -1,0 +1,1035 @@
+
+$CFG->wwwroot: This is the base address of the moodle installation. Use this when constructing URL's so that it doesn't matter what other script includes your script. That is, since your script can potentially be included from an arbitrary directory you will not reliably be able to construct relative URLs. Take a look at your config.php and see how this variable was defined.
+$CFG->dirroot: This is the base file path of the Moodle installation. This is the directory where Moodle is installed. So you will find your blocks in "{$CFG->dirroot}/blocks"
+$CFG->dataroot: This is the data directory for your Moodle site.
+$CFG->admin: This is the administrator username.
+$CFG->httpswwwroot: If https is enabled this is the secure wwwroot base address. If https is not enabled this is the same as $CFG->wwwroot.
+$CFG->libdir: This is the location of the moodle library files.
+$CFG->textfilters: Is a comma separated list of the currently enabled text filters.
+$CFG->loginhttps: Is a boolean value indicating whether or not https is enabled for login.
+$CFG->noreplyaddress: The email address to use for email that should not receive a reply.
+$CFG->sesskey: The current sesskey. Use the sesskey() function to obtain the current users session key for form and data processing. Using the sesskey() function rather than the value in $USER->sesskey or $CFG->sesskey is preferred as the sesskey() function allows the API to change and you will not need to update your code.
+$CFG->themedir: This is the location of the theme directory via the filesystem.
+$CFG->themewww: The web accessible base URL for the theme directory.
+$CFG->theme: Is the current site theme.
+$CFG->pixpath: The web accessible base URL of the pix directory. This is where the moodle icons will come from.
+$CFG->modpixpath: The web accessible base URL of the module icons.
+$CFG->mailsessiontime: This variable stores the number of hours email sessions persist (default is 1 month). A cron function (cleanup function) written in admin/cron.php is used to prune the session table.
+
+$USER->id: The user's Moodle user id.
+$USER->auth: The user's authentication method.
+$USER->username: The user's username
+$USER->idnumber: The user's idnumber, this is typically used to uniquely identify the user on an external system.
+$USER->firstname: The user's firstname.
+$USER->lastname: The user's lastname
+$USER->email: The user's email address.
+$USER->emailstop: Indicates if the user has disabled their email.
+$USER->institution: The user's institution.
+$USER->department: The user's department.
+$USER->address: The user's address.
+$USER->city: The user's city.
+$USER->country: The user's country
+$USER->lang: The user's default language
+$USER->theme: The user's theme if user themes are allowed.
+$USER->lastlogin: The last time the user logged in.
+$USER->currentlogin: The user's current login time.
+$USER->lastIP: The last IP the user logged in from.
+$USER->picture: If the user has a picture set or not.
+$USER->timemodified: The last time the user profile was modified.
+$USER->student: An array of course id numbers the user is a student in.
+$USER->timeaccess: An array keyed by course id which lists the access time for that particular course.
+$USER->teacher: An array of course id numbers the user is a teacher for.
+$USER->teacheredit: An array of course id numbers the user is an editing teach for.
+$USER->sesskey: The user's current session key.
+
+$COURSE->id: The course's Moodle course id.
+$COURSE->category: The course's category. Usually moodle administrator may have setup up several course categories, for example, "Science," "Humanities," "Public Health," etc. (or based on semester). When you create a new course manually, by default the category will be set to "Miscellaneous" for which the category id is 1.
+$COURSE->fullname: The course's full name, such as "Computer Science Basic Programming Logic"
+$COURSE->shortname: The course's shortname, such as CS101.
+$COURSE->format: The "format" of the course is usually "site" (for the Moodle root course), "weeks," or "topics" (based on the format the teacher chooses).
+$COURSE->visible: This specifies whether the course is visible to the students or not
+$COURSE->groupmode: This specifies whether the course uses group mode or not. 0 is no, and 1 is yes.
+$COURSE->timecreated: The time that the course was created. This uses Unix time stamp format so to really understand what the actual date is, you need some conversion (see the link below for more details)
+$COURSE->timemodified: The time that the course was last modified. Again it is using Unix time stamp format.
+$COURSE->guest: Whether the course allows "guest access." If the value is set to 0 then no, but if the value is set to 1 then yes.
+$COURSE->startdate: The starting date of the Moodle course. Note that Moodle uses "Unix timestamp" to convert the actual date/time to startdate. So for example, if you want to do a SQL query to list out all the courses that has starting date from 2007-08-01 to 2007-09-01 you could write the query like this using "unix_timestamp":
+	select fullname, shortname, cat.name from mdl_course, mdl_course_categories 
+        as cat where
+        startdate > unix_timestamp('20070801 00:00:00') and startdate < 
+        unix_timestamp('20070901 00:00:00')
+        and category = cat.id order by cat.name 
+
+
+$SITE->fullname: The Moodle site's full name. This is based on what you described during the Moodle installation process.
+$SITE->shortname: The Moodle site's short name. This is also based on what you named it during the Moodle installation process.
+$SITE->numsections: The Moodle site's number of sections.
+$SITE->id: The Moodle site ID number. By default it is assigned as "1".
+$SITE->category: The Moodle site category number. By default it is assigned as "0", which is the root category. Usually only the Moodle "root course"--the front page of Moodle, that is assigned to category 0. The "Miscellaneous" course category is category 1.
+$SITE->password: This is the admin admin stite password, which is the super admin (username: admin) password. Note: Don't confuse this one with the $CFG->dbpass--these two are different. The $CFG->dbpass is usually defined in the config.php and is the Moodle database password.
+
+
+Note: Other global variables such as $THEME, $db, $MCACHE, and $HTTPSPAGEREQUIRED are found in the /lib/setup.php.
+
+
+CONTEXT_SYSTEM
+CONTEXT_PERSONAL
+CONETXT_USER
+CONEXT_COURSECAT
+CONTEXT_COURSE
+CONTEXT_MODULE
+CONTEXT_BLOCK
+
+$context = get_context_instance(CONTEXT_COURSE, $courseid);
+
+
+Enable DEVELOPERS debug info from Moodle admin menu and then:
+print_object($COURSE);
+
+
+
+
+
+
+print_object($this->page->cm);
+
+m_info Object
+(
+    [modinfo:cm_info:private] => course_modinfo Object
+        (
+            [course:course_modinfo:private] => stdClass Object
+                (
+                    [id] => 3
+                    [category] => 1
+                    [sortorder] => 10001
+                    [fullname] => Milestone number one
+                    [shortname] => Milestone_01
+                    [idnumber] => m01
+                    [summary] => <p>Test course with components for the <strong>1st milestone!</strong></p>
+<p>To be completed by <strong><span style="background-color: #ffff00;">May 31st, 2012</span></strong></p>
+                    [summaryformat] => 1
+                    [format] => weeks
+                    [showgrades] => 1
+                    [modinfo] => a:6:{i:8;O:8:"stdClass":10:{s:2:"id";s:1:"4";s:2:"cm";s:1:"8";s:3:"mod";s:5:"forum";s:7:"section";s:1:"0";s:9:"sectionid";s:2:"14";s:6:"module";s:1:"7";s:5:"added";s:10:"1338217174";s:7:"visible";s:1:"1";s:10:"visibleold";s:1:"1";s:4:"name";s:10:"News forum";}i:9;O:8:"stdClass":11:{s:2:"id";s:1:"1";s:2:"cm";s:1:"9";s:3:"mod";s:8:"resource";s:7:"section";s:1:"4";s:9:"sectionid";s:2:"18";s:6:"module";s:2:"15";s:5:"added";s:10:"1338220375";s:7:"visible";s:1:"1";s:10:"visibleold";s:1:"1";s:4:"icon";s:7:"f/image";s:4:"name";s:12:"Aggelopoulos";}i:11;O:8:"stdClass":12:{s:2:"id";s:1:"1";s:2:"cm";s:2:"11";s:3:"mod";s:4:"data";s:7:"section";s:1:"4";s:9:"sectionid";s:2:"18";s:6:"module";s:1:"4";s:5:"added";s:10:"1338300377";s:7:"visible";s:1:"1";s:10:"visibleold";s:1:"1";s:15:"showdescription";s:1:"1";s:7:"content";s:94:"<div class="no-overflow"><p>A test for database activities --- let's check them out!</p></div>";s:4:"name";s:17:"Database activity";}i:12;O:8:"stdClass":10:{s:2:"id";s:1:"1";s:2:"cm";s:2:"12";s:3:"mod";s:6:"lesson";s:7:"section";s:1:"4";s:9:"sectionid";s:2:"18";s:6:"module";s:2:"11";s:5:"added";s:10:"1338300536";s:7:"visible";s:1:"1";s:10:"visibleold";s:1:"1";s:4:"name";s:17:"Give me a Lesson!";}i:13;O:8:"stdClass":11:{s:2:"id";s:1:"1";s:2:"cm";s:2:"13";s:3:"mod";s:5:"label";s:7:"section";s:1:"4";s:9:"sectionid";s:2:"18";s:6:"module";s:2:"10";s:5:"added";s:10:"1338300903";s:7:"visible";s:1:"1";s:10:"visibleold";s:1:"1";s:5:"extra";s:108:"<div class="no-overflow"><p>A simple <strong>label</strong>.... Why should this need any metadata?</p></div>";s:4:"name";s:53:"A simple label.... Why should this need any metada...";}i:14;O:8:"stdClass":11:{s:2:"id";s:1:"3";s:2:"cm";s:2:"14";s:3:"mod";s:8:"resource";s:7:"section";s:1:"4";s:9:"sectionid";s:2:"18";s:6:"module";s:2:"15";s:5:"added";s:10:"1338301791";s:7:"visible";s:1:"1";s:10:"visibleold";s:1:"1";s:4:"icon";s:7:"f/image";s:4:"name";s:7:"AgINFRA";}}
+                    [newsitems] => 5
+                    [startdate] => 1335819600
+                    [numsections] => 10
+                    [marker] => 0
+                    [maxbytes] => 2097152
+                    [legacyfiles] => 0
+                    [showreports] => 0
+                    [visible] => 1
+                    [visibleold] => 1
+                    [hiddensections] => 0
+                    [groupmode] => 0
+                    [groupmodeforce] => 0
+                    [defaultgroupingid] => 0
+                    [lang] => 
+                    [theme] => 
+                    [timecreated] => 1338217165
+                    [timemodified] => 1338217165
+                    [requested] => 0
+                    [restrictmodules] => 0
+                    [enablecompletion] => 0
+                    [completionstartonenrol] => 0
+                    [completionnotify] => 0
+                )
+
+            [courseid] => 3
+            [userid] => 2
+            [sections] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 8
+                        )
+
+                    [4] => Array
+                        (
+                            [0] => 9
+                            [1] => 11
+                            [2] => 12
+                            [3] => 13
+                            [4] => 14
+                        )
+
+                )
+
+            [cms] => Array
+                (
+                    [8] => cm_info Object
+                        (
+                            [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                            [state:cm_info:private] => 1
+                            [id] => 8
+                            [instance] => 4
+                            [course] => 3
+                            [idnumber] => 
+                            [added] => 1338217174
+                            [score] => 0
+                            [visible] => 1
+                            [visibleold] => 1
+                            [groupmode] => 0
+                            [groupingid] => 0
+                            [groupmembersonly] => 0
+                            [indent] => 0
+                            [completion] => 0
+                            [completiongradeitemnumber] => 
+                            [completionview] => 0
+                            [completionexpected] => 0
+                            [availablefrom] => 0
+                            [availableuntil] => 0
+                            [showavailability] => 0
+                            [showdescription] => 0
+                            [extra] => 
+                            [icon] => 
+                            [iconcomponent] => 
+                            [modname] => forum
+                            [module] => 7
+                            [name] => News forum
+                            [sectionnum] => 0
+                            [section] => 14
+                            [conditionscompletion] => Array
+                                (
+                                )
+
+                            [conditionsgrade] => Array
+                                (
+                                )
+
+                            [modplural] => Forums
+                            [available] => 1
+                            [availableinfo] => 
+                            [uservisible] => 1
+                            [context] => context_module Object
+                                (
+                                    [_id:protected] => 38
+                                    [_contextlevel:protected] => 70
+                                    [_instanceid:protected] => 8
+                                    [_path:protected] => /1/3/33/38
+                                    [_depth:protected] => 4
+                                )
+
+                            [url:cm_info:private] => moodle_url Object
+                                (
+                                    [scheme:protected] => http
+                                    [host:protected] => localhost
+                                    [port:protected] => 
+                                    [user:protected] => 
+                                    [pass:protected] => 
+                                    [path:protected] => /agrimoodle/mod/forum/view.php
+                                    [slashargument:protected] => 
+                                    [anchor:protected] => 
+                                    [params:protected] => Array
+                                        (
+                                            [id] => 8
+                                        )
+
+                                )
+
+                            [content:cm_info:private] => 
+                            [extraclasses:cm_info:private] => 
+                            [iconurl:cm_info:private] => 
+                            [onclick:cm_info:private] => 
+                            [customdata:cm_info:private] => 
+                            [afterlink:cm_info:private] => 
+                            [afterediticons:cm_info:private] => 
+                        )
+
+                    [9] => cm_info Object
+ *RECURSION*
+                    [11] => cm_info Object
+                        (
+                            [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                            [state:cm_info:private] => 1
+                            [id] => 11
+                            [instance] => 1
+                            [course] => 3
+                            [idnumber] => 
+                            [added] => 1338300377
+                            [score] => 0
+                            [visible] => 1
+                            [visibleold] => 1
+                            [groupmode] => 0
+                            [groupingid] => 0
+                            [groupmembersonly] => 0
+                            [indent] => 0
+                            [completion] => 0
+                            [completiongradeitemnumber] => 
+                            [completionview] => 0
+                            [completionexpected] => 0
+                            [availablefrom] => 0
+                            [availableuntil] => 0
+                            [showavailability] => 0
+                            [showdescription] => 1
+                            [extra] => 
+                            [icon] => 
+                            [iconcomponent] => 
+                            [modname] => data
+                            [module] => 4
+                            [name] => Database activity
+                            [sectionnum] => 4
+                            [section] => 18
+                            [conditionscompletion] => Array
+                                (
+                                )
+
+                            [conditionsgrade] => Array
+                                (
+                                )
+
+                            [modplural] => Databases
+                            [available] => 1
+                            [availableinfo] => 
+                            [uservisible] => 1
+                            [context] => context_module Object
+                                (
+                                    [_id:protected] => 43
+                                    [_contextlevel:protected] => 70
+                                    [_instanceid:protected] => 11
+                                    [_path:protected] => /1/3/33/43
+                                    [_depth:protected] => 4
+                                )
+
+                            [url:cm_info:private] => moodle_url Object
+                                (
+                                    [scheme:protected] => http
+                                    [host:protected] => localhost
+                                    [port:protected] => 
+                                    [user:protected] => 
+                                    [pass:protected] => 
+                                    [path:protected] => /agrimoodle/mod/data/view.php
+                                    [slashargument:protected] => 
+                                    [anchor:protected] => 
+                                    [params:protected] => Array
+                                        (
+                                            [id] => 11
+                                        )
+
+                                )
+
+                            [content:cm_info:private] => <div class="no-overflow"><p>A test for database activities --- let's check them out!</p></div>
+                            [extraclasses:cm_info:private] => 
+                            [iconurl:cm_info:private] => 
+                            [onclick:cm_info:private] => 
+                            [customdata:cm_info:private] => 
+                            [afterlink:cm_info:private] => 
+                            [afterediticons:cm_info:private] => 
+                        )
+
+                    [12] => cm_info Object
+                        (
+                            [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                            [state:cm_info:private] => 1
+                            [id] => 12
+                            [instance] => 1
+                            [course] => 3
+                            [idnumber] => 
+                            [added] => 1338300536
+                            [score] => 0
+                            [visible] => 1
+                            [visibleold] => 1
+                            [groupmode] => 0
+                            [groupingid] => 0
+                            [groupmembersonly] => 0
+                            [indent] => 0
+                            [completion] => 0
+                            [completiongradeitemnumber] => 
+                            [completionview] => 0
+                            [completionexpected] => 0
+                            [availablefrom] => 0
+                            [availableuntil] => 0
+                            [showavailability] => 0
+                            [showdescription] => 0
+                            [extra] => 
+                            [icon] => 
+                            [iconcomponent] => 
+                            [modname] => lesson
+                            [module] => 11
+                            [name] => Give me a Lesson!
+                            [sectionnum] => 4
+                            [section] => 18
+                            [conditionscompletion] => Array
+                                (
+                                )
+
+                            [conditionsgrade] => Array
+                                (
+                                )
+
+                            [modplural] => Lessons
+                            [available] => 1
+                            [availableinfo] => 
+                            [uservisible] => 1
+                            [context] => context_module Object
+                                (
+                                    [_id:protected] => 44
+                                    [_contextlevel:protected] => 70
+                                    [_instanceid:protected] => 12
+                                    [_path:protected] => /1/3/33/44
+                                    [_depth:protected] => 4
+                                )
+
+                            [url:cm_info:private] => moodle_url Object
+                                (
+                                    [scheme:protected] => http
+                                    [host:protected] => localhost
+                                    [port:protected] => 
+                                    [user:protected] => 
+                                    [pass:protected] => 
+                                    [path:protected] => /agrimoodle/mod/lesson/view.php
+                                    [slashargument:protected] => 
+                                    [anchor:protected] => 
+                                    [params:protected] => Array
+                                        (
+                                            [id] => 12
+                                        )
+
+                                )
+
+                            [content:cm_info:private] => 
+                            [extraclasses:cm_info:private] => 
+                            [iconurl:cm_info:private] => 
+                            [onclick:cm_info:private] => 
+                            [customdata:cm_info:private] => 
+                            [afterlink:cm_info:private] => 
+                            [afterediticons:cm_info:private] => 
+                        )
+
+                    [13] => cm_info Object
+                        (
+                            [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                            [state:cm_info:private] => 1
+                            [id] => 13
+                            [instance] => 1
+                            [course] => 3
+                            [idnumber] => 
+                            [added] => 1338300903
+                            [score] => 0
+                            [visible] => 1
+                            [visibleold] => 1
+                            [groupmode] => 0
+                            [groupingid] => 0
+                            [groupmembersonly] => 0
+                            [indent] => 0
+                            [completion] => 0
+                            [completiongradeitemnumber] => 
+                            [completionview] => 0
+                            [completionexpected] => 0
+                            [availablefrom] => 0
+                            [availableuntil] => 0
+                            [showavailability] => 0
+                            [showdescription] => 0
+                            [extra] => 
+                            [icon] => 
+                            [iconcomponent] => 
+                            [modname] => label
+                            [module] => 10
+                            [name] => A simple label.... Why should this need any metada...
+                            [sectionnum] => 4
+                            [section] => 18
+                            [conditionscompletion] => Array
+                                (
+                                )
+
+                            [conditionsgrade] => Array
+                                (
+                                )
+
+                            [modplural] => Labels
+                            [available] => 1
+                            [availableinfo] => 
+                            [uservisible] => 1
+                            [context] => context_module Object
+                                (
+                                    [_id:protected] => 45
+                                    [_contextlevel:protected] => 70
+                                    [_instanceid:protected] => 13
+                                    [_path:protected] => /1/3/33/45
+                                    [_depth:protected] => 4
+                                )
+
+                            [url:cm_info:private] => 
+                            [content:cm_info:private] => <div class="no-overflow"><p>A simple <strong>label</strong>.... Why should this need any metadata?</p></div>
+                            [extraclasses:cm_info:private] => 
+                            [iconurl:cm_info:private] => 
+                            [onclick:cm_info:private] => 
+                            [customdata:cm_info:private] => 
+                            [afterlink:cm_info:private] => 
+                            [afterediticons:cm_info:private] => 
+                        )
+
+                    [14] => cm_info Object
+                        (
+                            [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                            [state:cm_info:private] => 1
+                            [id] => 14
+                            [instance] => 3
+                            [course] => 3
+                            [idnumber] => 
+                            [added] => 1338301791
+                            [score] => 0
+                            [visible] => 1
+                            [visibleold] => 1
+                            [groupmode] => 0
+                            [groupingid] => 0
+                            [groupmembersonly] => 0
+                            [indent] => 0
+                            [completion] => 0
+                            [completiongradeitemnumber] => 
+                            [completionview] => 0
+                            [completionexpected] => 0
+                            [availablefrom] => 0
+                            [availableuntil] => 0
+                            [showavailability] => 0
+                            [showdescription] => 0
+                            [extra] => 
+                            [icon] => f/image
+                            [iconcomponent] => 
+                            [modname] => resource
+                            [module] => 15
+                            [name] => AgINFRA
+                            [sectionnum] => 4
+                            [section] => 18
+                            [conditionscompletion] => Array
+                                (
+                                )
+
+                            [conditionsgrade] => Array
+                                (
+                                )
+
+                            [modplural] => Files
+                            [available] => 1
+                            [availableinfo] => 
+                            [uservisible] => 1
+                            [context] => context_module Object
+                                (
+                                    [_id:protected] => 48
+                                    [_contextlevel:protected] => 70
+                                    [_instanceid:protected] => 14
+                                    [_path:protected] => /1/3/33/48
+                                    [_depth:protected] => 4
+                                )
+
+                            [url:cm_info:private] => moodle_url Object
+                                (
+                                    [scheme:protected] => http
+                                    [host:protected] => localhost
+                                    [port:protected] => 
+                                    [user:protected] => 
+                                    [pass:protected] => 
+                                    [path:protected] => /agrimoodle/mod/resource/view.php
+                                    [slashargument:protected] => 
+                                    [anchor:protected] => 
+                                    [params:protected] => Array
+                                        (
+                                            [id] => 14
+                                        )
+
+                                )
+
+                            [content:cm_info:private] => 
+                            [extraclasses:cm_info:private] => 
+                            [iconurl:cm_info:private] => 
+                            [onclick:cm_info:private] => 
+                            [customdata:cm_info:private] => 
+                            [afterlink:cm_info:private] => 
+                            [afterediticons:cm_info:private] => 
+                        )
+
+                )
+
+            [instances] => Array
+                (
+                    [forum] => Array
+                        (
+                            [4] => cm_info Object
+                                (
+                                    [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                                    [state:cm_info:private] => 1
+                                    [id] => 8
+                                    [instance] => 4
+                                    [course] => 3
+                                    [idnumber] => 
+                                    [added] => 1338217174
+                                    [score] => 0
+                                    [visible] => 1
+                                    [visibleold] => 1
+                                    [groupmode] => 0
+                                    [groupingid] => 0
+                                    [groupmembersonly] => 0
+                                    [indent] => 0
+                                    [completion] => 0
+                                    [completiongradeitemnumber] => 
+                                    [completionview] => 0
+                                    [completionexpected] => 0
+                                    [availablefrom] => 0
+                                    [availableuntil] => 0
+                                    [showavailability] => 0
+                                    [showdescription] => 0
+                                    [extra] => 
+                                    [icon] => 
+                                    [iconcomponent] => 
+                                    [modname] => forum
+                                    [module] => 7
+                                    [name] => News forum
+                                    [sectionnum] => 0
+                                    [section] => 14
+                                    [conditionscompletion] => Array
+                                        (
+                                        )
+
+                                    [conditionsgrade] => Array
+                                        (
+                                        )
+
+                                    [modplural] => Forums
+                                    [available] => 1
+                                    [availableinfo] => 
+                                    [uservisible] => 1
+                                    [context] => context_module Object
+                                        (
+                                            [_id:protected] => 38
+                                            [_contextlevel:protected] => 70
+                                            [_instanceid:protected] => 8
+                                            [_path:protected] => /1/3/33/38
+                                            [_depth:protected] => 4
+                                        )
+
+                                    [url:cm_info:private] => moodle_url Object
+                                        (
+                                            [scheme:protected] => http
+                                            [host:protected] => localhost
+                                            [port:protected] => 
+                                            [user:protected] => 
+                                            [pass:protected] => 
+                                            [path:protected] => /agrimoodle/mod/forum/view.php
+                                            [slashargument:protected] => 
+                                            [anchor:protected] => 
+                                            [params:protected] => Array
+                                                (
+                                                    [id] => 8
+                                                )
+
+                                        )
+
+                                    [content:cm_info:private] => 
+                                    [extraclasses:cm_info:private] => 
+                                    [iconurl:cm_info:private] => 
+                                    [onclick:cm_info:private] => 
+                                    [customdata:cm_info:private] => 
+                                    [afterlink:cm_info:private] => 
+                                    [afterediticons:cm_info:private] => 
+                                )
+
+                        )
+
+                    [resource] => Array
+                        (
+                            [1] => cm_info Object
+ *RECURSION*
+                            [3] => cm_info Object
+                                (
+                                    [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                                    [state:cm_info:private] => 1
+                                    [id] => 14
+                                    [instance] => 3
+                                    [course] => 3
+                                    [idnumber] => 
+                                    [added] => 1338301791
+                                    [score] => 0
+                                    [visible] => 1
+                                    [visibleold] => 1
+                                    [groupmode] => 0
+                                    [groupingid] => 0
+                                    [groupmembersonly] => 0
+                                    [indent] => 0
+                                    [completion] => 0
+                                    [completiongradeitemnumber] => 
+                                    [completionview] => 0
+                                    [completionexpected] => 0
+                                    [availablefrom] => 0
+                                    [availableuntil] => 0
+                                    [showavailability] => 0
+                                    [showdescription] => 0
+                                    [extra] => 
+                                    [icon] => f/image
+                                    [iconcomponent] => 
+                                    [modname] => resource
+                                    [module] => 15
+                                    [name] => AgINFRA
+                                    [sectionnum] => 4
+                                    [section] => 18
+                                    [conditionscompletion] => Array
+                                        (
+                                        )
+
+                                    [conditionsgrade] => Array
+                                        (
+                                        )
+
+                                    [modplural] => Files
+                                    [available] => 1
+                                    [availableinfo] => 
+                                    [uservisible] => 1
+                                    [context] => context_module Object
+                                        (
+                                            [_id:protected] => 48
+                                            [_contextlevel:protected] => 70
+                                            [_instanceid:protected] => 14
+                                            [_path:protected] => /1/3/33/48
+                                            [_depth:protected] => 4
+                                        )
+
+                                    [url:cm_info:private] => moodle_url Object
+                                        (
+                                            [scheme:protected] => http
+                                            [host:protected] => localhost
+                                            [port:protected] => 
+                                            [user:protected] => 
+                                            [pass:protected] => 
+                                            [path:protected] => /agrimoodle/mod/resource/view.php
+                                            [slashargument:protected] => 
+                                            [anchor:protected] => 
+                                            [params:protected] => Array
+                                                (
+                                                    [id] => 14
+                                                )
+
+                                        )
+
+                                    [content:cm_info:private] => 
+                                    [extraclasses:cm_info:private] => 
+                                    [iconurl:cm_info:private] => 
+                                    [onclick:cm_info:private] => 
+                                    [customdata:cm_info:private] => 
+                                    [afterlink:cm_info:private] => 
+                                    [afterediticons:cm_info:private] => 
+                                )
+
+                        )
+
+                    [data] => Array
+                        (
+                            [1] => cm_info Object
+                                (
+                                    [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                                    [state:cm_info:private] => 1
+                                    [id] => 11
+                                    [instance] => 1
+                                    [course] => 3
+                                    [idnumber] => 
+                                    [added] => 1338300377
+                                    [score] => 0
+                                    [visible] => 1
+                                    [visibleold] => 1
+                                    [groupmode] => 0
+                                    [groupingid] => 0
+                                    [groupmembersonly] => 0
+                                    [indent] => 0
+                                    [completion] => 0
+                                    [completiongradeitemnumber] => 
+                                    [completionview] => 0
+                                    [completionexpected] => 0
+                                    [availablefrom] => 0
+                                    [availableuntil] => 0
+                                    [showavailability] => 0
+                                    [showdescription] => 1
+                                    [extra] => 
+                                    [icon] => 
+                                    [iconcomponent] => 
+                                    [modname] => data
+                                    [module] => 4
+                                    [name] => Database activity
+                                    [sectionnum] => 4
+                                    [section] => 18
+                                    [conditionscompletion] => Array
+                                        (
+                                        )
+
+                                    [conditionsgrade] => Array
+                                        (
+                                        )
+
+                                    [modplural] => Databases
+                                    [available] => 1
+                                    [availableinfo] => 
+                                    [uservisible] => 1
+                                    [context] => context_module Object
+                                        (
+                                            [_id:protected] => 43
+                                            [_contextlevel:protected] => 70
+                                            [_instanceid:protected] => 11
+                                            [_path:protected] => /1/3/33/43
+                                            [_depth:protected] => 4
+                                        )
+
+                                    [url:cm_info:private] => moodle_url Object
+                                        (
+                                            [scheme:protected] => http
+                                            [host:protected] => localhost
+                                            [port:protected] => 
+                                            [user:protected] => 
+                                            [pass:protected] => 
+                                            [path:protected] => /agrimoodle/mod/data/view.php
+                                            [slashargument:protected] => 
+                                            [anchor:protected] => 
+                                            [params:protected] => Array
+                                                (
+                                                    [id] => 11
+                                                )
+
+                                        )
+
+                                    [content:cm_info:private] => <div class="no-overflow"><p>A test for database activities --- let's check them out!</p></div>
+                                    [extraclasses:cm_info:private] => 
+                                    [iconurl:cm_info:private] => 
+                                    [onclick:cm_info:private] => 
+                                    [customdata:cm_info:private] => 
+                                    [afterlink:cm_info:private] => 
+                                    [afterediticons:cm_info:private] => 
+                                )
+
+                        )
+
+                    [lesson] => Array
+                        (
+                            [1] => cm_info Object
+                                (
+                                    [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                                    [state:cm_info:private] => 1
+                                    [id] => 12
+                                    [instance] => 1
+                                    [course] => 3
+                                    [idnumber] => 
+                                    [added] => 1338300536
+                                    [score] => 0
+                                    [visible] => 1
+                                    [visibleold] => 1
+                                    [groupmode] => 0
+                                    [groupingid] => 0
+                                    [groupmembersonly] => 0
+                                    [indent] => 0
+                                    [completion] => 0
+                                    [completiongradeitemnumber] => 
+                                    [completionview] => 0
+                                    [completionexpected] => 0
+                                    [availablefrom] => 0
+                                    [availableuntil] => 0
+                                    [showavailability] => 0
+                                    [showdescription] => 0
+                                    [extra] => 
+                                    [icon] => 
+                                    [iconcomponent] => 
+                                    [modname] => lesson
+                                    [module] => 11
+                                    [name] => Give me a Lesson!
+                                    [sectionnum] => 4
+                                    [section] => 18
+                                    [conditionscompletion] => Array
+                                        (
+                                        )
+
+                                    [conditionsgrade] => Array
+                                        (
+                                        )
+
+                                    [modplural] => Lessons
+                                    [available] => 1
+                                    [availableinfo] => 
+                                    [uservisible] => 1
+                                    [context] => context_module Object
+                                        (
+                                            [_id:protected] => 44
+                                            [_contextlevel:protected] => 70
+                                            [_instanceid:protected] => 12
+                                            [_path:protected] => /1/3/33/44
+                                            [_depth:protected] => 4
+                                        )
+
+                                    [url:cm_info:private] => moodle_url Object
+                                        (
+                                            [scheme:protected] => http
+                                            [host:protected] => localhost
+                                            [port:protected] => 
+                                            [user:protected] => 
+                                            [pass:protected] => 
+                                            [path:protected] => /agrimoodle/mod/lesson/view.php
+                                            [slashargument:protected] => 
+                                            [anchor:protected] => 
+                                            [params:protected] => Array
+                                                (
+                                                    [id] => 12
+                                                )
+
+                                        )
+
+                                    [content:cm_info:private] => 
+                                    [extraclasses:cm_info:private] => 
+                                    [iconurl:cm_info:private] => 
+                                    [onclick:cm_info:private] => 
+                                    [customdata:cm_info:private] => 
+                                    [afterlink:cm_info:private] => 
+                                    [afterediticons:cm_info:private] => 
+                                )
+
+                        )
+
+                    [label] => Array
+                        (
+                            [1] => cm_info Object
+                                (
+                                    [modinfo:cm_info:private] => course_modinfo Object
+ *RECURSION*
+                                    [state:cm_info:private] => 1
+                                    [id] => 13
+                                    [instance] => 1
+                                    [course] => 3
+                                    [idnumber] => 
+                                    [added] => 1338300903
+                                    [score] => 0
+                                    [visible] => 1
+                                    [visibleold] => 1
+                                    [groupmode] => 0
+                                    [groupingid] => 0
+                                    [groupmembersonly] => 0
+                                    [indent] => 0
+                                    [completion] => 0
+                                    [completiongradeitemnumber] => 
+                                    [completionview] => 0
+                                    [completionexpected] => 0
+                                    [availablefrom] => 0
+                                    [availableuntil] => 0
+                                    [showavailability] => 0
+                                    [showdescription] => 0
+                                    [extra] => 
+                                    [icon] => 
+                                    [iconcomponent] => 
+                                    [modname] => label
+                                    [module] => 10
+                                    [name] => A simple label.... Why should this need any metada...
+                                    [sectionnum] => 4
+                                    [section] => 18
+                                    [conditionscompletion] => Array
+                                        (
+                                        )
+
+                                    [conditionsgrade] => Array
+                                        (
+                                        )
+
+                                    [modplural] => Labels
+                                    [available] => 1
+                                    [availableinfo] => 
+                                    [uservisible] => 1
+                                    [context] => context_module Object
+                                        (
+                                            [_id:protected] => 45
+                                            [_contextlevel:protected] => 70
+                                            [_instanceid:protected] => 13
+                                            [_path:protected] => /1/3/33/45
+                                            [_depth:protected] => 4
+                                        )
+
+                                    [url:cm_info:private] => 
+                                    [content:cm_info:private] => <div class="no-overflow"><p>A simple <strong>label</strong>.... Why should this need any metadata?</p></div>
+                                    [extraclasses:cm_info:private] => 
+                                    [iconurl:cm_info:private] => 
+                                    [onclick:cm_info:private] => 
+                                    [customdata:cm_info:private] => 
+                                    [afterlink:cm_info:private] => 
+                                    [afterediticons:cm_info:private] => 
+                                )
+
+                        )
+
+                )
+
+            [groups] => 
+        )
+
+    [state:cm_info:private] => 1
+    [id] => 9
+    [instance] => 1
+    [course] => 3
+    [idnumber] => 
+    [added] => 1338220375
+    [score] => 0
+    [visible] => 1
+    [visibleold] => 1
+    [groupmode] => 0
+    [groupingid] => 0
+    [groupmembersonly] => 0
+    [indent] => 0
+    [completion] => 0
+    [completiongradeitemnumber] => 
+    [completionview] => 0
+    [completionexpected] => 0
+    [availablefrom] => 0
+    [availableuntil] => 0
+    [showavailability] => 0
+    [showdescription] => 0
+    [extra] => 
+    [icon] => f/image
+    [iconcomponent] => 
+    [modname] => resource
+    [module] => 15
+    [name] => Aggelopoulos
+    [sectionnum] => 4
+    [section] => 18
+    [conditionscompletion] => Array
+        (
+        )
+
+    [conditionsgrade] => Array
+        (
+        )
+
+    [modplural] => Files
+    [available] => 1
+    [availableinfo] => 
+    [uservisible] => 1
+    [context] => context_module Object
+        (
+            [_id:protected] => 40
+            [_contextlevel:protected] => 70
+            [_instanceid:protected] => 9
+            [_path:protected] => /1/3/33/40
+            [_depth:protected] => 4
+        )
+
+    [url:cm_info:private] => moodle_url Object
+        (
+            [scheme:protected] => http
+            [host:protected] => localhost
+            [port:protected] => 
+            [user:protected] => 
+            [pass:protected] => 
+            [path:protected] => /agrimoodle/mod/resource/view.php
+            [slashargument:protected] => 
+            [anchor:protected] => 
+            [params:protected] => Array
+                (
+                    [id] => 9
+                )
+
+        )
+
+    [content:cm_info:private] => 
+    [extraclasses:cm_info:private] => 
+    [iconurl:cm_info:private] => 
+    [onclick:cm_info:private] => 
+    [customdata:cm_info:private] => 
+    [afterlink:cm_info:private] => 
+    [afterediticons:cm_info:private] => 
+    [sectionnumber] => 4
+)
