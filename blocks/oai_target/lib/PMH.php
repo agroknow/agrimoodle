@@ -123,14 +123,12 @@ class PMH {
 function oai_pmh_header($verb) {
     $now = date("Y-m-d\TH:i:s\Z");
     $output = <<<XML
-<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
-     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
-     http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"
+     xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+     xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/
+     http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">
   <responseDate>$now</responseDate>
-
 XML;
-    return $output;
 }
 
 function oai_pmh_footer($verb) {
@@ -154,7 +152,8 @@ function oai_pmh_footer($verb) {
 
 function do_verb_identify() {
     $baseurl = new moodle_url("/");
-    $output  = <<<XML
+
+    <<<XML
   <request verb='Identify'></request>
   <Identify>
     <repositoryName>AgriMoodle Test Repository</repositoryName>
@@ -165,10 +164,8 @@ function do_verb_identify() {
     <earliestDatestamp>2012-08-01T12:00:00Z</earliestDatestamp>
     <deletedRecord>no</deletedRecord>
     <granularity>YYYY-MM-DD</granularity>
-  </Identify>
-
+ </Identify>
 XML;
-    return $output;
 }
 
 
