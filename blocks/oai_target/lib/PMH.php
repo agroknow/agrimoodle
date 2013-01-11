@@ -1,10 +1,14 @@
 <?php
 
-require_once 'XML/Serializer.php';
+// require_once 'XML/Serializer.php';
 
+$DS = DIRECTORY_SEPARATOR;
+$PDIR = $DS . '..';
 
-include_once realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . "common.php";
-include_once LIB_DIR . "Course.php";
+require_once(dirname(__FILE__) . $PDIR . $PDIR . $PDIR . $DS . 'config.php');
+
+include_once dirname(__FILE__) . $PDIR . $DS . "common.php";
+include_once dirname(__FILE__) . $DS . "Course.php";
 
 class PMH {
 

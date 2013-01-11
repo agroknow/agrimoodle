@@ -31,7 +31,7 @@
 //
 // Report all errors except E_NOTICE
 // This is the default value set in php.ini
-error_reporting (E_ALL ^ E_NOTICE);
+// error_reporting (E_ALL ^ E_NOTICE);
 
 $output = '';
 $errors = '';
@@ -78,13 +78,23 @@ foreach($verbs as $val) {
 	unset($$val);
 }
 
-$db = DB::connect($DSN);
+$options = array(
+    'debug'       => 2,
+    'portability' => DB_PORTABILITY_ALL,
+);
 
-if (DB::isError($db)) {
+
+
+$db  =& DB::connect($DSN, $options);
+/* change character set to utf8 */
+$db->query("SET CHARACTER SET 'utf8'");
+
+if (PEAR::isError($db)) {
 	die($db->getMessage());
 } else {
 	$db->setFetchMode(DB_FETCHMODE_ASSOC);
 }
+
 
 $request = ' <request'.$reqattr.'>'.$MY_URI."</request>\n";
 $request_err = ' <request>'.$MY_URI."</request>\n";
@@ -147,9 +157,9 @@ if ($errors != '') {
 	oai_exit();
 }
 
-if ($compress) {
-	ob_start('ob_gzhandler');
-}
+//if ($compress) {
+//	ob_start('ob_gzhandler');
+//}
 
 header($CONTENT_TYPE);
 echo $xmlheader;

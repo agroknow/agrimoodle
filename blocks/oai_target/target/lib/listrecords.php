@@ -229,7 +229,7 @@ while ($countrec++ < $maxrec) {
 	$output .= xmlformat($identifier, 'identifier', '', 4);
 	$output .= xmlformat($datestamp, 'datestamp', '', 4);
 	if (!$status_deleted) 
-		// use xmlrecord since we use stuff from database
+		 // use xmlrecord since we use stuff from database
 		$output .= xmlrecord($record[$SQL['set']], 'setSpec', '', 4);
 
 	$output .= '   </header>'."\n"; 
@@ -250,5 +250,7 @@ if (isset($restoken)) {
 $output .= 
 ' </ListRecords>'."\n";
 $output = utf8_decode($output);
-  
+
+return $output;
+
 ?>

@@ -53,7 +53,8 @@ $indent = 6;
 
 //-----marinos changes start here 
 //-- comment all $output lines, create the next one
-$output .= xmlrecord($record['lom_record'], 'lom:LOMRecord', '', $indent);
+// $output .= xmlrecord($record['lom_record'], 'lom:LOMRecord', '', $indent);
+$output .= $record['lom_record'];
 
 //$output .= xmlrecord($record['dc_title'], 'dc:title', '', $indent);
 //$output .= xmlrecord($record['dc_creator'],'dc:creator', '', $indent);

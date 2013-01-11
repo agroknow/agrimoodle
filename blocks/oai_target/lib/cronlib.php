@@ -1,6 +1,6 @@
 ﻿<?php
 
-require_once 'XML/Serializer.php';
+// require_once 'XML/Serializer.php';
 
 
 include_once realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . "common.php";

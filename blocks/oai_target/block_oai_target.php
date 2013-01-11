@@ -102,12 +102,12 @@ class block_oai_target extends block_base {
             $this->content->text.="</div>";
             //
             $this->content->text.="<ol>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=GetRecord'>GetRecord</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=Identify'>Identify</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=ListIdentifiers'>ListIdentifiers</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=ListMetadataFormats'>ListMetadataFormats</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=ListRecords'>ListRecords</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=ListSets'>ListSets</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=Identify'>Identify</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=ListSets'>ListSets</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=ListMetadataFormats'>ListMetadataFormats</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=ListIdentifiers&metadataPrefix=oai_lom&set=foo'>ListIdentifiers</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=ListRecords&metadataPrefix=oai_lom'>ListRecords</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=GetRecord&identifier=http://www.foo.gr&metadataPrefix=oai_lom'>GetRecord</a></li>";
             $this->content->text.="</ol>";
 //		}
 		$this->content->footer = '<b>Note:</b> under construction!';

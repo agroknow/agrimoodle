@@ -63,11 +63,12 @@ $CONTENT_TYPE = 'Content-Type: text/plain';
 // if you do not find PEAR, use something like this
 //ini_set('include_path', '.:/usr/share/php:/www/oai/PEAR');
 // Windows users might like to try this
-ini_set('include_path', '.;c:\wamp\bin\php\php5.3.5\pear');
+//ini_set('include_path', '.;c:\wamp\bin\php\php5.3.5\pear');
 //ini_set('include_path', '.;C:\wamp\bin\php\php5.3.5\pear\pear');
 
 // if there are problems with unknown 'numrows', then make sure
 // to upgrade to a decent PEAR version. 
+
 require_once('DB.php');
 
 error_reporting(E_ALL & ~E_NOTICE);
@@ -204,8 +205,8 @@ $METADATAFORMATS = 	array (
 
 // change according to your local DB setup.
 $DB_HOST   = 'localhost';
-$DB_USER   = 'root';
-$DB_PASSWD = '';
+$DB_USER   = 'agmadmin';
+$DB_PASSWD = 'XXXXXX';
 $DB_NAME   = 'agrimoodle';												           
 
 // Data Source Name: This is the universal connection string
