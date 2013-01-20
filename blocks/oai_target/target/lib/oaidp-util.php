@@ -348,7 +348,7 @@ function oai_close()
 {
 	global $compress;
 
-	echo "</OAI-PMH>\n";
+	echo "</OAI-PMH>";
 
 	if ($compress) {
 		ob_end_flush();

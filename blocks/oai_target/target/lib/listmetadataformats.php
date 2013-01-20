@@ -87,9 +87,9 @@ if (is_array($METADATAFORMATS)) {
 	$output .= " <ListMetadataFormats>\n";
 	foreach($METADATAFORMATS as $key=>$val) {
 		$output .= "  <metadataFormat>\n";
-		$output .= xmlformat($key, 'metadataPrefix', '', 3);
-		$output .= xmlformat($val['schema'], 'schema', '', 3);
-		$output .= xmlformat($val['metadataNamespace'], 'metadataNamespace', '', 3);
+		$output .= xmlformat($key, 'metadataPrefix', '', $INDENT);
+		$output .= xmlformat($val['schema'], 'schema', '', $INDENT);
+		$output .= xmlformat($val['metadataNamespace'], 'metadataNamespace', '', $INDENT);
 		$output .= "  </metadataFormat>\n";
 	}
 	$output .= " </ListMetadataFormats>\n"; 

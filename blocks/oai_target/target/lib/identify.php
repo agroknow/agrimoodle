@@ -44,7 +44,7 @@ if ($errors != '') {
 // see http://www.openarchives.org/OAI/2.0/guidelines-oai-identifier.htm 
 // for details
 
-$indent = 4;
+$indent = $INDENT;
 $output .= " <Identify>\n";
 $output .= xmlformat($repositoryName, 'repositoryName', '', $indent);
 $output .= xmlformat($baseURL, 'baseURL', '', $indent);

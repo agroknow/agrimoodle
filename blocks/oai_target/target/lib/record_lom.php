@@ -1,11 +1,11 @@
-﻿<?php
+<?php
 /*
 * +----------------------------------------------------------------------+
 * | PHP Version 4                                                        |
 * +----------------------------------------------------------------------+
 * | Copyright (c) 2002-2005 Heinrich Stamerjohanns                       |
 * |                                                                      |
-* | listsets.php -- Utilities for the OAI Data Provider                  |
+* | dc_record.php -- Utilities for the OAI Data Provider                 |
 * |                                                                      |
 * | This is free software; you can redistribute it and/or modify it under|
 * | the terms of the GNU General Public License as published by the      |
@@ -23,58 +23,44 @@
 * | Derived from work by U. Mόller, HUB Berlin, 2002                     |
 * |                                                                      |
 * | Written by Heinrich Stamerjohanns, May 2002                          |
-* |            stamer@uni-oldenburg.de                                   |
+* /            stamer@uni-oldenburg.de                                   |
 * +----------------------------------------------------------------------+
 */
 //
-// $Id: listsets.php,v 1.00 2002/08/26 13:08:04 stamer Exp $
+// $Id: record_dc.php,v 1.02 2003/04/08 14:32:07 stamer Exp $
 //
 
-// parse and check arguments
-foreach($args as $key => $val) {
+// this handles unqualified DC records, but can be also used as a sample
+// for other formats.
+// just specify the next variable according to your own metadata prefix
+// change output your metadata records further below.
 
-	switch ($key) { 
-		case 'resumptionToken':
-			$resumptionToken = $val;
-			$errors .= oai_error('badResumptionToken', $key, $val); 
-			break;
+// please change to the according metadata prefix you use 
+//-------marinos changes start here - previous value="oai_dc"
+$prefix = 'oai_lom';
+//-------marinos changes ends here
 
-		default:
-			$errors .= oai_error('badArgument', $key, $val);
-	}
+// you do need to change anything in the namespace and schema stuff
+// the correct headers should be created automatically
+
+$output .= 
+'   <metadata>'."\n";
+
+$output .= metadataHeader($prefix);
+
+// please change according to your metadata format
+$indent = $INDENT+2;
+
+//$output .= xmlrecord($record['lom_record'], 'lom:LOMRecord', '', $indent);
+$output .= $record['lom_record'];
+
+// Here, no changes need to be done
+$output .=           
+'     </'.$prefix;
+if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
+	$output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
 }
-
-// break and clean up on error
-if ($errors != '') {
-	oai_exit();
-}
-
-if (is_array($SETS)) {
-	$output .= "  <ListSets>\n";
-	foreach($SETS as $key=>$val) {
-		$output .= "   <set>\n";
-		$output .= xmlformat($val['setSpec'], 'setSpec', '', $INDENT);
-		$output .= xmlformat($val['setName'], 'setName', '', $INDENT);
-		if (isset($val['setDescription']) && $val['setDescription'] != '') {
-			$output .= "    <setDescription>\n";
-			$prefix = 'oai_lom';
-			$output .= metadataHeader($prefix);
-			$output .= xmlrecord($val['setDescription'], 'lom:description', '', $INDENT+3);
-			$output .=           
-			'     </'.$prefix;
-			if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
-				$output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
-			}
-			$output .= ">\n";
-			$output .= "    </setDescription>\n";
-		}
-		$output .= "   </set>\n";
-	}
-	$output .= "  </ListSets>\n"; 
-}
-else {
-	$errors .= oai_error('noSetHierarchy'); 
-	oai_exit();
-}
-
+$output .= ">\n";
+$output .= 
+'   </metadata>'."\n";
 ?>

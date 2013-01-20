@@ -51,11 +51,11 @@ $SHOW_QUERY_ERROR = FALSE;
 
 // The content-type the WWW-server delivers back. For debug-puposes, "text/plain" 
 // is easier to view. On a production site you should use "text/xml".
-$CONTENT_TYPE = 'Content-Type: text/plain';
+//$CONTENT_TYPE = 'Content-Type: text/plain';
 
 // If everything is running ok, you should use this
 // $SHOW_QUERY_ERROR = FALSE;
-//$CONTENT_TYPE = 'Content-Type: text/xml;charset=utf-8';
+$CONTENT_TYPE = 'Content-Type: text/xml';
 
 // PEAR SETUP
 // use PEAR classes
@@ -139,7 +139,7 @@ $delimiter			= ':';
 // see: http://www.openarchives.org/OAI/2.0/guidelines-oai-identifier.htm
 // Basically use domainname-word.domainname
 // please adjust
-$repositoryIdentifier = 'aName.org'; 
+$repositoryIdentifier = 'agrimoodle.org'; 
 
 
 // description is defined in identify.php 
@@ -166,6 +166,9 @@ $MAXIDS = 200;
 $tokenValid = 24*3600;
 $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid); 
 
+//INDENT for the xmlrecord()
+$INDENT = 4;
+
 // define all supported sets in your repository
 $SETS = 	array (
 				array("setSpec"=>"phdthesis", 'setName'=>'PHD Thesis', 'setDescription'=>'a dfsasd fsdf sdf asdf sdf asdf sdaf sdf sdf sdf sdf sdf sdf asd f') //,
@@ -184,10 +187,16 @@ $SETS = 	array (
 
 //----marinos changes start here
 $METADATAFORMATS = 	array (
-						'oai_lom' => array('metadataPrefix'=>'oai_lom', 
+						'oai_dc' => array('metadataPrefix'=>'oai_dc', 
 							'schema'=>'http://www.openarchives.org/OAI/2.0/oai_dc.xsd',
 							'metadataNamespace'=>'http://www.openarchives.org/OAI/2.0/oai_dc/',
 							'myhandler'=>'record_dc.php',
+							'record_prefix'=>'dc',
+							'record_namespace' => 'http://purl.org/dc/elements/1.1/'
+						),'oai_lom' => array('metadataPrefix'=>'oai_lom', 
+							'schema'=>'http://www.openarchives.org/OAI/2.0/oai_dc.xsd',
+							'metadataNamespace'=>'http://www.openarchives.org/OAI/2.0/oai_dc/',
+							'myhandler'=>'record_lom.php',
 							'record_prefix'=>'lom',
 							'record_namespace' => 'http://purl.org/dc/elements/1.1/'
 						) //,
@@ -204,10 +213,10 @@ $METADATAFORMATS = 	array (
 //
 
 // change according to your local DB setup.
-$DB_HOST   = 'localhost';
-$DB_USER   = 'agmadmin';
-$DB_PASSWD = 'XXXXXX';
-$DB_NAME   = 'agrimoodle';												           
+$DB_HOST   = $CFG->dbhost;
+$DB_USER   = $CFG->dbuser;
+$DB_PASSWD = $CFG->dbpass;
+$DB_NAME   = $CFG->dbname;										           
 
 // Data Source Name: This is the universal connection string
 // if you use something other than mysql edit accordingly.
@@ -343,8 +352,7 @@ $datetime = gmstrftime('%Y-%m-%dT%T');
 $responseDate = $datetime.'Z';
 
 // do not change
-$XMLHEADER = 
-'<?xml version="1.0" encoding="UTF-8"?>
+$XMLHEADER = '<?xml version="1.0" encoding="UTF-8"?>
 <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/

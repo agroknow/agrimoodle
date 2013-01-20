@@ -36,6 +36,10 @@
 $output = '';
 $errors = '';
 
+$DS = DIRECTORY_SEPARATOR;
+$PDIR = $DS . '..';
+require_once(dirname(__FILE__) . $PDIR . $PDIR . $PDIR . $DS . 'config.php');
+
 require_once('lib/oaidp-util.php');
 
 // register_globals does not need to be set
@@ -166,5 +170,4 @@ echo $xmlheader;
 echo $request;
 echo $output;
 oai_close(); 
-
 ?>

@@ -25,3 +25,4 @@ oerfinder
 # DEBUGGING:
 
   * print_object($USER);
+  * var_dump(__FILE__, __LINE__, $record['lom_record']);

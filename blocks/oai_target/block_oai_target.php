@@ -75,7 +75,7 @@ class block_oai_target extends block_base {
 
 		global $COURSE;
 		global $CFG;
-
+		
 		$this->content   = new stdClass;
 		$Course = new Course();
 		$course_registration = $Course->get_registration($COURSE->id);
@@ -172,6 +172,8 @@ function cron() {
 
 		}
 		echo "\n****** oai_target :: end ******\n\n";
+		$verb = "GetSql";
+		include_once('lib/cronlib.php');
 		return;
 	}
 
