@@ -1,5 +1,5 @@
 ****************************************************************
-* Thu Aug  23 13:19:09 CET 2012
+* Thu Aug 23 13:19:09 CET 2012
 * Tasos Koutoumanos - anastasios.koutoumanos@gmail.com
 * Agro-Know Technologies - http://www.agroknow.gr
 ****************************************************************

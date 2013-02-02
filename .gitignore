@@ -13,6 +13,7 @@
 /lib/editor/tinymce/extra/tools/temp/
 *~
 *.swp
+*.zip
 /tags
 /TAGS
 /cscope.*
@@ -35,4 +36,6 @@ phpunit.xml
 *.sublime-project
 *.sublime-workspace
 Drupal.sublime-projectcompletions
+
+# no need to versioni control these "personal" notes
 /blocks/oerfinder/NOTES.md

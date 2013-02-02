@@ -75,11 +75,11 @@ class block_oai_target extends block_base {
 
 		global $COURSE;
 		global $CFG;
-		
+
 		$this->content   = new stdClass;
 		$Course = new Course();
 		$course_registration = $Course->get_registration($COURSE->id);
-		
+
 
         // last update info
         $this->content->text = "<span style='font-size: small'>";
@@ -128,10 +128,10 @@ function cron() {
 
 		// get the list of courses that are using this block
 		$courses = $Course->get_all_courses_using_oai_target_block();
-		
+
 		// if no courses are using this block exit
 		if( !is_array($courses) or count($courses) < 1 ) {
-			echo "\n--> None course is using oai_target plugin.";
+			echo "\n--> No course is using oai_target plugin.";
 			echo "\n****** oai_target :: end ******\n\n";
 			return;
 		}
@@ -152,7 +152,8 @@ function cron() {
 			// if course log entry does not exist
 			// or the last update time is older than two days
 			// then reinitialize course log
-			if( !$Course->log_exists($course->id) or $course_registration->last_update_time + 48*3600 < time() )
+			if( !$Course->log_exists($course->id) or
+					(isset($course_registration->last_update_time) and $course_registration->last_update_time + 48*3600 < time()) )
 				$Course->initialize_log($course);
 
 			// check update frequency for the course and skip to next cron cycle if neccessary

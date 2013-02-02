@@ -10,7 +10,11 @@ class Course {
 
         $course=new Object();
         $course->course_id = $course_id;
-        $course->last_update_time = $starting_time;
+        if (isset($starting_time)) {
+            $course->last_update_time = $starting_time;
+        } else {
+            $course->last_update_time = -1;
+        }
         $course->notify_by_pmh = 1;
         if( isset($CFG->block_update_frequency) ) {
             $course->update_frequency = $CFG->block_update_frequency * 3600;
@@ -73,7 +77,10 @@ class Course {
 
         $course_registration = $DB->get_records_select( 'block_oai_target_courses', "course_id=$course_id" );
         if( isset($course_registration) and is_array($course_registration) and !empty($course_registration)  ) {
-            return current($course_registration);
+            $ccr = current($course_registration);
+            if (! isset($ccr->last_update_time)) $ccr->last_update_time = -1;
+            if (! isset($ccr->update_frequency)) $ccr->update_frequency = -1;
+            return $ccr;
         } else {
             return null;
         }
@@ -84,7 +91,9 @@ class Course {
 
         $course_registration = $DB->get_records_select( 'block_oai_target_courses', "course_id=$course_id" );
         if( isset($course_registration) and is_array($course_registration)  and !empty($course_registration) ) {
-            return current($course_registration)->last_update_time;
+            $ccr = current($course_registration);
+            if (! isset($ccr->last_update_time)) $ccr->last_update_time = -1;
+            return $ccr->last_update_time;
         } else {
             return null;
         }

@@ -14,7 +14,7 @@
 * | This software is distributed in the hope that it will be useful, but |
 * | WITHOUT  ANY WARRANTY; without even the implied warranty of          |
 * | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         |
-* | GNU General Public License for more details.                         |     
+* | GNU General Public License for more details.                         |
 * | You should have received a copy of the GNU General Public License    |
 * | along with  software; if not, write to the Free Software Foundation, |
 * | Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA         |
@@ -31,7 +31,8 @@
 //
 // Report all errors except E_NOTICE
 // This is the default value set in php.ini
-// error_reporting (E_ALL ^ E_NOTICE);
+
+error_reporting (E_ALL  ^ E_NOTICE);
 
 $output = '';
 $errors = '';
@@ -87,11 +88,17 @@ $options = array(
     'portability' => DB_PORTABILITY_ALL,
 );
 
+$dbc = new DB();
+$db = $dbc->connect($DSN, $options);
 
-
-$db  =& DB::connect($DSN, $options);
 /* change character set to utf8 */
 $db->query("SET CHARACTER SET 'utf8'");
+
+//if (DB::isError($db)) {
+//	die($db->getMessage());
+//} else {
+//	$db->setFetchMode(DB_FETCHMODE_ASSOC);
+//}
 
 if (PEAR::isError($db)) {
 	die($db->getMessage());
@@ -169,5 +176,5 @@ header($CONTENT_TYPE);
 echo $xmlheader;
 echo $request;
 echo $output;
-oai_close(); 
+oai_close();
 ?>

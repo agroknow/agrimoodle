@@ -1,14 +1,14 @@
 ****************************************************************
-* Thu Aug  23 13:19:09 CET 2012
+* Thu Aug 23 13:19:09 CET 2012
 * Tasos Koutoumanos - anastasios.koutoumanos@gmail.com
 * Agro-Know Technologies - http://www.agroknow.gr
 ****************************************************************
 
-This plugin is part of AgriMoodle.
-FIXME: Add a description of AgriMoodle and reference to more details
+This plugin is part of agriMoodle.
+For more information please visit: http://agrimoodle.agroknow.gr
 
-It provides and OAI-PMH target for your Moodle instance. OAI-PMH stands for
-the Open Archives Initiative Protocol for Metadata Harvesting. You can find
+The plugin provides and OAI-PMH target for your Moodle instance. OAI-PMH stands
+for the Open Archives Initiative Protocol for Metadata Harvesting. You can find
 more information here: http://www.openarchives.org/OAI/openarchivesprotocol.html
 
 A harvester is a client application that issues OAI-PMH requests. A harvester
@@ -89,14 +89,12 @@ http://an.oa.org/OAI-script?verb=ListSets
 
 
 
-
-
 INSTALLATION
-------------
+============
 To install you will have to perform the following steps:
-	
-	1.	
-	2.	
+
+	1.
+	2.
 	3.	Login in your Moodle platform as Administrator and
 		click on OAI Target inside Site Administration block.
 
@@ -104,44 +102,12 @@ At this point the block initialization should be performed and the block
 should be available in the Blocks list. Note that the block is available
 only inside courses.
 
-Settings: 
+Settings:
+---------
 
 Bugs:
+-----
 If you find a bug please submit it here:
 FIXME: provide a url for the issue tracker
 
 Please provide the bug description and don't forget Moodle and block version.
-
-
-TODO:
-
-- check BOAIDP plugin, it's for Moodle 1.9 but has some interesting ideas,
-  esp. related to the database schema. Overall it's useless.
-  https://github.com/mglaredo/moodle-block_boaidp/tree/master/db
-  http://moodle.org/plugins/pluginversion.php?id=695
-
-- checked the DOOR plugin, it's quite old and useless
-  http://moodle.org/mod/data/view.php?d=13&rid=502
-
-- check information from this page:
-  http://www.physnet.uni-oldenburg.de/projects/OAD/software.html
-
-- it Refers to the phpoai2 connector which can serve as a basis for our work
-
-- check information from here:
-  http://www.oaforum.org/tutorial/english/page4.htm
-
-
-FIXME:
-
-- Handle DELETED records
-
-
-TODO:
-
-The general idea is to parse all files that are generated from the mdeditor
-widget (LOM editor), for every course that is registered to the target and
-store the information in a LOM format, ready to be posted to the harvester.
-
-Then, when the harvester calls with a proper verb, this plugin should respond
-with appropriate answers!
