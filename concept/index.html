@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>agriMoodle :: concept &amp; vision</title>
+        <meta charset='utf-8'/>
+        <script src='slides.js'></script>
+
+		<style media="print">
+         @page {
+            size: A4 portrait;
+             @top-right {
+                content: "Page " counter(page);
+             }
+         }
+          article {
+            /* page-break-after: always; */
+            page-break-inside: avoid;
+            orphans: 100;
+            margin: auto;
+          }
+          article.next, article.past {
+            display: block;
+          }
+          body {
+              display: block !important;
+              font-family: 'Open Sans', Arial, sans-serif;
+              font-size: 1.1em;
+          }
+      </style>
+      <script type="text/javascript">
+        window.addEventListener('load', function(){
+            var link = document.getElementsByTagName('link');
+            link[link.length-1].setAttribute ("media","screen");
+        });
+       </script>
+
+    </head>
+    <style> </style>
+
+    <body style='display: none'>
+        <section class='slides layout-regular template-default'>
+            <article class='biglogo'></article>
+            <article>
+                <h3>The agenda</h3>
+                <p>1. agri-moodle</p>
+                <p>2. User tracking & recommendation services</p>
+                <p>3. ISLE</p>
+                <p>4. ARIADNE</p>
+			</article>
+            <article>
+                <h1>agri-moodle<br/>Concept &amp; Vision</h1>
+                <p>Tasos Koutoumanos<br/> <a href="mailto:tkout@agroknow.gr">tkout at agroknow.gr</a></p>
+            </article>
+            <article>
+                <h3>The main components</h3>
+                <p><img src="images/agri-moodle_map.png" /></p>
+<!-- 				<div class='source white'>
+					Source: <a href="http://83.212.96.219:9000/agrimoodle/wiki">agri-moodle wiki</a>
+				</div>
+ -->			</article>
+			<article>
+				<h3>The concept...</h3>
+				<p>Provide a fresh Moodle 2.x installation bundle, that:</p>
+				<ul class="build">
+					<li>provides great <b>green/agri-</b> templates and themes</li>
+					<li>is linked to interesting <b>green/agri-</b> information sources</li>
+					<li>trainers can use tools to import resources from relevant repositories</li>
+					<li>trainers can use an easy LOM editor to describe and export metadata for their resources</li>
+					<li>learners can benefit from (automatic) references to useful material, through various widgets</li>
+				</ul>
+			</article>
+			<article>
+				<h3>Roadmap</h3>
+				<div class="build">
+				<p><b class="green">June, 2012:</b> a first <b class="red">demo</b> is made available online.</p>
+				<ul>
+					<li>Issue tracking is used by all to throw in feedback, tasks and wishes.</li>
+					<li>Work focuses on Ariadne widget, themes, LOM editor, integration and m17n</li>
+				</ul>
+				<p><b class="green">July, 2012:</b> a first <b class="red">operational</b> is made available online.</p>
+				<ul>
+					<li>Some testing, and fixes for one week, then...</li>
+				</ul>
+				<p><b class="green">October, 2012:</b> a first <b class="red">pilot</b> with real users (V3DAS trainers).</p>
+				</div>
+			</article>
+
+			<article class="smaller" style="line-height:16px" >
+				<h3>Deadlines</h3>
+				<p><b class="green">June, 2012:</b> a first <b class="red">demo</b> is made available online.</p>
+				<ol>
+					<li>add resource / hacking the form</li>
+					<li>enrich through a new button &rarr; popup form</li>
+					<li>store metadata locally, and recall for further enrichment</li>
+				</ol>
+				<p><b class="green">01 July, 2012:</b> a first <b class="red">operational</b> installation is made available online.</p>
+				<ol>
+					<li>operational / pilot server for feedback from trainers</li>
+					<li>export to repository (target) from <b>local</b> installation</li>
+					<li>enrich through a new button --> popup</li>
+				</ol>
+				<p><b class="green">15 July, 2012:</b> a first <b class="red">pilot</b> with real users (V3DAS trainers).</p>
+				<ol>
+					<li>first installation for use of V3DAS trainers</li>
+					<li>investigate the HUB for publishing enriched metadata</li>
+				</ol>
+				<p><b class="green">25 July, 2012:</b> a first <b class="red">pilot</b> of operational HUB.</p>
+				<ol>
+					<li>one or two different hubs, where servers can register</li>
+					<li>different metadata schemes &amp; vocabularies defined</li>
+					<li>??? provide a target from each HUB to Organic.Edunet</li>
+				</ol>
+			</article>
+
+
+			<article>
+				<h3>Things to discuss</h3>
+				<ol>
+					<li>The components for the 1st version</li>
+					<li>The process</li>
+					<ul>
+						<li>Progress up to now</li>
+						<li>Agile process, TRAC, issue tracking</li>
+					</ul>
+					<li>Themes &amp; Templates</li>
+					<ul>
+						<li>some samples to test</li>
+					</ul>
+					<li>The <b class="green">Future</b><sup>?</sup></li>
+
+				</ol>
+			</article>
+
+			<article class="smaller">
+				<h3>Progress up to now</h3>
+				<p>Project has been ongoing for almost a month</p>
+				<ol style="font-size: 20px">
+					<li>Development process: the issue <b class="green">trac</b>ker and the <b><a href="http://83.212.96.219:9000/agrimoodle/wiki">wiki</a></b></li>
+					<li>Eummena's proposal for CGIAR.ERP project <br/><i style="font-size:18px">(failed, but some positive feedback)</i></li>
+					<li>Start for the ARIADNE / GLOBE repository plugin<br/><i style="font-size:18px">Based on Julien's code</i></li>
+					<li>Setup of the <b class="red">subversion (svn)</b> server<br/><i style="font-size:18px">and integration in the development methodology, based on Netbeans and TRAC</i></li>
+					<li>Some basic collaboration with Ahmad</li>
+					<li>Setup of the demo agri-moodle, a <b><a href="http://83.212.96.219/agrimoodle">fresh Moodle installation</a></b>
+						<br/> <i style="font-size:18px">under revision control, integrated with the development methodology!</i></li>
+					<li>Integration of the <b class="red">Ariadne widget</b>
+						<br/> <i style="font-size:18px">with some work on m17n and configurable parameters through Moodle's admin pages</i></li>
+				</ol>
+
+			</article>
+
+			<article>
+				<h3>Let's kick it off!</h3>
+				<q>Trainers want to use Moodle for everything</q>
+				<q><i>For one thing, LOM support into Moodle is a great opportunity</i></q>
+				<q>A project is complete when it starts working for you, rather than you working for it.<div class="author">Scott Allen</div></q>
+			</article>
+
+        </section>
+    </body>
+</html>
