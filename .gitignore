@@ -1,3 +1,5 @@
+/blocks/oai_target/target/lib/listrecordsOLD.php
+/blocks/mdeditor/test/oe-ontology.owl
 # This file specifies intentionally untracked files that all Moodle git
 # repositories should ignore. It is recommended not to modify this file in your
 # local clone. Instead, use .git/info/exclude and add new records there as
