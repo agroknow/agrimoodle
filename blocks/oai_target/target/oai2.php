@@ -100,7 +100,7 @@ $db->query("SET CHARACTER SET 'utf8'");
 //	$db->setFetchMode(DB_FETCHMODE_ASSOC);
 //}
 
-if (PEAR::isError($db)) {
+if (@PEAR::isError($db)) {
 	die($db->getMessage());
 } else {
 	$db->setFetchMode(DB_FETCHMODE_ASSOC);

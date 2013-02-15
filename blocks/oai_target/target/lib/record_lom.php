@@ -56,7 +56,8 @@ $output .= $record['lom_record'];
 
 // Here, no changes need to be done
 $output .=           
-'     </'.$prefix;
+//'     </'.$prefix;
+'     </lom';
 if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
 	$output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
 }

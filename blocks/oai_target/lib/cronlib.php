@@ -19,21 +19,21 @@ class cronlib {
 }
 
 function do_verb_sql() {
-    global $CFG, $DB;
+    global $CFG, $DB, $tmpId, $setType;
 	
     $d = DIRECTORY_SEPARATOR;
-    $base = $CFG->dirroot.$d.'lom'.$d;
-	
+    $baseCourses = $CFG->dirroot.$d.'lom'.$d.'course'.$d.'complete'.$d;
+	$baseResources = $CFG->dirroot.$d.'lom'.$d.'resource'.$d.'complete'.$d;
 //---html output....
 		$output = "<html><body>";
 //---html output....
 
     $lom_files = array();
-    $dirIter = new RecursiveDirectoryIterator($base, RecursiveDirectoryIterator::KEY_AS_PATHNAME);
+    $dirIter = new RecursiveDirectoryIterator($baseCourses, RecursiveDirectoryIterator::KEY_AS_PATHNAME);
     $recIter = new RecursiveIteratorIterator($dirIter, RecursiveIteratorIterator::CHILD_FIRST);
     foreach ($recIter as $info) {
         if (($info->isFile()) && fnmatch("*json", $info->getFilename())) {
-            $lom_files[$info->getFilename()] = $info->getPathname();
+            $lom_files['c'.$info->getFilename()] = $info->getPathname();
         }
     }
 

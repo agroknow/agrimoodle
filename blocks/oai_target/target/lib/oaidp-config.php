@@ -31,9 +31,9 @@
 // $Id: oaidp-config.php,v 1.07 2004/07/01 16:59:57 stamer Exp $
 //
 
-/*
+/* 
  * This is the configuration file for the PHP OAI Data-Provider.
- * Please read through the WHOLE file, there are several things, that
+ * Please read through the WHOLE file, there are several things, that 
  * need to be adjusted:
 
  - where to find the PEAR classes (look for PEAR SETUP)
@@ -139,8 +139,8 @@ $delimiter			= ':';
 // see: http://www.openarchives.org/OAI/2.0/guidelines-oai-identifier.htm
 // Basically use domainname-word.domainname
 // please adjust
-// FIXME: make this configurable through agriMoodle's interface
-$repositoryIdentifier = 'agrimoodle.org';
+$parseURL = parse_url($CFG->wwwroot);
+$repositoryIdentifier = $parseURL['host'].''.$parseURL['path']; 
 
 
 // description is defined in identify.php
@@ -172,11 +172,9 @@ $INDENT = 4;
 
 // define all supported sets in your repository
 $SETS = 	array (
-	// FIXME: this should be configurable by the agriMoodle's instance administrator
-	array(
-		"setSpec" => "agriMoodle resources",
-		"setName" => "These are the resources of the agriMoodle instance operating at " .
-				$_SERVER['SERVER_NAME'])
+				//array("setSpec"=>"phdthesis", 'setName'=>'PHD Thesis', 'setDescription'=>'a dfsasd fsdf sdf asdf sdf asdf sdaf sdf sdf sdf sdf sdf sdf asd f') //,
+				array("setSpec"=>"course", 'setName'=>'Course', 'setDescription'=>'a dfsasd fsdf sdf asdf sdf asdf sdaf sdf sdf sdf sdf sdf sdf asd f') ,
+				array("setSpec"=>"resource", 'setName'=>'Resource', 'setDescription'=>'a dfsasd fsdf sdf asdf sdf asdf sdaf sdf sdf sdf sdf sdf sdf asd f') //,
 	// array('setSpec'=>'math', 'setName'=>'Mathematics') ,
 	// array('setSpec'=>'phys', 'setName'=>'Physics')
 );
@@ -243,7 +241,7 @@ $xmlescaped = false;
 $SQL['split'] = '@@';
 
 // the name of the table where your store your metadata
-$SQL['table'] = 'mdl_oai_records';
+$SQL['table'] = 'mdl_block_oai_target_lom_records';
 
 // the name of the column where you store your sequence
 // (or autoincrement values).
@@ -252,7 +250,7 @@ $SQL['id_column'] = 'id';
 // the name of the column where you store the unique identifiers
 // pointing to your item.
 // this is your internal identifier for the item
-$SQL['identifier'] = 'url';
+$SQL['identifier'] = 'oai_identifier';
 
 // If you want to expand the internal identifier in some way
 // use this (but not for OAI stuff, see next line)
@@ -262,7 +260,9 @@ $idPrefix = '';
 // this will be expanded to
 // oai:$repositoryIdentifier:$idPrefix$SQL['identifier']
 // should not be changed
-$oaiprefix = "oai".$delimiter.$repositoryIdentifier.$delimiter.$idPrefix;
+//$oaiprefix = "oai".$delimiter.$repositoryIdentifier.$delimiter.$idPrefix; 
+// CHECK: (tasos) investigate if this is correct!
+$oaiprefix = "";
 
 // adjust anIdentifier with sample contents an identifier
 $sampleIdentifier     = $oaiprefix.'anIdentifier';

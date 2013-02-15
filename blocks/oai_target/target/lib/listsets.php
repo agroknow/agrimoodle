@@ -59,9 +59,10 @@ if (is_array($SETS)) {
 			$output .= "    <setDescription>\n";
 			$prefix = 'oai_lom';
 			$output .= metadataHeader($prefix);
-			$output .= xmlrecord($val['setDescription'], 'lom:description', '', $INDENT+3);
+			$output .= xmlrecord($val['setDescription'], 'description', '', $INDENT+3);
 			$output .=           
-			'     </'.$prefix;
+			//'     </'.$prefix;
+			'     </lom';
 			if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
 				$output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
 			}
