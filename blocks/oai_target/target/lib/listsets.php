@@ -55,20 +55,21 @@ if (is_array($SETS)) {
 		$output .= "   <set>\n";
 		$output .= xmlformat($val['setSpec'], 'setSpec', '', $INDENT);
 		$output .= xmlformat($val['setName'], 'setName', '', $INDENT);
-		if (isset($val['setDescription']) && $val['setDescription'] != '') {
-			$output .= "    <setDescription>\n";
-			$prefix = 'oai_lom';
-			$output .= metadataHeader($prefix);
-			$output .= xmlrecord($val['setDescription'], 'description', '', $INDENT+3);
-			$output .=           
-			//'     </'.$prefix;
-			'     </lom';
-			if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
-				$output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
-			}
-			$output .= ">\n";
-			$output .= "    </setDescription>\n";
-		}
+		// FIXME: removed descriptions, not well implemented and not needed for the time being.
+		// if (isset($val['setDescription']) && $val['setDescription'] != '') {
+		// 	$output .= "    <setDescription>\n";
+		// 	$prefix = 'oai_lom';
+		// 	$output .= metadataHeader($prefix);
+		// 	$output .= xmlrecord($val['setDescription'], 'description', '', $INDENT+3);
+		// 	$output .=           
+		// 	//'     </'.$prefix;
+		// 	'     </lom';
+		// 	if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
+		// 		$output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
+		// 	}
+		// 	$output .= ">\n";
+		// 	$output .= "    </setDescription>\n";
+		// }
 		$output .= "   </set>\n";
 	}
 	$output .= "  </ListSets>\n"; 
@@ -77,5 +78,3 @@ else {
 	$errors .= oai_error('noSetHierarchy'); 
 	oai_exit();
 }
-
-?>

@@ -11,6 +11,14 @@ NOTES
   - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=ListIdentifiers&metadataPrefix=oai_lom&set=foo
   - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=ListRecords&metadataPrefix=oai_lom
   - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=GetRecord&identifier=http://www.foo.gr&metadataPrefix=oai_lom
+  
+* TEMPLATE implementations (verbs)
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=Identify
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=ListSets
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=ListIdentifiers&metadataPrefix=oai_lom
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=ListRecords&metadataPrefix=oai_lom
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=GetRecord&identifier=oai:aglr.agroknow.gr/organic-edunet/:45&metadataPrefix=oai_lom
+
 
 * To check the cron operation
   tkout@maya ~/dev/agrimoodle/admin/cli $ php cron.php

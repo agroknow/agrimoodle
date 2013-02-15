@@ -1,21 +1,27 @@
-﻿<?php
+﻿/**
+ * Library code used by oai_target cron.
+ *
+ * @package   oai_target
+ * @copyright 2012 Agro-Know Technologies
+ * @author    Tasos Koutoumanos <tafkey@about.me>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
-// require_once 'XML/Serializer.php';
+
+<?php
+
+defined('MOODLE_INTERNAL') || die();
+
 include_once realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . "common.php";
 include_once LIB_DIR . "Course.php";
 
 class cronlib {
-
     function __construct($course_id, $verb) {
-		
         if ($verb == "GetSql") {
-            header("Content-type: text/html");
+    //        header("Content-type: text/html");
             echo do_verb_sql();
-
         }
-
     }
-
 }
 
 function do_verb_sql() {
@@ -23,7 +29,7 @@ function do_verb_sql() {
 	
     $d = DIRECTORY_SEPARATOR;
     $baseCourses = $CFG->dirroot.$d.'lom'.$d.'course'.$d.'complete'.$d;
-	$baseResources = $CFG->dirroot.$d.'lom'.$d.'resource'.$d.'complete'.$d;
+		$baseResources = $CFG->dirroot.$d.'lom'.$d.'resource'.$d.'complete'.$d;
 //---html output....
 		$output = "<html><body>";
 //---html output....

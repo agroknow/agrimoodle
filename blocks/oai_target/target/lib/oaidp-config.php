@@ -137,14 +137,15 @@ $delimiter			= ':';
 // You may choose any name, but for repositories to comply with the oai
 // format for unique identifiers for items records.
 // see: http://www.openarchives.org/OAI/2.0/guidelines-oai-identifier.htm
-// Basically use domainname-word.domainname
-// please adjust
-$parseURL = parse_url($CFG->wwwroot);
-$repositoryIdentifier = $parseURL['host'].''.$parseURL['path']; 
+// this is the namespace_id of OAI 2.0 identifier's spec
+// (scheme ":" namespace_id ":" local_id where scheme should always be "oai")
+// $parseURL = parse_url($CFG->wwwroot);
+// $repositoryIdentifier = $parseURL['host'].''.$parseURL['path']; 
+$repositoryIdentifier = parse_url($CFG->wwwroot)['host']; 
 
 
 // description is defined in identify.php
-$show_identifier = false;
+$show_identifier = true;
 
 // You may include details about your community and friends (other
 // data-providers).
@@ -172,9 +173,9 @@ $INDENT = 4;
 
 // define all supported sets in your repository
 $SETS = 	array (
-				//array("setSpec"=>"phdthesis", 'setName'=>'PHD Thesis', 'setDescription'=>'a dfsasd fsdf sdf asdf sdf asdf sdaf sdf sdf sdf sdf sdf sdf asd f') //,
-				array("setSpec"=>"course", 'setName'=>'Course', 'setDescription'=>'a dfsasd fsdf sdf asdf sdf asdf sdaf sdf sdf sdf sdf sdf sdf asd f') ,
-				array("setSpec"=>"resource", 'setName'=>'Resource', 'setDescription'=>'a dfsasd fsdf sdf asdf sdf asdf sdaf sdf sdf sdf sdf sdf sdf asd f') //,
+				//array("setSpec"=>"phdthesis", 'setName'=>'PHD Thesis', 'setDescription'=>'Very nice thesis'),
+				array("setSpec"=>"courses", 'setName'=>'Courses that are deployed through agriMoodle') ,
+				array("setSpec"=>"resources", 'setName'=>'Resources from agriMoodle courses'),
 	// array('setSpec'=>'math', 'setName'=>'Mathematics') ,
 	// array('setSpec'=>'phys', 'setName'=>'Physics')
 );
@@ -195,18 +196,14 @@ $METADATAFORMATS = 	array (
 		'myhandler'=>'record_dc.php',
 		'record_prefix'=>'dc',
 		'record_namespace' => 'http://purl.org/dc/elements/1.1/'
-	),'oai_lom' => array('metadataPrefix'=>'oai_lom',
+	),
+	'oai_lom' => array('metadataPrefix'=>'oai_lom',
 		'schema'=>'http://www.openarchives.org/OAI/2.0/oai_dc.xsd',
 		'metadataNamespace'=>'http://www.openarchives.org/OAI/2.0/oai_dc/',
 		'myhandler'=>'record_lom.php',
 		'record_prefix'=>'lom',
 		'record_namespace' => 'http://ltsc.ieee.org/xsd/LOM'
-	) //,
-	//array('metadataPrefix'=>'olac',
-	//	'schema'=>'http://www.language-archives.org/OLAC/olac-2.0.xsd',
-	//	'metadataNamespace'=>'http://www.openarchives.org/OLAC/0.2/',
-	//	'handler'=>'record_olac.php'
-	//)
+	)
 );
 
 //
@@ -254,18 +251,16 @@ $SQL['identifier'] = 'oai_identifier';
 
 // If you want to expand the internal identifier in some way
 // use this (but not for OAI stuff, see next line)
-$idPrefix = '';
+$idPrefix = 'v1/';
 
 // this is your external (OAI) identifier for the item
 // this will be expanded to
 // oai:$repositoryIdentifier:$idPrefix$SQL['identifier']
 // should not be changed
-//$oaiprefix = "oai".$delimiter.$repositoryIdentifier.$delimiter.$idPrefix; 
-// CHECK: (tasos) investigate if this is correct!
-$oaiprefix = "";
+$oaiprefix = "oai".$delimiter.$repositoryIdentifier.$delimiter.$idPrefix; 
 
 // adjust anIdentifier with sample contents an identifier
-$sampleIdentifier     = $oaiprefix.'anIdentifier';
+$sampleIdentifier     = $oaiprefix.'c21/r1972';
 
 // the name of the column where you store your datestamps
 $SQL['datestamp'] = 'datestamp';
