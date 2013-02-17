@@ -10,6 +10,9 @@
  */
 
 
+// see end of file for instructions related to testing
+
+
 // defined('MOODLE_INTERNAL') || die();
 
 include_once realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . "common.php";
@@ -41,6 +44,7 @@ class cronlib {
 		$baseResources = $CFG->dirroot.$d.'lom'.$d.'resource'.$d.'complete'.$d;
 
 		$json_files = array();
+		// first scan for JSONs related to courses
 		$dirIter = new RecursiveDirectoryIterator($baseCourses, RecursiveDirectoryIterator::KEY_AS_PATHNAME);
 		$recIter = new RecursiveIteratorIterator($dirIter, RecursiveIteratorIterator::CHILD_FIRST);
 		foreach ($recIter as $jf) {
@@ -48,29 +52,58 @@ class cronlib {
 					$json_files['c'.basename($jf->getFilename(), ".json")] = $jf;
 			}
 		}
+		// then scan for JSONs related to resources
+		$dirIter = new RecursiveDirectoryIterator($baseResources, RecursiveDirectoryIterator::KEY_AS_PATHNAME);
+		$recIter = new RecursiveIteratorIterator($dirIter, RecursiveIteratorIterator::CHILD_FIRST);
+		foreach ($recIter as $jf) {
+			if (($jf->isFile()) && fnmatch("*json", $jf->getFilename())) {
+					$json_files['c'.basename($jf->getFilename(), ".json")] = $jf;
+			}
+		}
 
-		var_dump($json_files);
+		// var_dump($json_files);
 		foreach ($json_files as $jfid => $jf) {
-			if ($this->cid > 0) {
-				
+			
+			// true if json file refers to a course, false if it refers to a resource
+			$is_course = (substr($jfid, 0, 1) == "r");
+			
+			// if a specific id has been asked for, skip any other
+			if ($is_course and $this->cid > 0) {				
 				if ("c{$this->cid}" != $jfid) {
 					$output .= "Will not parse {$jf->getFilename()} (looking for $this->cid)\n";
 					continue;
 				} else {
 					$output .= "Found {$jf->getFilename()}. Will parse it!\n";					
 				}
+			}	elseif ($this->rid > 0) {				
+				if ("r{$this->rid}" != $jfid) {
+					$output .= "Will not parse {$jf->getFilename()} (looking for $this->rid)\n";
+					continue;
+				} else {
+					$output .= "Found {$jf->getFilename()}. Will parse it!\n";					
+				}
 			}
-			
-			$xmlOuput = <<<EOT
-        <lom xmlns='http://ltsc.ieee.org/xsd/LOM'>
+
+			$uri_loc = $CFG->wwwroot;		
+			if ($is_course) {
+				$uri_loc .= "/course/view.php?id=$tmpId";
+	  	} else {
+				$uri_loc .= "/mod/resource/view.php?id=$tmpId";
+  		}			
+
+			// $xmlOuput = <<<EOT
+   //      <lom xmlns="http://ltsc.ieee.org/xsd/LOM"
+   //           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+   //           xsi:schemaLocation="http://ltsc.ieee.org/xsd/LOM http://ltsc.ieee.org/xsd/lomv1.0/lomLoose.xsd">
+			$xmlOutput = <<<EOT
           <general>
            <identifier>
-              <catalog></catalog>
-              <entry></entry>
+              <catalog>URI</catalog>
+              <entry>$uri_loc</entry>
             </identifier>
 EOT;
+
 			
-			//---html output....
 			$ts = filemtime($jf);
 			$mydate = new DateTime("@$ts");
 			$myenterdate = $mydate->format('Y-m-d H:i:s');
@@ -80,18 +113,30 @@ EOT;
 			//-- send SQL command to mysql to execute
 			$record = new stdClass;
 			// FIXME: ++++ 
-			$record->provider = 'foo';
-			$record->url = 'http://www.foo.gr';
+			$record->provider = $CFG->wwwroot;
+			$record->url = $uri_loc;
 			$record->enterdate		= $myenterdate;
 			$record->oai_identifier	= $jf->getFilename();
 			$record->oai_set		= 'foo';
 			$record->datestamp		= $myenterdate;
 			$record->deleted		= 'false';
 			////$xmlstringtoDB = utf8_encode(parse_json($lompath,file_get_contents($lompath),$xmlOutput));
-			$xmlstringtoDB = cronlib::parse_json($jf->getPathname(),file_get_contents($jf),$xmlOutput);
+			$xmlstringtoDB = cronlib::parse_json($jf->getPathname(), file_get_contents($jf), $xmlOutput);
 			$xmlstringtoDB = str_replace(" & ", " &amp; ", $xmlstringtoDB);
 				
 			$record->lom_record		= $xmlstringtoDB;
+
+			$result = $DB->get_record('block_oai_target_lom_records',array('url'=>$record->url));
+
+			if ($result) {
+				$record->id = $result->id;
+				echo 'UPDATE '.$result->id;
+				$DB->update_record('block_oai_target_lom_records', $record, false);
+			} else {
+				echo 'NEW INSERT';
+				$DB->insert_record('block_oai_target_lom_records', $record, false);
+			}
+
 //			var_dump($record);
 //			$DB->insert_record('mdl_block_oai_target_lom_records', $record, false);
 	  }
@@ -190,7 +235,7 @@ EOT;
 		
 	//----need values for structure: source and value
 		$xmlOutput .='            <structure>'."\n";
-		$xmlOutput .='              <source></source>'."\n";
+		$xmlOutput .='              <source>LOMv1.0</source>'."\n";
 		$xmlOutput .='              <value></value>'."\n";
 		$xmlOutput .='            </structure>'."\n";
 		
@@ -202,7 +247,7 @@ EOT;
 
 	//----need values for status: source and value
 		$xmlOutput .='            <status>'."\n";
-		$xmlOutput .='              <source></source>'."\n";
+		$xmlOutput .='              <source>LOMv1.0</source>'."\n";
 		$xmlOutput .='              <value></value>'."\n";
 		$xmlOutput .='            </status>'."\n";
 
@@ -215,7 +260,7 @@ EOT;
 				echo 'contribute2: '.$row['role'].' date:'.$row['date'].' entity:';
 				
 				$xmlOutput .='              <role>'."\n";
-				$xmlOutput .='                <source></source>'."\n";
+				$xmlOutput .='                <source>LOMv1.0</source>'."\n";
 				$xmlOutput .='                <value>'.$row['role'].' </value>'."\n";
 				$xmlOutput .='              </role>'."\n";
 	       		$entity = $row['entity'];
@@ -245,6 +290,9 @@ EOT;
 
 	//----need values for identifier: catalog and entry
 		$xmlOutput .='            <identifier>'."\n";
+		// FIXME: +++
+//	$xmlOutput .='              <catalog>'.$repositoryIdentifier.'_'.$setType.'</catalog>'."\n";
+//	$xmlOutput .='              <entry>'.$setType.'_'.$tmpId.'</entry>'."\n";
 		$xmlOutput .='              <catalog></catalog>'."\n";
 		$xmlOutput .='              <entry></entry>'."\n";
 		$xmlOutput .='            </identifier>'."\n";
@@ -259,7 +307,7 @@ EOT;
 				echo ' role:'.$data['contribute3']["$i"]['role'].' date:'.$data['contribute3']["$i"]['date'];
 				
 				$xmlOutput .='            <role>'."\n";
-				$xmlOutput .='              <source></source>'."\n";
+				$xmlOutput .='              <source>LOMv1.0</source>'."\n";
 				$xmlOutput .='              <value>'.$data['contribute3']["$i"]['role'].'</value>'."\n";
 				$xmlOutput .='            </role>'."\n";
 				$entity = $data['contribute3']["$i"]['entity'];
@@ -278,24 +326,30 @@ EOT;
 			echo 'NO contribute3<br/>';
 			$xmlOutput .='            <contribute></contribute>'."\n";
 		}
-		
-		
-	//----need values for metadataSchema
-		$xmlOutput .='            <metadataSchema>LOMv1.0</metadataSchema>'."\n";
-		$xmlOutput .='            <metadataSchema>LREv3.0</metadataSchema>'."\n";
+				
+		$xmlOutput .='            <metadataSchema>OE AP v3.0</metadataSchema>'."\n";
+		$xmlOutput .='            <language>'.$data['contribute3']['language34'].'</language>'."\n";
 		
 	//----close metaMetadata tag	
 		$xmlOutput .='          </metaMetadata>'."\n";
 		
 	//----need values for technical: format,size,location,duration ...
-	/*$xmlOutput .='<technical>
+	$xmlOutput .='<technical>
 	    <format></format>
 	    <size></size>
-	    <location>rtsp://v6.cache7.c.youtube.com/CjQLENy73wIaKwk44G5h89WSABMYESARFEIQWW91VHViZUhhcnZlc3RlckgGUgZ2aWRlb3MM/0/0/0/video.3gp</location>
+	    <location>';
+// FIXME +++ some refactoring here!!!
+	if ($setType == 'resource'){
+		$location =$CFG->wwwroot.'/mod/resource/view.php?id='.$tmpId;
+    }else{
+		$location =$CFG->wwwroot.'/course/view.php?id='.$tmpId;
+	}
+	
+$xmlOutput .=$location.'</location>
 	    <duration>
 	      <duration></duration>
 	    </duration>
-	  </technical>';*/
+	  </technical>';
 	    
 	//----start <educational>
 		$xmlOutput .='          <educational>'."\n";
@@ -308,7 +362,7 @@ EOT;
 				//if (is_array($row)) echo 'Array';
 				echo 'resource_type: '.$row.'<br/>';
 				$xmlOutput .='           <learningResourceType>'."\n";
-				$xmlOutput .='             <source></source>'."\n";
+			$xmlOutput .='             <source>LREv3.0</source>'."\n";
 				$xmlOutput .='             <value>'.$row.'</value>'."\n";
 				$xmlOutput .='           </learningResourceType>'."\n";
 			} 
@@ -322,11 +376,11 @@ EOT;
 			echo 'educational COUNT ->'.count($data['educational']).'<br/>';
 			echo 'educational-> interactivity_level:'.$data['educational']['interactivity_level'].' semantic_density:'.$data['educational']['semantic_density'].'<br/>';
 			$xmlOutput .='           <interactivityLevel>'."\n";
-			$xmlOutput .='             <source></source>'."\n";
+		$xmlOutput .='             <source>LREv3.0</source>'."\n";
 			$xmlOutput .='             <value>'.$data['educational']['interactivity_level'].'</value>'."\n";
 			$xmlOutput .='           </interactivityLevel>'."\n";
 			$xmlOutput .='           <semanticDensity>'."\n";
-			$xmlOutput .='             <source></source>'."\n";
+		$xmlOutput .='             <source>LREv3.0</source>'."\n";
 			$xmlOutput .='             <value>'.$data['educational']['semantic_density'].'</value>'."\n";
 			$xmlOutput .='           </semanticDensity>'."\n";
 
@@ -342,7 +396,7 @@ EOT;
 				//if (is_array($row)) echo 'Array';
 				echo 'indended_user: '.$row.'<br/>';
 				$xmlOutput .='           <intendedEndUserRole>'."\n";
-				$xmlOutput .='             <source></source>'."\n";
+			$xmlOutput .='             <source>LREv3.0</source>'."\n";
 				$xmlOutput .='             <value>'.$row.'</value>'."\n";
 				$xmlOutput .='           </intendedEndUserRole>'."\n";
 			} 
@@ -357,7 +411,7 @@ EOT;
 				//if (is_array($row)) echo 'Array';
 				echo 'context: '.$row.'<br/>';
 				$xmlOutput .='           <context>'."\n";
-				$xmlOutput .='             <source></source>'."\n";
+			$xmlOutput .='             <source>LREv3.0</source>'."\n";
 				$xmlOutput .='             <value>'.$row.'</value>'."\n";
 				$xmlOutput .='           </context>'."\n";
 			} 
@@ -380,11 +434,11 @@ EOT;
 		if (array_key_exists('educational', $data)){
 			echo 'difficulty:'.$data['educational']['difficulty'].' learning_time:'.$data['educational']['learning_time'].'<br/>';
 			$xmlOutput .='           <difficulty>'."\n";
-			$xmlOutput .='             <source></source>'."\n";
+		$xmlOutput .='             <source>LREv3.0</source>'."\n";
 			$xmlOutput .='             <value>'.$data['educational']['difficulty'].'</value>'."\n";
 			$xmlOutput .='           </difficulty>'."\n";
 			$xmlOutput .='           <typicalLearningTime>'."\n";
-			$xmlOutput .='             <source></source>'."\n";
+		$xmlOutput .='             <source>LREv3.0</source>'."\n";
 			$xmlOutput .='             <value>'.$data['educational']['learning_time'].'</value>'."\n";
 			$xmlOutput .='           </typicalLearningTime>'."\n";
 		}else{
@@ -417,14 +471,14 @@ EOT;
 				//if (is_array($row)) echo 'Array';
 				echo 'language5: '.$row.'<br/>';
 				$xmlOutput .='           <language>'."\n";
-				$xmlOutput .='             <source></source>'."\n";
+			$xmlOutput .='             <source>LREv3.0</source>'."\n";
 				$xmlOutput .='             <value>'.$row.' </value>'."\n";
 				$xmlOutput .='           </language>'."\n";
 			} 
 		}else{
 			echo 'NO language5<br/>';
 			$xmlOutput .='           <language>'."\n";
-			$xmlOutput .='             <source></source>'."\n";
+		$xmlOutput .='             <source>LREv3.0</source>'."\n";
 			$xmlOutput .='             <value></value>'."\n";
 			$xmlOutput .='           </language>'."\n";
 		}
@@ -446,7 +500,7 @@ EOT;
 				$xmlOutput .='              <value>'.$data['rights']["$i"]['cost'].'</value>'."\n";
 				$xmlOutput .='            </cost>'."\n";
 				$xmlOutput .='            <copyrightAndOtherRestrictions>'."\n";
-				$xmlOutput .='              <source></source>'."\n";
+			$xmlOutput .='              <source>LOMv1.0</source>'."\n";
 				$xmlOutput .='              <value>'.$data['rights']["$i"]['restrictions'].'</value>'."\n";
 				$xmlOutput .='            </copyrightAndOtherRestrictions>'."\n";
 				$description = $data['rights']["$i"]['description'];
@@ -466,11 +520,11 @@ EOT;
 				echo 'cc:'.$data['cc'].'<br/>';
 				$xmlOutput .='          <rights>'."\n";
 				$xmlOutput .='            <cost>'."\n";
-				$xmlOutput .='              <source></source>'."\n";
+			$xmlOutput .='              <source>LOMv1.0</source>'."\n";
 				$xmlOutput .='              <value></value>'."\n";
 				$xmlOutput .='            </cost>'."\n";
 				$xmlOutput .='            <copyrightAndOtherRestrictions>'."\n";
-				$xmlOutput .='              <source></source>'."\n";
+			$xmlOutput .='              <source>LOMv1.0</source>'."\n";
 				$xmlOutput .='              <value>'.$data['cc'].'</value>'."\n";
 				$xmlOutput .='            </copyrightAndOtherRestrictions>'."\n";
 				$xmlOutput .='            <description>'."\n";
@@ -503,7 +557,7 @@ EOT;
 				echo 'classification_details: '.$row.'<br/>';
 				$xmlOutput .='            <taxonPath>'."\n";
 				$xmlOutput .='              <source>'."\n";
-				$xmlOutput .='                <string language=""></string>'."\n";
+			$xmlOutput .='                <string language="en">Organic.Edunet Ontology</string>'."\n";
 				$xmlOutput .='              </source>'."\n";
 				$xmlOutput .='              <taxon>'."\n";
 				$xmlOutput .='                <id></id>'."\n";
@@ -522,7 +576,6 @@ EOT;
 	//----end <classification>
 
 	//----end <lom>	
-		$xmlOutput .='        </lom>';
 			
 		echo '----------------------------------------END OF JSON FILE----------------------------------------<br/>';
 		echo '                                                                                                <br/>';
@@ -547,6 +600,7 @@ $arg3 = (empty($_GET["$ARG3"])) ? 0 : intval(($_GET["$ARG3"]));
 
 
 // Direct operation, for testing purposes
+// http://localhost/dev/agrimoodle/blocks/oai_target/lib/cronlib.php?ParseJson&cid=10
 header("Content-type: text/plain");
 echo <<<HEAD
 NOTE: Direct operation, this should be dissallowed after testing!
