@@ -28,11 +28,27 @@
  * @param int $oldversion
  * @param object $block
  */
-function xmldb_block_oai_target_upgrade($oldversion) {
-    global $CFG, $DB;
+function xmldb_block_oai_target_upgrade($oldversion = 0) {
+   global $DB;
+    $dbman = $DB->get_manager();
 
-    // Moodle v2.3.0 release upgrade line
-    // Put any upgrade step following this
+    $result = true;
 
-    return true;
+    if ($result && $oldversion < 2013022002) {
+
+        // Define field id to be added to block_oai_target_log
+        $table = new xmldb_table('block_oai_target_log');
+        $field = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null);
+
+        // Conditionally launch add field id
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // oai_target savepoint reached
+        upgrade_block_savepoint(true, 2013022002, 'oai_target');
+    }    
+    
+
+    return $result;
 }

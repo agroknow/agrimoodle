@@ -308,24 +308,23 @@ function checkDateFormat($date) {
 	global $granularity;
 	global $message;
 
-    if ($granularity == 'YYYY-MM-DDThh:mm:ssZ') {
+  if ($granularity == 'YYYY-MM-DDThh:mm:ssZ') {
 		$checkstr = '([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z$';
 	} else {
 		$checkstr = '([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}$)';
 	}
-	if (ereg($checkstr, $date, $regs)) {
+	// if (ereg($checkstr, $date, $regs)) {
+	if (preg_match("/$checkstr/", $date, $regs)) {		
 		if (checkdate($regs[2], $regs[3], $regs[1])) {	
 			return 1;
-		}
-		else {
+		} else {
 			$message = "Invalid Date: $date is not a valid date.";
 			return 0;
 		}
-    }
-    else {
-	    $message = "Invalid Date Format: $date does not comply to the date format $granularity.";
-	    return 0;
-    }
+  } else {
+    $message = "Invalid Date Format: $date does not comply to the date format $granularity.";
+	  return 0;
+  }
 }
 
 function formatDatestamp($datestamp)
@@ -393,9 +392,9 @@ function metadataHeader($prefix)
 
 	$myformat = $METADATAFORMATS[$prefix];
 
-	$str = 
+	$str = 	'      <';
 	//'     <'.$prefix;
-	'     <lom';
+	// '     <oai_lom:';
 	if ($myformat['record_prefix']) {
 		//$str .= ':'.$myformat['record_prefix'];
 		$str .= $myformat['record_prefix'];

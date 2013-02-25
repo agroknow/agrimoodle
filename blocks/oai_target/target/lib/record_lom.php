@@ -39,11 +39,12 @@ $output .= metadataHeader($prefix);
 
 $output .= $record['lom_record'];
 
-$output .=           
-'     </'.$prefix;
-if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
-  $output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
-}
+// FIXME: this is a hack, Marinos pls. fix!
+$output .= '</lom>';          
+// '     </'.$prefix.';
+// if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
+  // $output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
+// }
 $output .= ">\n";
 $output .= 
 '   </metadata>'."\n";

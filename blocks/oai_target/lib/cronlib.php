@@ -17,6 +17,7 @@
 
 include_once realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . "common.php";
 include_once LIB_DIR . "Course.php";
+include_once('../target/lib/oaidp-config.php');
 
 class cronlib {
 
@@ -36,7 +37,7 @@ class cronlib {
 
 
 	function scan_files() {
-		global $CFG, $DB, $tmpId, $setType;
+		global $CFG, $DB, $tmpId, $setType, $cid, $rid, $repositoryIdentifier, $delimiter;
 		$output = "";
 
 		$d = DIRECTORY_SEPARATOR;
@@ -57,7 +58,7 @@ class cronlib {
 		$recIter = new RecursiveIteratorIterator($dirIter, RecursiveIteratorIterator::CHILD_FIRST);
 		foreach ($recIter as $jf) {
 			if (($jf->isFile()) && fnmatch("*json", $jf->getFilename())) {
-					$json_files['c'.basename($jf->getFilename(), ".json")] = $jf;
+					$json_files['r'.basename($jf->getFilename(), ".json")] = $jf;
 			}
 		}
 
@@ -65,10 +66,11 @@ class cronlib {
 		foreach ($json_files as $jfid => $jf) {
 			
 			// true if json file refers to a course, false if it refers to a resource
-			$is_course = (substr($jfid, 0, 1) == "r");
+			$is_course = (substr($jfid, 0, 1) == "c");
 			
 			// if a specific id has been asked for, skip any other
 			if ($is_course and $this->cid > 0) {				
+				$tmpId = $this->cid;
 				if ("c{$this->cid}" != $jfid) {
 					$output .= "Will not parse {$jf->getFilename()} (looking for $this->cid)\n";
 					continue;
@@ -76,19 +78,30 @@ class cronlib {
 					$output .= "Found {$jf->getFilename()}. Will parse it!\n";					
 				}
 			}	elseif ($this->rid > 0) {				
+				$tmpId = $this->rid;
 				if ("r{$this->rid}" != $jfid) {
 					$output .= "Will not parse {$jf->getFilename()} (looking for $this->rid)\n";
 					continue;
 				} else {
 					$output .= "Found {$jf->getFilename()}. Will parse it!\n";					
 				}
+			// if a no specific cid or rid have been asked for, parse all completed
+			} elseif ($this->rid == 0 and $this->cid == 0) {	
+				$tmpId = substr($jfid, 1);
+				$output .= "Will parse all!\n";
+			} else {
+				continue;
 			}
 
 			$uri_loc = $CFG->wwwroot;		
 			if ($is_course) {
 				$uri_loc .= "/course/view.php?id=$tmpId";
+				$setType = "course";
+				$folder = '/course/';
 	  	} else {
 				$uri_loc .= "/mod/resource/view.php?id=$tmpId";
+				$setType = "resource";
+				$folder = '/mod/resource/';
   		}			
 
 			// $xmlOuput = <<<EOT
@@ -112,15 +125,15 @@ EOT;
 
 			//-- send SQL command to mysql to execute
 			$record = new stdClass;
-			// FIXME: ++++ 
 			$record->provider = $CFG->wwwroot;
 			$record->url = $uri_loc;
-			$record->enterdate		= $myenterdate;
-			$record->oai_identifier	= $jf->getFilename();
-			$record->oai_set		= 'foo';
+			$record->enterdate = $myenterdate;
+			// FIXME: this is a hack, need to put the valid dc_date here!
+			$record->dc_date = $myenterdate; 
+			$record->oai_identifier	= "oai$delimiter$repositoryIdentifier$folder$delimiter$tmpId";
+			$record->oai_set		= $setType;
 			$record->datestamp		= $myenterdate;
 			$record->deleted		= 'false';
-			////$xmlstringtoDB = utf8_encode(parse_json($lompath,file_get_contents($lompath),$xmlOutput));
 			$xmlstringtoDB = cronlib::parse_json($jf->getPathname(), file_get_contents($jf), $xmlOutput);
 			$xmlstringtoDB = str_replace(" & ", " &amp; ", $xmlstringtoDB);
 				
@@ -130,37 +143,32 @@ EOT;
 
 			if ($result) {
 				$record->id = $result->id;
-				echo 'UPDATE '.$result->id;
+				echo "UPDATING $setType with id: $result->id\n";
 				$DB->update_record('block_oai_target_lom_records', $record, false);
 			} else {
-				echo 'NEW INSERT';
+				echo "INSERT NEW $setType in DB \n";
 				$DB->insert_record('block_oai_target_lom_records', $record, false);
 			}
-
-//			var_dump($record);
-//			$DB->insert_record('mdl_block_oai_target_lom_records', $record, false);
 	  }
-	  
-	  return $output;
 	}
 
-
-
 	function parse_json($lompath,$json,$xmlOutput) {
+		global $CFG, $tmpId, $setType, $repositoryIdentifier, $delimiter;
+
 		$string=''.$json.'';
 
 		$data = json_decode($string, true);
 
-		echo "---------------------------------- START PARSING $lompath -----------------------------------\n";
+		echo "\n-----------------------------------START PARSING JSON FILE-----------------------------------\nFILE -> $lompath\n";
 		
 		
 		
 		if (array_key_exists('title', $data)){
-			echo "TITLE COUNT -> ".count($data['title'])."\n";
+			echo "Title COUNT ->".count($data['title'])."\n";
 			$xmlOutput .= "            <title>\n";
 			foreach($data['title'] as $p=>$row){
-				echo "  TITLE: '".$row['value']."'  LANG:".$row['language']."\n";
-				$xmlOutput .= "              <string language={$row['language']} >{$row['value']}</string>\n";
+				echo "TITLE: {$row['value']}, lang:{$row['language']}\n";
+				$xmlOutput .= "<string language=\"{$row['language']}\">{$row['value']}</string>\n";
 			} 
 			$xmlOutput .="            </title>\n";
 		} else{
@@ -170,370 +178,358 @@ EOT;
 		
 		
 		if (array_key_exists('language13', $data)){
-			echo 'language13 COUNT ->'.count($data['language13']).'<br/>';
+			echo "language13 COUNT ->".count($data['language13'])."\n";
 			foreach($data['language13'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
-				echo 'language13: '.$row.'<br/>';
-				$xmlOutput .= '            <language>'.$row.'</language>'."\n";
+				echo "language13: $row\n";
+				$xmlOutput .= "<language>$row</language>\n";
 			} 
 		}else{
-			echo 'NO language13<br/>';
-			$xmlOutput .='            <language></language>'."\n";
+			echo "NO language13\n";
+			$xmlOutput .="<language></language>\n";
 		}
 		
 		
 		if (array_key_exists('description', $data)){
-			echo 'description COUNT ->'.count($data['description']).'<br/>';
+			echo "description COUNT ->".count($data['description'])."\n";
 			foreach($data['description'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
-				$xmlOutput .='            <description>'."\n";
+				$xmlOutput .="<description>\n";
 				foreach($row as $i=>$f){
-					echo 'description: '.$f['value'].' lang:'.$f['language'].'<br/>';
-					$xmlOutput .='              <string language="'.$f['language'].'">'.$f['value'].'</string>'."\n";
+					echo "description: {$f['value']}, lang:{$f['language']}\n";
+					$xmlOutput .="<string language=\"{$f['language']}\">{$f['value']}</string>\n";
 				}
-				$xmlOutput .='            </description>'."\n";
+				$xmlOutput .="</description>\n";
 			}
 			
 		}else{
-			echo 'NO description<br/>';
-			$xmlOutput .='            <description></description>'."\n";
+			echo "NO description\n";
+			$xmlOutput .="<description></description>\n";
 		}
 		
 		
 		if (array_key_exists('keyword', $data)){
-			echo 'keyword COUNT ->'.count($data['keyword']).'<br/>';
+			echo "keyword COUNT ->".count($data['keyword'])."\n";
 			foreach($data['keyword'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
-				$xmlOutput .='            <keyword>'."\n";
+				$xmlOutput .="<keyword>\n";
 				foreach($row as $i=>$f){
-					echo 'keyword: '.$f['value'].' lang:'.$f['language'].'<br/>';
-					$xmlOutput .='              <string language="'.$f['language'].'">'.$f['value'].'</string>'."\n";
+					echo "keyword: {$f['value']}, lang:{$f['language']}\n";
+					$xmlOutput .="<string language=\"{$f['language']}\">{$f['value']}</string>\n";
 	      		}
-				$xmlOutput .='            </keyword>'."\n";
+				$xmlOutput .="</keyword>\n";
 			}
 			
 		}else{
-			echo 'NO keyword<br/>';
-			$xmlOutput .='            <keyword></keyword>'."\n";
+			echo "NO keyword\n";
+			$xmlOutput .="<keyword></keyword>\n";
 		}
 		
 		
 		if (array_key_exists('coverage', $data)){
-			echo 'coverage COUNT ->'.count($data['coverage']).'<br/>';
-			$xmlOutput .='            <coverage>'."\n";
+			echo "coverage COUNT ->".count($data['coverage'])."\n";
+			$xmlOutput .="<coverage>\n";
 			foreach($data['coverage'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
-				echo 'coverage: '.$row.'<br/>';
-				$xmlOutput .= '              <string>'.$row.'</string>'."\n";
+				echo "coverage: $row\n";
+				$xmlOutput .= "<string>$row</string>\n";
 			}
-			$xmlOutput .='            </coverage>'."\n";
+			$xmlOutput .="</coverage>\n";
 		}else{
-			echo 'NO coverage<br/>';
-			$xmlOutput .='            <coverage></coverage>'."\n";
+			echo "NO coverage\n";
+			$xmlOutput .="<coverage></coverage>\n";
 		}
 		
 		
 	//----need values for structure: source and value
-		$xmlOutput .='            <structure>'."\n";
-		$xmlOutput .='              <source>LOMv1.0</source>'."\n";
-		$xmlOutput .='              <value></value>'."\n";
-		$xmlOutput .='            </structure>'."\n";
+		$xmlOutput .="<structure>\n";
+		$xmlOutput .="<source>LOMv1.0</source>\n";
+		$xmlOutput .="<value></value>\n";
+		$xmlOutput .="</structure>\n";
 		
 	//----close general tag	
-		$xmlOutput .='          </general>'."\n";
+		$xmlOutput .="</general>\n";
 
 	//----start <lifeCycle>
-		$xmlOutput .='          <lifeCycle>'."\n";
+		$xmlOutput .="<lifeCycle>\n";
 
 	//----need values for status: source and value
-		$xmlOutput .='            <status>'."\n";
-		$xmlOutput .='              <source>LOMv1.0</source>'."\n";
-		$xmlOutput .='              <value></value>'."\n";
-		$xmlOutput .='            </status>'."\n";
+		$xmlOutput .="<status>\n";
+		$xmlOutput .="<source>LOMv1.0</source>\n";
+		$xmlOutput .="<value></value>\n";
+		$xmlOutput .="</status>\n";
 
 		
 		if (array_key_exists('contribute2', $data)){
-			echo 'contribute2 COUNT ->'.count($data['contribute2']).'<br/>';
+			echo "contribute2 COUNT ->".count($data['contribute2'])."\n";
 			foreach($data['contribute2'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
-				$xmlOutput .='            <contribute>'."\n";
-				echo 'contribute2: '.$row['role'].' date:'.$row['date'].' entity:';
-				
-				$xmlOutput .='              <role>'."\n";
-				$xmlOutput .='                <source>LOMv1.0</source>'."\n";
-				$xmlOutput .='                <value>'.$row['role'].' </value>'."\n";
-				$xmlOutput .='              </role>'."\n";
+				$xmlOutput .="<contribute>\n";
+				echo "contribute2: {$row['role']}, date:{$row['date']} entity:";
+				$xmlOutput .="<role>\n";
+				$xmlOutput .="<source>LOMv1.0</source>\n";
+				$xmlOutput .="<value>{$row['role']}</value>\n";
+				$xmlOutput .="</role>\n";
 	       		$entity = $row['entity'];
-				//echo count($entity);
 				foreach($entity as $t){
-					echo ' firstname:'.$t['firstname'].' lastname:'.$t['lastname'].' email:'.$t['email'].' organization:'.$t['organization'].'<br/>';
-					$xmlOutput .='              <entity><![CDATA[BEGIN:VCARD FN:'.$t['firstname'].' '.$t['lastname'].' ORG:'.$t['organization'].' EMAIL;TYPE=INTERNET:'.$t['email'].' N:'.$t['lastname'].';'.$t['firstname'].' VERSION:3.0 END:VCARD]]></entity>'."\n";
+					echo "firstname:{$t['firstname']} lastname:{$t['lastname']} email:{$t['email']} organization:{$t['organization']}\n";
+					$xmlOutput .="<entity><![CDATA[BEGIN:VCARD FN:{$t['firstname']} {$t['lastname']} ORG:{$t['organization']} EMAIL;TYPE=INTERNET:{$t['email']} N:{$t['lastname']};{$t['firstname']} VERSION:3.0 END:VCARD]]></entity>\n";
 				}
-				$xmlOutput .='              <date>'."\n";
-				$xmlOutput .='                <dateTime>'.$row['date'].'</dateTime>'."\n";
-				$xmlOutput .='              </date>'."\n";
-				
-				$xmlOutput .='            </contribute>'."\n";
+				$xmlOutput .="<date>\n";
+				$xmlOutput .="<dateTime>{$row['date']}</dateTime>\n";
+				$xmlOutput .="</date>\n";
+				$xmlOutput .="</contribute>\n";
 			}
 		}else{
-			echo 'NO contribute2<br/>';
-			$xmlOutput .='            <contribute></contribute>'."\n";
+			echo "NO contribute2\n";
+			$xmlOutput .="<contribute></contribute>\n";
 		}
 
 		
 	//----close lifeCycle tag
-		$xmlOutput .='          </lifeCycle>'."\n";
+		$xmlOutput .="</lifeCycle>\n";
 		
 
 	//----start <metaMetadata>
-		$xmlOutput .='          <metaMetadata>'."\n";
+		$xmlOutput .="<metaMetadata>\n";
 
 	//----need values for identifier: catalog and entry
-		$xmlOutput .='            <identifier>'."\n";
-		// FIXME: +++
-//	$xmlOutput .='              <catalog>'.$repositoryIdentifier.'_'.$setType.'</catalog>'."\n";
-//	$xmlOutput .='              <entry>'.$setType.'_'.$tmpId.'</entry>'."\n";
-		$xmlOutput .='              <catalog></catalog>'."\n";
-		$xmlOutput .='              <entry></entry>'."\n";
-		$xmlOutput .='            </identifier>'."\n";
+		$xmlOutput .="<identifier>\n";
+		$xmlOutput .="<catalog>{$repositoryIdentifier}_{$setType}</catalog>\n";
+		$xmlOutput .="<entry>{$setType}_{$tmpId}</entry>\n";
+		$xmlOutput .="</identifier>\n";
 		
 		if (array_key_exists('contribute3', $data)){
-			echo 'contribute3 COUNT ->'.count($data['contribute3']).'<br/>';
-			echo 'contribute3-> language34:'.$data['contribute3']['language34'];
+			echo "contribute3 COUNT ->".count($data['contribute3'])."\n";
+			echo "contribute3-> language34:{$data['contribute3']['language34']}\n";
 			
 			for ($i=0;$i<count($data['contribute3'])-1;$i++){
-				$xmlOutput .='            <contribute>'."\n";
-				
-				echo ' role:'.$data['contribute3']["$i"]['role'].' date:'.$data['contribute3']["$i"]['date'];
-				
-				$xmlOutput .='            <role>'."\n";
-				$xmlOutput .='              <source>LOMv1.0</source>'."\n";
-				$xmlOutput .='              <value>'.$data['contribute3']["$i"]['role'].'</value>'."\n";
-				$xmlOutput .='            </role>'."\n";
+				$xmlOutput .="<contribute>\n";
+				echo "role:{$data['contribute3']["$i"]['role']} date:{$data['contribute3']["$i"]['date']}";
+				$xmlOutput .="<role>\n";
+				$xmlOutput .="<source>LOMv1.0</source>\n";
+				$xmlOutput .="<value>{$data['contribute3']["$i"]['role']}</value>\n";
+				$xmlOutput .="</role>\n";
 				$entity = $data['contribute3']["$i"]['entity'];
-				//echo count($entity);
+
 				foreach($entity as $t){
-					echo ' firstname:'.$t['firstname'].' lastname:'.$t['lastname'].' email:'.$t['email'].' organization:'.$t['organization'].'<br/>';
-					$xmlOutput .='            <entity><![CDATA[BEGIN:VCARD FN:'.$t['firstname'].' '.$t['lastname'].' ORG:'.$t['organization'].' EMAIL;TYPE=INTERNET:'.$t['email'].' N:'.$t['lastname'].';'.$t['firstname'].' VERSION:3.0 END:VCARD]]></entity>'."\n";
+					echo "firstname:{$t['firstname']} lastname:{$t['lastname']} email:{$t['email']} organization:{$t['organization']}\n";
+					$xmlOutput .="<entity><![CDATA[BEGIN:VCARD FN:{$t['firstname']} {$t['lastname']} ORG:{$t['organization']} EMAIL;TYPE=INTERNET:{$t['email']} N:{$t['lastname']};{$t['firstname']} VERSION:3.0 END:VCARD]]></entity>\n";
 				}
-				$xmlOutput .='            <date>'."\n";
-				$xmlOutput .='              <dateTime>'.$data['contribute3']["$i"]['date'].'</dateTime>'."\n";
-				$xmlOutput .='            </date>'."\n";
-				$xmlOutput .='            </contribute>'."\n";
+				$xmlOutput .="<date>\n";
+				$xmlOutput .="<dateTime>{$data['contribute3']['$i']['date']}</dateTime>\n";
+				$xmlOutput .="</date>\n";
+				$xmlOutput .="</contribute>\n";
 			}
 			
 		}else{
-			echo 'NO contribute3<br/>';
-			$xmlOutput .='            <contribute></contribute>'."\n";
+			echo "NO contribute3\n";
+			$xmlOutput .="<contribute></contribute>\n";
 		}
 				
-		$xmlOutput .='            <metadataSchema>OE AP v3.0</metadataSchema>'."\n";
-		$xmlOutput .='            <language>'.$data['contribute3']['language34'].'</language>'."\n";
+		//----need values for metadataSchema DONE
+		$xmlOutput .="<metadataSchema>OE AP v3.0</metadataSchema>\n";
+		
+		
+		$xmlOutput .="<language>{$data['contribute3']['language34']}</language>\n";
 		
 	//----close metaMetadata tag	
-		$xmlOutput .='          </metaMetadata>'."\n";
+		$xmlOutput .="</metaMetadata>\n";
 		
 	//----need values for technical: format,size,location,duration ...
-	$xmlOutput .='<technical>
+		$xmlOutput .=<<<EOT
+		<technical>
 	    <format></format>
 	    <size></size>
-	    <location>';
-// FIXME +++ some refactoring here!!!
+			  <location>
+EOT;
 	if ($setType == 'resource'){
-		$location =$CFG->wwwroot.'/mod/resource/view.php?id='.$tmpId;
+			$location ="$CFG->wwwroot/mod/resource/view.php?id=$tmpId";
     }else{
-		$location =$CFG->wwwroot.'/course/view.php?id='.$tmpId;
+			$location ="$CFG->wwwroot/course/view.php?id=$tmpId";
 	}
 	
-$xmlOutput .=$location.'</location>
+		$xmlOutput .=<<<EOT
+		$location</location>
 	    <duration>
 	      <duration></duration>
 	    </duration>
-	  </technical>';
+		  </technical>
+EOT;
 	    
 	//----start <educational>
-		$xmlOutput .='          <educational>'."\n";
+		$xmlOutput .="<educational>\n";
 		
 		
 		
 		if (array_key_exists('resource_type', $data)){
-			echo 'resource_type COUNT ->'.count($data['resource_type']).'<br/>';
+			echo "resource_type COUNT ->".count($data['resource_type'])."\n";
 			foreach($data['resource_type'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
-				echo 'resource_type: '.$row.'<br/>';
-				$xmlOutput .='           <learningResourceType>'."\n";
-			$xmlOutput .='             <source>LREv3.0</source>'."\n";
-				$xmlOutput .='             <value>'.$row.'</value>'."\n";
-				$xmlOutput .='           </learningResourceType>'."\n";
+				echo "resource_type: $row\n";
+				$xmlOutput .="<learningResourceType>\n";
+				$xmlOutput .="<source>LREv3.0</source>\n";
+				$xmlOutput .="<value>$row</value>\n";
+				$xmlOutput .="</learningResourceType>\n";
 			} 
 		}else{
-			echo 'NO resource_type<br/>';
-			$xmlOutput .='           <learningResourceType></learningResourceType>'."\n";
+			echo "NO resource_type\n";
+			$xmlOutput .="<learningResourceType></learningResourceType>\n";
 		}
 		
 		
 		if (array_key_exists('educational', $data)){
-			echo 'educational COUNT ->'.count($data['educational']).'<br/>';
-			echo 'educational-> interactivity_level:'.$data['educational']['interactivity_level'].' semantic_density:'.$data['educational']['semantic_density'].'<br/>';
-			$xmlOutput .='           <interactivityLevel>'."\n";
-		$xmlOutput .='             <source>LREv3.0</source>'."\n";
-			$xmlOutput .='             <value>'.$data['educational']['interactivity_level'].'</value>'."\n";
-			$xmlOutput .='           </interactivityLevel>'."\n";
-			$xmlOutput .='           <semanticDensity>'."\n";
-		$xmlOutput .='             <source>LREv3.0</source>'."\n";
-			$xmlOutput .='             <value>'.$data['educational']['semantic_density'].'</value>'."\n";
-			$xmlOutput .='           </semanticDensity>'."\n";
+			echo "educational COUNT ->".count($data['educational'])."\n";
+			echo "educational-> interactivity_level:{$data['educational']['interactivity_level']} semantic_density:{$data['educational']['semantic_density']}\n";
+			$xmlOutput .="<interactivityLevel>\n";
+			$xmlOutput .="<source>LREv3.0</source>\n";
+			$xmlOutput .="<value>{$data['educational']['interactivity_level']}</value>\n";
+			$xmlOutput .="</interactivityLevel>\n";
+			$xmlOutput .="<semanticDensity>\n";
+			$xmlOutput .="<source>LREv3.0</source>\n";
+			$xmlOutput .="<value>{$data['educational']['semantic_density']}</value>\n";
+			$xmlOutput .="</semanticDensity>\n";
 
 		}else{
-			echo 'NO educational<br/>';
-			$xmlOutput .='           <interactivityLevel></interactivityLevel>'."\n";
-			$xmlOutput .='           <semanticDensity></semanticDensity>'."\n";
+			echo "NO educational\n";
+			$xmlOutput .="<interactivityLevel></interactivityLevel>\n";
+			$xmlOutput .="<semanticDensity></semanticDensity>\n";
 		}
 		
 		if (array_key_exists('indended_user', $data)){
-			echo 'indended_user COUNT ->'.count($data['indended_user']).'<br/>';
+			echo "indended_user COUNT ->".count($data['indended_user'])."\n";
 			foreach($data['indended_user'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
-				echo 'indended_user: '.$row.'<br/>';
-				$xmlOutput .='           <intendedEndUserRole>'."\n";
-			$xmlOutput .='             <source>LREv3.0</source>'."\n";
-				$xmlOutput .='             <value>'.$row.'</value>'."\n";
-				$xmlOutput .='           </intendedEndUserRole>'."\n";
+				echo "indended_user: $row\n";
+				$xmlOutput .="<intendedEndUserRole>\n";
+				$xmlOutput .="<source>LREv3.0</source>\n";
+				$xmlOutput .="<value>$row</value>\n";
+				$xmlOutput .="</intendedEndUserRole>\n";
 			} 
 		}else{
-			echo 'NO indended_user<br/>';
-			$xmlOutput .='           <intendedEndUserRole></intendedEndUserRole>'."\n";
+			echo "NO indended_user\n";
+			$xmlOutput .="<intendedEndUserRole></intendedEndUserRole>\n";
 		}
 		
 		if (array_key_exists('context', $data)){
-			echo 'context COUNT ->'.count($data['context']).'<br/>';
+			echo "context COUNT ->".count($data['context'])."\n";
 			foreach($data['context'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
-				echo 'context: '.$row.'<br/>';
-				$xmlOutput .='           <context>'."\n";
-			$xmlOutput .='             <source>LREv3.0</source>'."\n";
-				$xmlOutput .='             <value>'.$row.'</value>'."\n";
-				$xmlOutput .='           </context>'."\n";
+				echo "context: $row\n";
+				$xmlOutput .="<context>\n";
+				$xmlOutput .="<source>LREv3.0</source>\n";
+				$xmlOutput .="<value>$row</value>\n";
+				$xmlOutput .="</context>\n";
 			} 
 		}else{
-			echo 'NO context<br/>';
-			$xmlOutput .='           <context></context>'."\n";
+			echo "NO context\n";
+			$xmlOutput .="<context></context>\n";
 		}
 		
 		if (array_key_exists('educational', $data)){
-			echo 'educational COUNT ->'.count($data['educational']).'<br/>';
-			echo 'typical_age:'.$data['educational']['typical_age'].'<br/>';
-			$xmlOutput .='           <typicalAgeRange>'."\n";
-			$xmlOutput .='             <string language="">'.$data['educational']['typical_age'].'</string>'."\n";
-			$xmlOutput .='           </typicalAgeRange>'."\n";
+			echo "educational COUNT ->".count($data['educational'])."\n";
+			echo "typical_age:".$data['educational']['typical_age']."\n";
+			$xmlOutput .="<typicalAgeRange>\n";
+		//--- edw den vrika/antelifthika kapoio json pou na exei timi gia to propertie language tou string
+			$xmlOutput .="<string language=\"\">{$data['educational']['typical_age']}</string>\n";
+			$xmlOutput .="</typicalAgeRange>\n";
 		}else{
-			echo 'NO educational<br/>';
+			echo "NO educational\n";
 			$xmlOutput .='           <typicalAgeRange></typicalAgeRange>'."\n";
 		}
 		
 		if (array_key_exists('educational', $data)){
-			echo 'difficulty:'.$data['educational']['difficulty'].' learning_time:'.$data['educational']['learning_time'].'<br/>';
-			$xmlOutput .='           <difficulty>'."\n";
-		$xmlOutput .='             <source>LREv3.0</source>'."\n";
-			$xmlOutput .='             <value>'.$data['educational']['difficulty'].'</value>'."\n";
-			$xmlOutput .='           </difficulty>'."\n";
-			$xmlOutput .='           <typicalLearningTime>'."\n";
-		$xmlOutput .='             <source>LREv3.0</source>'."\n";
-			$xmlOutput .='             <value>'.$data['educational']['learning_time'].'</value>'."\n";
-			$xmlOutput .='           </typicalLearningTime>'."\n";
+			echo "difficulty:{$data['educational']['difficulty']} learning_time:{$data['educational']['learning_time']}\n";
+			$xmlOutput .="<difficulty>\n";
+			$xmlOutput .="<source>LREv3.0</source>\n";
+			$xmlOutput .="<value>{$data['educational']['difficulty']}</value>\n";
+			$xmlOutput .="</difficulty>\n";
+			$xmlOutput .="<typicalLearningTime>\n";
+			$xmlOutput .="<source>LREv3.0</source>\n";
+			$xmlOutput .="<value>{$data['educational']['learning_time']}</value>\n";
+			$xmlOutput .="</typicalLearningTime>\n";
 		}else{
-			echo 'NO educational<br/>';
-			$xmlOutput .='           <difficulty></difficulty>'."\n";
-			$xmlOutput .='           <typicalLearningTime></typicalLearningTime>'."\n";
+			echo "NO educational\n";
+			$xmlOutput .="<difficulty></difficulty>\n";
+			$xmlOutput .="<typicalLearningTime></typicalLearningTime>\n";
 		}
 		
 		
 		if (array_key_exists('description5', $data)){
-			echo 'description5 COUNT ->'.count($data['description5']).'<br/>';
-			$xmlOutput .='           <description>'."\n";
+			echo "description5 COUNT ->".count($data['description5'])."\n";
+			$xmlOutput .="<description>\n";
 			foreach($data['description5'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
 				foreach($row as $i=>$f){
-					echo 'description5: '.$f['value'].' lang:'.$f['language'].'<br/>';
-					$xmlOutput .='           <string language="'.$f['language'].'">'.$f['value'].'</string>'."\n";
+					echo "description5: {$f['value']} lang:{$f['language']}\n";
+					$xmlOutput .="<string language=\"{$f['language']}\">{$f['value']}</string>\n";
 				}
 			}
-			$xmlOutput .='           </description>'."\n";
+			$xmlOutput .="</description>\n";
 		}else{
-			echo 'NO description5<br/>';
-			$xmlOutput .='           <description></description>'."\n";
+			echo "NO description5\n";
+			$xmlOutput .="<description></description>\n";
 		}
 
 		
 		if (array_key_exists('language5', $data)){
-			echo 'language5 COUNT ->'.count($data['language5']).'<br/>';
+			echo "language5 COUNT ->".count($data['language5'])."\n";
 			foreach($data['language5'] as $p=>$row){
-				//if (is_array($row)) echo 'Array';
-				echo 'language5: '.$row.'<br/>';
-				$xmlOutput .='           <language>'."\n";
-			$xmlOutput .='             <source>LREv3.0</source>'."\n";
-				$xmlOutput .='             <value>'.$row.' </value>'."\n";
-				$xmlOutput .='           </language>'."\n";
+				echo "language5: $row\n";
+				$xmlOutput .="<language>\n";
+				$xmlOutput .="<source>LREv3.0</source>\n";
+				$xmlOutput .="<value>$row</value>\n";
+				$xmlOutput .="</language>\n";
 			} 
 		}else{
-			echo 'NO language5<br/>';
-			$xmlOutput .='           <language>'."\n";
-		$xmlOutput .='             <source>LREv3.0</source>'."\n";
-			$xmlOutput .='             <value></value>'."\n";
-			$xmlOutput .='           </language>'."\n";
+			echo "NO language5\n";
+			$xmlOutput .="<language>\n";
+			$xmlOutput .="<source>LREv3.0</source>\n";
+			$xmlOutput .="<value></value>\n";
+			$xmlOutput .="</language>\n";
 		}
 		
 	//----end <educational>
-		$xmlOutput .='          </educational>'."\n";
+		$xmlOutput .="</educational>\n";
 
 		
 	//----start <rights>
 		if (array_key_exists('rights', $data)){
-			echo 'rights COUNT ->'.count($data['rights']).'<br/>';
-			echo 'rights:'.$data['rights'].'<br/>';
-			$xmlOutput .='          <rights>'."\n";
+			echo "rights COUNT ->".count($data['rights'])."\n";
+			echo "rights:{$data['rights']}\n";
+			$xmlOutput .="<rights>\n";
 			
 			for ($i=0;$i<count($data['rights']);$i++){
-				echo 'cost: '.$data['rights']["$i"]['cost'].' restrictions:'.$data['rights']["$i"]['restrictions'].'<br/>';
-				$xmlOutput .='            <cost>'."\n";
-				$xmlOutput .='              <source></source>'."\n";
-				$xmlOutput .='              <value>'.$data['rights']["$i"]['cost'].'</value>'."\n";
-				$xmlOutput .='            </cost>'."\n";
-				$xmlOutput .='            <copyrightAndOtherRestrictions>'."\n";
-			$xmlOutput .='              <source>LOMv1.0</source>'."\n";
-				$xmlOutput .='              <value>'.$data['rights']["$i"]['restrictions'].'</value>'."\n";
-				$xmlOutput .='            </copyrightAndOtherRestrictions>'."\n";
-				$description = $data['rights']["$i"]['description'];
-				//echo count($entity);
+				echo "cost: {$data['rights']['$i']['cost']} restrictions:{$data['rights']['$i']['restrictions']}\n";
+				$xmlOutput .="<cost>\n";
+				$xmlOutput .="<source></source>\n";
+				$xmlOutput .="<value>{$data['rights']['$i']['cost']}</value>\n";
+				$xmlOutput .="</cost>\n";
+				$xmlOutput .="<copyrightAndOtherRestrictions>\n";
+				$xmlOutput .="<source>LOMv1.0</source>\n";
+				$xmlOutput .="<value>{$data['rights']['$i']['restrictions']}</value>\n";
+				$xmlOutput .="</copyrightAndOtherRestrictions>\n";
+				$description = $data['rights']['$i']['description'];
 				foreach($description as $t){
-					echo ' description:'.$t['value'].' language:'.$t['language'].'<br/>';
-					$xmlOutput .= '            <description lang="'.$t['language'].'">'."\n";
-					$xmlOutput .='               <string>'.$t['value'].'</string>'."\n";
-					$xmlOutput .='             </description>'."\n";
+					echo "description:{$t['value']} language:{$t['language']}\n";
+					$xmlOutput .="<description lang=\"{$t['language']}\">\n";
+					$xmlOutput .="<string>{$t['value']}</string>\n";
+					$xmlOutput .="</description>\n";
 				}
 			}
 			
-			$xmlOutput .='          </rights>'."\n";
+			$xmlOutput .="</rights>\n";
 		}else{
 			if (array_key_exists('cc', $data)){
-				echo 'cc COUNT ->'.count($data['cc']).'<br/>';
-				echo 'cc:'.$data['cc'].'<br/>';
-				$xmlOutput .='          <rights>'."\n";
-				$xmlOutput .='            <cost>'."\n";
-			$xmlOutput .='              <source>LOMv1.0</source>'."\n";
-				$xmlOutput .='              <value></value>'."\n";
-				$xmlOutput .='            </cost>'."\n";
-				$xmlOutput .='            <copyrightAndOtherRestrictions>'."\n";
-			$xmlOutput .='              <source>LOMv1.0</source>'."\n";
-				$xmlOutput .='              <value>'.$data['cc'].'</value>'."\n";
-				$xmlOutput .='            </copyrightAndOtherRestrictions>'."\n";
-				$xmlOutput .='            <description>'."\n";
-				$xmlOutput .='              <string></string>'."\n";
-				$xmlOutput .='            </description>'."\n";
-				$xmlOutput .='          </rights>'."\n";
+				echo "cc COUNT ->".count($data['cc'])."\n";
+				echo "cc:{$data['cc']}\n";
+				$xmlOutput .="<rights>\n";
+				$xmlOutput .="<cost>\n";
+				$xmlOutput .="<source>LOMv1.0</source>\n";
+				$xmlOutput .="<value></value>\n";
+				$xmlOutput .="</cost>\n";
+				$xmlOutput .="<copyrightAndOtherRestrictions>\n";
+				$xmlOutput .="<source>LOMv1.0</source>\n";
+				$xmlOutput .="<value>{$data['cc']}</value>\n";
+				$xmlOutput .="</copyrightAndOtherRestrictions>\n";
+				$xmlOutput .="<description>\n";
+				$xmlOutput .="<string></string>\n";
+				$xmlOutput .="</description>\n";
+				$xmlOutput .="</rights>\n";
 			}else{
-				echo 'NO cc<br/>';
-				$xmlOutput .='          <rights></rights>'."\n";
+				echo "NO cc\n";
+				$xmlOutput .="<rights></rights>\n";
 
 			}
 		}
@@ -545,42 +541,42 @@ $xmlOutput .=$location.'</location>
 
 	//----start <classification>
 	//----need values for classification: purpose
-		$xmlOutput .='          <classification>'."\n";
-	    $xmlOutput .='            <purpose>'."\n";
-	    $xmlOutput .='              <value></value>'."\n";
-	    $xmlOutput .='            </purpose>'."\n";
+		$xmlOutput .="<classification>\n";
+		$xmlOutput .="<purpose>\n";
+		$xmlOutput .="<value></value>\n";
+		$xmlOutput .="</purpose>\n";
 		
 		if (array_key_exists('classification_details', $data)){
-			echo 'classification_details COUNT ->'.count($data['classification_details']).'<br/>';
+			echo "classification_details COUNT ->".count($data['classification_details'])."\n";
 			foreach($data['classification_details'] as $p=>$row){
 				//if (is_array($row)) echo 'Array';
-				echo 'classification_details: '.$row.'<br/>';
-				$xmlOutput .='            <taxonPath>'."\n";
-				$xmlOutput .='              <source>'."\n";
-			$xmlOutput .='                <string language="en">Organic.Edunet Ontology</string>'."\n";
-				$xmlOutput .='              </source>'."\n";
-				$xmlOutput .='              <taxon>'."\n";
-				$xmlOutput .='                <id></id>'."\n";
-				$xmlOutput .='                <entry>'."\n";
-				$xmlOutput .='                  <string>'.$row.'</string>'."\n";
-				$xmlOutput .='                </entry>'."\n";
-				$xmlOutput .='              </taxon>'."\n";
-				$xmlOutput .='            </taxonPath>'."\n";
+				echo "classification_details: $row\n";
+				$xmlOutput .="<taxonPath>\n";
+				$xmlOutput .="<source>\n";
+				$xmlOutput .="<string language=\"en\">Organic.Edunet Ontology</string>\n";
+				$xmlOutput .="</source>\n";
+				$xmlOutput .="<taxon>\n";
+				$xmlOutput .="<id></id>\n";
+				$xmlOutput .="<entry>\n";
+				$xmlOutput .="<string>$row</string>\n";
+				$xmlOutput .="</entry>\n";
+				$xmlOutput .="</taxon>\n";
+				$xmlOutput .="</taxonPath>\n";
 			}
-			$xmlOutput .='          </classification>'."\n";
+			$xmlOutput .="</classification>\n";
 		}else{
-			echo 'NO classification_details<br/>';
-			$xmlOutput .='          </classification>'."\n";
+			echo "NO classification_details\n";
+			$xmlOutput .="</classification>\n";
 			
 		}
 	//----end <classification>
 
 	//----end <lom>	
 			
-		echo '----------------------------------------END OF JSON FILE----------------------------------------<br/>';
-		echo '                                                                                                <br/>';
-		echo '************************************************************************************************<br/>';
-		echo '                                                                                                <br/>';
+		echo <<<EOT
+----------------------------------------END OF JSON FILE----------------------------------------\n\n
+************************************************************************************************\n\n
+EOT;
 		
 		return $xmlOutput;
 	}
@@ -617,6 +613,9 @@ HEAD;
 
 if (is_null($_GET["$ARG1"])) {
     echo "ERROR: No valid action could be parsed from request location. Exiting.";
+} elseif (is_null($_GET["$ARG2"]) && is_null($_GET["$ARG3"])){
+	$cl = new cronlib(0, "all"); 
+	echo $cl->scan_files();
 } elseif ($arg2+$arg3 <=0 ) {
     echo "ERROR: No valid course id (cid) or resource id (rid) could be parsed in request location. Exiting.";
 } else {

@@ -1,6 +1,6 @@
 <?php
 $plugin->component  = 'block_oai_target';
-$plugin->version  = 2013011601;
+$plugin->version  = 2013022002;
 $plugin->release  = 1;
 $plugin->requires  =2011033003;
 $plugin->maturity  = MATURITY_BETA;
