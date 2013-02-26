@@ -32,6 +32,7 @@
 
 // please change to the according metadata prefix you use 
 $prefix = 'oai_lom';
+$ourPrefix = explode("_",$prefix);
 
 $output .= 
 '   <metadata>'."\n";
@@ -40,11 +41,11 @@ $output .= metadataHeader($prefix);
 $output .= $record['lom_record'];
 
 // FIXME: this is a hack, Marinos pls. fix!
-$output .= '</lom>';          
+$output .= "</".$ourPrefix[1];
 // '     </'.$prefix.';
-// if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
-  // $output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
-// }
+if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
+	$output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
+}
 $output .= ">\n";
 $output .= 
 '   </metadata>'."\n";

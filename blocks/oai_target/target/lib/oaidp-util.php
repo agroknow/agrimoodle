@@ -391,10 +391,10 @@ function metadataHeader($prefix)
 	global $XMLSCHEMA;
 
 	$myformat = $METADATAFORMATS[$prefix];
+	$ourPrefix = explode("_",$prefix);
 
-	$str = 	'      <';
+	$str = '     <'.$ourPrefix[1];
 	//'     <'.$prefix;
-	// '     <oai_lom:';
 	if ($myformat['record_prefix']) {
 		//$str .= ':'.$myformat['record_prefix'];
 		$str .= $myformat['record_prefix'];

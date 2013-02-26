@@ -119,20 +119,21 @@ EOT;
 			
 			$ts = filemtime($jf);
 			$mydate = new DateTime("@$ts");
-			$myenterdate = $mydate->format('Y-m-d H:i:s');
+			$jsonFileDate = $mydate->format('Y-m-d H:i:s');
 				
-			$output .= "- $jfid :: {$jf->getPathname()} :: $myenterdate\n";
+			$output .= "- $jfid :: {$jf->getPathname()} :: $jsonFileDate\n";
 
 			//-- send SQL command to mysql to execute
 			$record = new stdClass;
 			$record->provider = $CFG->wwwroot;
 			$record->url = $uri_loc;
-			$record->enterdate = $myenterdate;
+			$record->enterdate		= $jsonFileDate;
 			// FIXME: this is a hack, need to put the valid dc_date here!
-			$record->dc_date = $myenterdate; 
-			$record->oai_identifier	= "oai$delimiter$repositoryIdentifier$folder$delimiter$tmpId";
+			$record->dc_date 		= $jsonFileDate; 
+			//$record->oai_identifier	= "oai$delimiter$repositoryIdentifier$folder$delimiter$tmpId";
+			$record->oai_identifier	= "$setType/$tmpId";
 			$record->oai_set		= $setType;
-			$record->datestamp		= $myenterdate;
+			$record->datestamp		= $jsonFileDate;
 			$record->deleted		= 'false';
 			$xmlstringtoDB = cronlib::parse_json($jf->getPathname(), file_get_contents($jf), $xmlOutput);
 			$xmlstringtoDB = str_replace(" & ", " &amp; ", $xmlstringtoDB);
@@ -270,9 +271,24 @@ EOT;
 					echo "firstname:{$t['firstname']} lastname:{$t['lastname']} email:{$t['email']} organization:{$t['organization']}\n";
 					$xmlOutput .="<entity><![CDATA[BEGIN:VCARD FN:{$t['firstname']} {$t['lastname']} ORG:{$t['organization']} EMAIL;TYPE=INTERNET:{$t['email']} N:{$t['lastname']};{$t['firstname']} VERSION:3.0 END:VCARD]]></entity>\n";
 				}
+				if ($row['date']!="") {
+					//Pattern for date 2012-09-15T14:04:10.00Z
+					$dateArray = split("/",$row['date']);
+		//----------we check if the date string in json is dd/mm/yyyy because sometimes date sring in json is mm/dd/yyyy
+		//----------its not perfect correct check. json must follow one prototype and must know that
+					if ($dateArray[1]>12){
+						$dateFormated = "$dateArray[2]-$dateArray[0]-$dateArray[1]T00:00:00.00Z";
+					}else{
+						$dateFormated = "$dateArray[2]-$dateArray[1]-$dateArray[0]T00:00:00.00Z";
+					}
 				$xmlOutput .="<date>\n";
-				$xmlOutput .="<dateTime>{$row['date']}</dateTime>\n";
+					$xmlOutput .="<dateTime>$dateFormated</dateTime>\n";
 				$xmlOutput .="</date>\n";
+				}
+				
+				/*$xmlOutput .="<date>\n";
+				$xmlOutput .="<dateTime>{$row['date']}</dateTime>\n";
+				$xmlOutput .="</date>\n";*/
 				$xmlOutput .="</contribute>\n";
 			}
 		}else{
@@ -311,12 +327,23 @@ EOT;
 					echo "firstname:{$t['firstname']} lastname:{$t['lastname']} email:{$t['email']} organization:{$t['organization']}\n";
 					$xmlOutput .="<entity><![CDATA[BEGIN:VCARD FN:{$t['firstname']} {$t['lastname']} ORG:{$t['organization']} EMAIL;TYPE=INTERNET:{$t['email']} N:{$t['lastname']};{$t['firstname']} VERSION:3.0 END:VCARD]]></entity>\n";
 				}
+				if ($data['contribute3']["$i"]['date']!="") {
+					//Pattern for date 2012-09-15T14:04:10.00Z
+					$dateArray = split("/",$data['contribute3']["$i"]['date']);
+		//----------we check if the date string in json is dd/mm/yyyy because sometimes date sring in json is mm/dd/yyyy
+		//----------its not perfect correct check. json must follow one prototype and must know that
+					if ($dateArray[1]>12){
+						$dateFormated = "$dateArray[2]-$dateArray[0]-$dateArray[1]T00:00:00.00Z";
+					}else{
+						$dateFormated = "$dateArray[2]-$dateArray[1]-$dateArray[0]T00:00:00.00Z";
+					}
 				$xmlOutput .="<date>\n";
-				$xmlOutput .="<dateTime>{$data['contribute3']['$i']['date']}</dateTime>\n";
+					$xmlOutput .="<dateTime>$dateFormated</dateTime>\n";
 				$xmlOutput .="</date>\n";
-				$xmlOutput .="</contribute>\n";
 			}
 			
+				$xmlOutput .="</contribute>\n";
+			}
 		}else{
 			echo "NO contribute3\n";
 			$xmlOutput .="<contribute></contribute>\n";
@@ -326,7 +353,9 @@ EOT;
 		$xmlOutput .="<metadataSchema>OE AP v3.0</metadataSchema>\n";
 		
 		
+		if ($data['contribute3']['language34']) {
 		$xmlOutput .="<language>{$data['contribute3']['language34']}</language>\n";
+		}
 		
 	//----close metaMetadata tag	
 		$xmlOutput .="</metaMetadata>\n";
@@ -334,8 +363,6 @@ EOT;
 	//----need values for technical: format,size,location,duration ...
 		$xmlOutput .=<<<EOT
 		<technical>
-	    <format></format>
-	    <size></size>
 			  <location>
 EOT;
 	if ($setType == 'resource'){
@@ -346,9 +373,7 @@ EOT;
 	
 		$xmlOutput .=<<<EOT
 		$location</location>
-	    <duration>
-	      <duration></duration>
-	    </duration>
+		  <format></format>
 		  </technical>
 EOT;
 	    
@@ -419,26 +444,114 @@ EOT;
 		}
 		
 		if (array_key_exists('educational', $data)){
+			if ($data['educational']['typical_age']!='') {
 			echo "educational COUNT ->".count($data['educational'])."\n";
 			echo "typical_age:".$data['educational']['typical_age']."\n";
 			$xmlOutput .="<typicalAgeRange>\n";
 		//--- edw den vrika/antelifthika kapoio json pou na exei timi gia to propertie language tou string
-			$xmlOutput .="<string language=\"\">{$data['educational']['typical_age']}</string>\n";
+//--- vazw tin language tou vasikou giati xreiazetai ston validator language
+			$xmlOutput .="<string language=\"{$data['contribute3']['language34']}\">{$data['educational']['typical_age']}</string>\n";
 			$xmlOutput .="</typicalAgeRange>\n";
 		}else{
 			echo "NO educational\n";
-			$xmlOutput .='           <typicalAgeRange></typicalAgeRange>'."\n";
+			$xmlOutput .="<typicalAgeRange></typicalAgeRange>\n";
+		}
+		} else {
+			echo "NO educational\n";
+			$xmlOutput .="<typicalAgeRange></typicalAgeRange>\n";
 		}
 		
 		if (array_key_exists('educational', $data)){
-			echo "difficulty:{$data['educational']['difficulty']} learning_time:{$data['educational']['learning_time']}\n";
+			echo "difficulty:{$data['educational']['difficulty']} learning_time:{$data['educational']['learning_time']} - ";
 			$xmlOutput .="<difficulty>\n";
 			$xmlOutput .="<source>LREv3.0</source>\n";
 			$xmlOutput .="<value>{$data['educational']['difficulty']}</value>\n";
 			$xmlOutput .="</difficulty>\n";
 			$xmlOutput .="<typicalLearningTime>\n";
-			$xmlOutput .="<source>LREv3.0</source>\n";
-			$xmlOutput .="<value>{$data['educational']['learning_time']}</value>\n";
+//----dont known data or parameter in json to put in description
+			$xmlOutput .="<description></description>\n";
+//----two different kind of formats in duration. example 45' or 8:00-14:00
+			if($data['educational']['learning_time']==''){
+			
+			}elseif (strrpos($data['educational']['learning_time'],"'")) {
+				$tmpduration = split("'",$data['educational']['learning_time']);
+				
+				$years = "";
+				$months = "";
+				$days = "";
+				$hours = "";
+				$minutes = "";
+				$secs = "";
+				$T="";
+				echo "duration".$tmpduration[0];
+				if ($tmpduration[0]>60) {
+					$hours = (floor($tmpduration[0]/60))."H";
+					$minutes = ($tmpduration[0] % 60)."M";
+				}else{
+					$minutes = $tmpduration[0]."M";
+				}
+				
+				if ($hours!='' || $minutes!='') {
+					$T="T";
+				}
+				
+				echo "P$years$months$days$T$hours$minutes$secs\n";
+				
+				$xmlOutput .="<duration>P$years$months$days$T$hours$minutes$secs</duration>\n";
+			}elseif (strrpos($data['educational']['learning_time'],"-") && strrpos($data['educational']['learning_time'],":")) {
+				$tmpduration=$data['educational']['learning_time'];
+				$tmpduration = split("-",$tmpduration);
+				$n = sscanf($tmpduration[0], "%s:%s", $hs, $ms);
+				$m = sscanf($tmpduration[1], "%s:%s", $hf, $mf);
+				$timeinMin = ($hf*60+$mf) - ($hs*60+$ms);
+
+				$years = "";
+				$months = "";
+				$days = "";
+				$hours = "";
+				$minutes = "";
+				$secs = "";
+				$T="";
+				
+				if ($timeinMin%60>0) {
+					$minutes = ($timeinMin % 60)."M";
+				}
+				
+				if ($timeinMin%60==0) {
+					$hours = (floor($timeinMin/60))."H";
+				}
+				
+				if ($hours%24>0) {
+					if (floor($hours/24)>0) {
+						$days = (floor($hours/24))."D";
+					}
+					$hours = ($hours % 24)."H";
+				}
+				
+				if ($days%30>0){
+					if (floor($days/30)>0) {
+						$months = (floor($days/30))."M";
+					}
+					$days = ($days % 30)."D";
+				}
+				
+				if ($months%12>0){
+					if (floor($months/12)>0) {
+						$years = (floor($months/12))."Y";
+					}
+					$months = ($months % 12)."M";
+				}
+				
+				if ($hours!='' || $minutes!='') {
+					$T="T";
+				}
+				
+				echo "P$years$months$days$T$hours$minutes$secs\n";
+								
+				$xmlOutput .="<duration>P$years$months$days$T$hours$minutes$secs</duration>\n";
+			}else {
+				$xmlOutput .="<duration>{$data['educational']['learning_time']}</duration>\n";
+			}
 			$xmlOutput .="</typicalLearningTime>\n";
 		}else{
 			echo "NO educational\n";
@@ -467,17 +580,12 @@ EOT;
 			echo "language5 COUNT ->".count($data['language5'])."\n";
 			foreach($data['language5'] as $p=>$row){
 				echo "language5: $row\n";
-				$xmlOutput .="<language>\n";
-				$xmlOutput .="<source>LREv3.0</source>\n";
-				$xmlOutput .="<value>$row</value>\n";
-				$xmlOutput .="</language>\n";
+//dont know if tag language is the corrext one - passed from validator
+				$xmlOutput .="<language>$row</language>\n";
 			} 
 		}else{
 			echo "NO language5\n";
-			$xmlOutput .="<language>\n";
-			$xmlOutput .="<source>LREv3.0</source>\n";
-			$xmlOutput .="<value></value>\n";
-			$xmlOutput .="</language>\n";
+			//$xmlOutput .="<language></language>\n";
 		}
 		
 	//----end <educational>
@@ -491,14 +599,14 @@ EOT;
 			$xmlOutput .="<rights>\n";
 			
 			for ($i=0;$i<count($data['rights']);$i++){
-				echo "cost: {$data['rights']['$i']['cost']} restrictions:{$data['rights']['$i']['restrictions']}\n";
+				echo "cost: {$data['rights']["$i"]['cost']} restrictions:{$data['rights']["$i"]['restrictions']}\n";
 				$xmlOutput .="<cost>\n";
 				$xmlOutput .="<source></source>\n";
-				$xmlOutput .="<value>{$data['rights']['$i']['cost']}</value>\n";
+				$xmlOutput .="<value>{$data['rights']["$i"]['cost']}</value>\n";
 				$xmlOutput .="</cost>\n";
 				$xmlOutput .="<copyrightAndOtherRestrictions>\n";
 				$xmlOutput .="<source>LOMv1.0</source>\n";
-				$xmlOutput .="<value>{$data['rights']['$i']['restrictions']}</value>\n";
+				$xmlOutput .="<value>{$data['rights']["$i"]['restrictions']}</value>\n";
 				$xmlOutput .="</copyrightAndOtherRestrictions>\n";
 				$description = $data['rights']['$i']['description'];
 				foreach($description as $t){

@@ -139,9 +139,11 @@ $delimiter			= ':';
 // see: http://www.openarchives.org/OAI/2.0/guidelines-oai-identifier.htm
 // this is the namespace_id of OAI 2.0 identifier's spec
 // (scheme ":" namespace_id ":" local_id where scheme should always be "oai")
-// $parseURL = parse_url($CFG->wwwroot);
-// $repositoryIdentifier = $parseURL['host'].''.$parseURL['path']; 
-$repositoryIdentifier = parse_url($CFG->wwwroot)['host']; 
+ $parseURL = parse_url($CFG->wwwroot);
+ $repositoryIdentifier = $parseURL['host']; 
+
+//tasos
+//$repositoryIdentifier = parse_url($CFG->wwwroot)['host']; 
 
 
 // description is defined in identify.php
@@ -198,11 +200,9 @@ $METADATAFORMATS = 	array (
 		'record_namespace' => 'http://purl.org/dc/elements/1.1/'
 	),
 	'oai_lom' => array('metadataPrefix'=>'oai_lom',
-		'schema'=>'http://www.openarchives.org/OAI/2.0/oai_dc.xsd',
-		'metadataNamespace'=>'http://www.openarchives.org/OAI/2.0/oai_dc/',
-		'myhandler'=>'record_lom.php',
-		'record_prefix'=>'lom',
-		'record_namespace' => 'http://ltsc.ieee.org/xsd/LOM'
+		'schema'=>'http://ltsc.ieee.org/xsd/lomv1.0/lomLoose.xsd',
+		'metadataNamespace'=>'http://ltsc.ieee.org/xsd/LOM',
+		'myhandler'=>'record_lom.php'
 	)
 );
 

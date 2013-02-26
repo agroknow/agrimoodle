@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/oai_target/db" VERSION="20101223" COMMENT="XMLDB file for Moodle blocks/oai_target"
+<XMLDB PATH="blocks/oai_target/db" VERSION="20130224" COMMENT="XMLDB file for Moodle blocks/oai_target"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="block_oai_target_courses" NEXT="block_oai_target_log" COMMENT="Courses table">
+    <TABLE NAME="block_oai_target_courses" COMMENT="Courses table" NEXT="block_oai_target_log">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="course_id"/>
         <FIELD NAME="course_id" TYPE="int" LENGTH="11" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="The course identificator" PREVIOUS="id" NEXT="last_update_time"/>
