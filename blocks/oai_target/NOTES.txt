@@ -3,6 +3,22 @@ block_oai_target
 
 NOTES
 =====
+*INSTALLATION
+ - Make sure you have all the required versions. 
+	- moodle download from here: https://github.com/agroknow/agrimoodle/tree/with_marinos, 
+	- just block oai-target download from here: https://github.com/agroknow/agrimoodle/tree/with_marinos/blocks/oai_target
+ - Download and unpack the block folder.
+ - Place the folder (eg "myblock") in the "blocks" subdirectory.
+ - Login in your Moodle platform as Administrator and
+   click on OAI Target inside Site Administration block.
+   At this point the block initialization should be performed and the block
+   should be available in the Blocks list. Note that the block is available
+   only inside courses.
+ - Turn editing on in any course page.
+ - Add the block to the page.
+ - Use Metadata Editor to fill in the Metadata (See Metadata Edidor Notes).
+ - Run Cron through your moodle.
+ - You are ready to use OAI-TARGET. 
 
 * To check the OAI-PMH target (verbs)
   - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=Identify
@@ -21,7 +37,7 @@ NOTES
   
 * VALIDATOR
   - http://83.212.96.219:8080/voa3r_validationService/validateMetadata.jsp
-
+  
 
 * To check the cron operation
   tkout@maya ~/dev/agrimoodle/admin/cli $ php cron.php
@@ -39,12 +55,11 @@ FIXME:
 
 TODO:
 -----
-The general idea is to parse all files that are generated from the mdeditor
-widget (LOM editor), for every course that is registered to the target and
-store the information in a LOM format, ready to be posted to the harvester.
 
-Then, when the harvester calls with a proper verb, this plugin should respond
-with appropriate answers!
+
+VERSION2:
+---------
+- Create Settings for the oai-target block in moodle
 
 
 RELATED:
@@ -64,88 +79,3 @@ RELATED:
 
 - check information from here:
   http://www.oaforum.org/tutorial/english/page4.htm
-
-
-
-
-
-	version 2013011301
-
-------------------------------------------------------------------------------------------------------------------------
-	files that has been changed
-------------------------------------------------------------------------------------------------------------------------
-
-	- block_oai_target.php
-	- common.php
-		remove whitespace from the end of the file
-
-	- lib/cronlib.php
-		remove assocArrayToXML function
-		remove json_to_xml function
-		remove array_to_xml function
-		remove xml header from every entry sending to db
-		reform xml string
-		remove whitespace from the end of the file
-
-	- lib/PMH.php
-		remove whitespace from the end of the file
-
-	- target/oai2.php
-		add lines 39-41
-		remove whitespace from the end of the file
-
-	- target/lib/record_dc.php
-		recover old version
-
-	- target/lib/oaidp-util.php
-		remove whitespace from the end of the file
-
-	- target/lib/oaidp-config.php
-		comment line 54
-		uncommnet line 58
-		edit line 142
-		create $INDENT for gloabal use for the xmlrecord() and xmlformat() line 170
-		change/correct $METADATAFORMATS line 189 (new record record_prefix)
-		change/correct DB connection line 216-219(Use Moodle config)
-		remove whitespace from the end of the file
-
-	- target/lib/listsets.php
-		use global $INDENT
-		remove whitespace from the end of the file
-
-	- target/lib/listrecords.php
-		create it from scratch because something was wrong (secret character or something in encoding)
-		use global $INDENT
-		remove whitespace from the end of the file
-
-	- target/lib/listmetadataformats.php
-		use global $INDENT
-		remove whitespace from the end of the file
-
-	- target/lib/listidentifiers.php
-		use global $INDENT
-		remove whitespace from the end of the file
-
-	- target/lib/identify.php
-		use global $INDENT
-		remove whitespace from the end of the file
-
-	- target/lib/getrecord.php
-		use global $INDENT
-		remove whitespace from the end of the file
-
-	- NEW
-		create file record_lom.php
-
-------------------------------------------------------------------------------
-TODO LIST (from marinos, 23/01/2013)
--------------------------------------------------------------------------------
-
-+ πρέπει να μπεί στο install ο πίνακας που γράφει η cronlib (mdl_oai_records). DONE
-+ πρέπει να γίνουν αλλαγές στην cronlib ώστε να μπορεί να μπεί στο cron του moodle. DONE
-- αυτή τη στιγμή γράφουμε στον πίνακα mdl_oai_records αλλά δεν κάνουμε έλεγχο αν υπάρχει η εγγραφή στον πίνακα ώστε να κάνουμε update αν χρειάζεται.
-
-Έχω σκεφτεί τρόπο για update, αλλά δεν ξέρω τι να βάλω σαν κλειδί στον πίνακα που να προσδιορίζει μοναδικά την εγγραφή.
-Από όσα κρατάτε στο json δεν φαίνεται να μας κάνει κάτι εκτός και αν κάνω κάπου λάθος.
-Μία καλή ιδέα ίσως να ήταν να κρατάτε το shortname του μαθήματος ή το Course ID number.
-Θα πρέπει λοιπόν με κάποιο τρόπο να τα έχουμε μέσα στο json.
