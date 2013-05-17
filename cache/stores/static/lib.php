@@ -29,12 +29,64 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
+ * The static data store class
+ *
+ * @copyright  2012 Sam Hemelryk
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+abstract class static_data_store extends cache_store {
+
+    /**
+     * An array for storage.
+     * @var array
+     */
+    private static $staticstore = array();
+
+    /**
+     * Returns a static store by reference... REFERENCE SUPER IMPORTANT.
+     *
+     * @param string $id
+     * @return array
+     */
+    protected static function &register_store_id($id) {
+        if (!array_key_exists($id, self::$staticstore)) {
+            self::$staticstore[$id] = array();
+        }
+        return self::$staticstore[$id];
+    }
+
+    /**
+     * Flushes the store of all values for belonging to the store with the given id.
+     * @param string $id
+     */
+    protected static function flush_store_by_id($id) {
+        unset(self::$staticstore[$id]);
+        self::$staticstore[$id] = array();
+    }
+
+    /**
+     * Flushes all of the values from all stores.
+     *
+     * @copyright  2012 Sam Hemelryk
+     * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+     */
+    protected static function flush_store() {
+        $ids = array_keys(self::$staticstore);
+        unset(self::$staticstore);
+        self::$staticstore = array();
+        foreach ($ids as $id) {
+            self::$staticstore[$id] = array();
+        }
+    }
+}
+
+/**
  * The static store class.
  *
  * @copyright  2012 Sam Hemelryk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class cachestore_static extends static_data_store implements cache_store, cache_is_key_aware {
+class cachestore_static extends static_data_store implements cache_is_key_aware {
 
     /**
      * The name of the store
@@ -85,6 +137,17 @@ class cachestore_static extends static_data_store implements cache_store, cache_
     }
 
     /**
+     * Returns false as this store does not support multiple identifiers.
+     * (This optional function is a performance optimisation; it must be
+     * consistent with the value from get_supported_features.)
+     *
+     * @return bool False
+     */
+    public function supports_multiple_identifiers() {
+        return false;
+    }
+
+    /**
      * Returns the supported modes as a combined int.
      *
      * @param array $configuration
@@ -111,33 +174,6 @@ class cachestore_static extends static_data_store implements cache_store, cache_
      */
     public static function is_supported_mode($mode) {
         return ($mode === self::MODE_REQUEST);
-    }
-
-    /**
-     * Returns true if the store instance guarantees data.
-     *
-     * @return bool
-     */
-    public function supports_data_guarantee() {
-        return true;
-    }
-
-    /**
-     * Returns true if the store instance supports multiple identifiers.
-     *
-     * @return bool
-     */
-    public function supports_multiple_indentifiers() {
-        return false;
-    }
-
-    /**
-     * Returns true if the store instance supports native ttl.
-     *
-     * @return bool
-     */
-    public function supports_native_ttl() {
-        return true;
     }
 
     /**
@@ -306,8 +342,9 @@ class cachestore_static extends static_data_store implements cache_store, cache_
      * @return bool Returns true if the operation was a success, false otherwise.
      */
     public function delete($key) {
+        $result = isset($this->store[$key]);
         unset($this->store[$key]);
-        return true;
+        return $result;
     }
 
     /**
@@ -319,8 +356,10 @@ class cachestore_static extends static_data_store implements cache_store, cache_
     public function delete_many(array $keys) {
         $count = 0;
         foreach ($keys as $key) {
+            if (isset($this->store[$key])) {
+                $count++;
+            }
             unset($this->store[$key]);
-            $count++;
         }
         return $count;
     }
@@ -332,6 +371,8 @@ class cachestore_static extends static_data_store implements cache_store, cache_
      */
     public function purge() {
         $this->flush_store_by_id($this->storeid);
+        $this->store = &self::register_store_id($this->storeid);
+        return true;
     }
 
     /**
@@ -346,7 +387,7 @@ class cachestore_static extends static_data_store implements cache_store, cache_
     /**
      * Performs any necessary clean up when the store instance is being deleted.
      */
-    public function cleanup() {
+    public function instance_deleted() {
         $this->purge();
     }
 
@@ -360,7 +401,7 @@ class cachestore_static extends static_data_store implements cache_store, cache_
         // Do something here perhaps.
         $cache = new cachestore_static('Static store');
         $cache->initialise($definition);
-        return $cache;;
+        return $cache;
     }
 
     /**
@@ -369,57 +410,5 @@ class cachestore_static extends static_data_store implements cache_store, cache_
      */
     public function my_name() {
         return $this->name;
-    }
-}
-
-/**
- * The static data store class
- *
- * @copyright  2012 Sam Hemelryk
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-abstract class static_data_store {
-
-    /**
-     * An array for storage.
-     * @var array
-     */
-    private static $staticstore = array();
-
-    /**
-     * Returns a static store by reference... REFERENCE SUPER IMPORTANT.
-     *
-     * @param string $id
-     * @return array
-     */
-    protected static function &register_store_id($id) {
-        if (!array_key_exists($id, self::$staticstore)) {
-            self::$staticstore[$id] = array();
-        }
-        return self::$staticstore[$id];
-    }
-
-    /**
-     * Flushes the store of all values for belonging to the store with the given id.
-     * @param string $id
-     */
-    protected static function flush_store_by_id($id) {
-        unset(self::$staticstore[$id]);
-        self::$staticstore[$id] = array();
-    }
-
-    /**
-     * Flushes all of the values from all stores.
-     *
-     * @copyright  2012 Sam Hemelryk
-     * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-     */
-    protected static function flush_store() {
-        $ids = array_keys(self::$staticstore);
-        unset(self::$staticstore);
-        self::$staticstore = array();
-        foreach ($ids as $id) {
-            self::$staticstore[$id] = array();
-        }
     }
 }

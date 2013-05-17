@@ -165,7 +165,7 @@ class grade_report_user extends grade_report {
         $this->showrank        = grade_get_setting($this->courseid, 'report_user_showrank', $CFG->grade_report_user_showrank);
         $this->showpercentage  = grade_get_setting($this->courseid, 'report_user_showpercentage', $CFG->grade_report_user_showpercentage);
         $this->showhiddenitems = grade_get_setting($this->courseid, 'report_user_showhiddenitems', $CFG->grade_report_user_showhiddenitems);
-        $this->showtotalsifcontainhidden = grade_get_setting($this->courseid, 'report_user_showtotalsifcontainhidden', $CFG->grade_report_user_showtotalsifcontainhidden);
+        $this->showtotalsifcontainhidden = array($this->courseid => grade_get_setting($this->courseid, 'report_user_showtotalsifcontainhidden', $CFG->grade_report_user_showtotalsifcontainhidden));
 
         $this->showgrade       = grade_get_setting($this->courseid, 'report_user_showgrade',       !empty($CFG->grade_report_user_showgrade));
         $this->showrange       = grade_get_setting($this->courseid, 'report_user_showrange',       !empty($CFG->grade_report_user_showrange));
@@ -219,7 +219,14 @@ class grade_report_user extends grade_report {
         $this->calculate_averages();
     }
 
+    /**
+     * Recurses through a tree of elements setting the rowspan property on each element
+     *
+     * @param array $element Either the top element or, during recursion, the current element
+     * @return int The number of elements processed
+     */
     function inject_rowspans(&$element) {
+
         if ($element['depth'] > $this->maxdepth) {
             $this->maxdepth = $element['depth'];
         }
@@ -227,9 +234,11 @@ class grade_report_user extends grade_report {
             return 1;
         }
         $count = 1;
+
         foreach ($element['children'] as $key=>$child) {
             $count += $this->inject_rowspans($element['children'][$key]);
         }
+
         $element['rowspan'] = $count;
         return $count;
     }

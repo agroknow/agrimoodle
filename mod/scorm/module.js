@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Javascript helper function for IMS Content Package module.
+ * Javascript helper function for SCORM module.
  *
  * @package   mod-scorm
  * @copyright 2009 Petr Skoda (http://skodak.org)
@@ -24,6 +24,7 @@
 mod_scorm_launch_next_sco = null;
 mod_scorm_launch_prev_sco = null;
 mod_scorm_activate_item = null;
+scorm_layout_widget = null;
 
 M.mod_scorm = {};
 
@@ -40,8 +41,7 @@ M.mod_scorm.init = function(Y, hide_nav, hide_toc, toc_title, window_name, launc
         scorm_disable_toc = true;
     }
 
-    scoes_nav = JSON.parse(scoes_nav);
-    var scorm_layout_widget;
+    scoes_nav = Y.JSON.parse(scoes_nav);
     var scorm_current_node;
     var scorm_buttons = [];
     var scorm_bloody_labelclick = false;
@@ -152,7 +152,7 @@ M.mod_scorm.init = function(Y, hide_nav, hide_toc, toc_title, window_name, launc
             scorm_resize_frame();
 
             var left = scorm_layout_widget.getUnitByPosition('left');
-            if (left.expanded) {
+            if (left.expand) {
                 scorm_current_node.focus();
             }
             if (scorm_hide_nav == false) {
@@ -364,7 +364,7 @@ M.mod_scorm.init = function(Y, hide_nav, hide_toc, toc_title, window_name, launc
                 var datastring = scoes_nav[launch_sco].url + '&function=scorm_seq_flow&request=backward';
                 result = scorm_ajax_request(M.cfg.wwwroot + '/mod/scorm/datamodels/sequencinghandler.php?', datastring);
                 mod_scorm_seq = encodeURIComponent(result);
-                result = JSON.parse (result);
+                result = Y.JSON.parse (result);
                 if (typeof result.nextactivity.id != undefined) {
                         var node = scorm_prev(scorm_tree_node.getHighlightedNode())
                         if (node == null) {
@@ -390,7 +390,7 @@ M.mod_scorm.init = function(Y, hide_nav, hide_toc, toc_title, window_name, launc
                 var datastring = scoes_nav[launch_sco].url + '&function=scorm_seq_flow&request=forward';
                 result = scorm_ajax_request(M.cfg.wwwroot + '/mod/scorm/datamodels/sequencinghandler.php?', datastring);
                 mod_scorm_seq = encodeURIComponent(result);
-                result = JSON.parse (result);
+                result = Y.JSON.parse (result);
                 if (typeof result.nextactivity.id != undefined) {
                         var node = scorm_next(scorm_tree_node.getHighlightedNode())
                         if (node == null) {
@@ -493,6 +493,15 @@ M.mod_scorm.init = function(Y, hide_nav, hide_toc, toc_title, window_name, launc
         tree.expandAll();
         tree.render();
 
+        // On getting the window, always set the focus on the current item
+        Y.YUI2.util.Event.on(window, 'focus', function (e) {
+            var current = scorm_tree_node.getHighlightedNode();
+            var left = scorm_layout_widget.getUnitByPosition('left');
+            if (current && left.expand) {
+                current.focus();
+            }
+        });
+
         // navigation
         if (scorm_hide_nav == false) {
             scorm_nav_panel = new Y.YUI2.widget.Panel('scorm_navpanel', { visible:true, draggable:true, close:false, xy: [250, 450],
@@ -527,6 +536,9 @@ M.mod_scorm.init = function(Y, hide_nav, hide_toc, toc_title, window_name, launc
 
         // finally activate the chosen item
         var scorm_first_url = tree.getRoot().children[0];
+        if (scorm_first_url == null) { // This is probably a single sco with no children (AICC Direct uses this).
+            scorm_first_url = tree.getRoot();
+        }
         scorm_first_url.title = scoes_nav[launch_sco].url;
         scorm_activate_item(scorm_first_url);
 
@@ -538,4 +550,85 @@ M.mod_scorm.init = function(Y, hide_nav, hide_toc, toc_title, window_name, launc
             scorm_resize_layout(true);
         };
     });
+};
+
+M.mod_scorm.connectPrereqCallback = {
+
+    success: function(o) {
+        YUI().use('yui2-treeview', 'yui2-layout', function(Y) {
+            // MDL-29159 The core version of getContentHtml doesn't escape text properly.
+            Y.YUI2.widget.TextNode.prototype.getContentHtml = function() {
+                var sb = [];
+                sb[sb.length] = this.href ? '<a' : '<span';
+                sb[sb.length] = ' id="' + Y.YUI2.lang.escapeHTML(this.labelElId) + '"';
+                sb[sb.length] = ' class="' + Y.YUI2.lang.escapeHTML(this.labelStyle) + '"';
+                if (this.href) {
+                    sb[sb.length] = ' href="' + Y.YUI2.lang.escapeHTML(this.href) + '"';
+                    sb[sb.length] = ' target="' + Y.YUI2.lang.escapeHTML(this.target) + '"';
+                }
+                if (this.title) {
+                    sb[sb.length] = ' title="' + Y.YUI2.lang.escapeHTML(this.title) + '"';
+                }
+                sb[sb.length] = ' >';
+                sb[sb.length] = this.label;
+                sb[sb.length] = this.href?'</a>':'</span>';
+                return sb.join("");
+            };
+
+            if (o.responseText !== undefined) {
+                var tree = new Y.YUI2.widget.TreeView('scorm_tree');
+                if (scorm_tree_node && o.responseText) {
+                    var hnode = scorm_tree_node.getHighlightedNode();
+                    var hidx = null;
+                    if (hnode) {
+                        hidx = hnode.index + scorm_tree_node.getNodeCount();
+                    }
+                    // all gone
+                    var root_node = scorm_tree_node.getRoot();
+                    while (root_node.children.length > 0) {
+                        scorm_tree_node.removeNode(root_node.children[0]);
+                    }
+                }
+                // make sure the temporary tree element is not there
+                var el_old_tree = document.getElementById('scormtree123');
+                if (el_old_tree) {
+                    el_old_tree.parentNode.removeChild(el_old_tree);
+                }
+                var el_new_tree = document.createElement('div');
+                var pagecontent = document.getElementById("page-content");
+                el_new_tree.setAttribute('id','scormtree123');
+                el_new_tree.innerHTML = o.responseText;
+                // make sure it doesnt show
+                el_new_tree.style.display = 'none';
+                pagecontent.appendChild(el_new_tree)
+                // ignore the first level element as this is the title
+                var startNode = el_new_tree.firstChild.firstChild;
+                if (startNode.tagName == 'LI') {
+                    // go back to the beginning
+                    startNode = el_new_tree;
+                }
+                //var sXML = new XMLSerializer().serializeToString(startNode);
+                scorm_tree_node.buildTreeFromMarkup('scormtree123');
+                var el = document.getElementById('scormtree123');
+                el.parentNode.removeChild(el);
+                scorm_tree_node.expandAll();
+                scorm_tree_node.render();
+                if (hidx != null) {
+                    hnode = scorm_tree_node.getNodeByIndex(hidx);
+                    if (hnode) {
+                        hnode.highlight();
+                        var left = scorm_layout_widget.getUnitByPosition('left');
+                        if (left.expand) {
+                            hnode.focus();
+                        }
+                    }
+                }
+            }
+        });
+    },
+
+    failure: function(o) {
+        // TODO: do some sort of error handling.
+    }
+
 };

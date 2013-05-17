@@ -2,6 +2,7 @@
 
     require_once('../config.php');
     require_once($CFG->libdir.'/adminlib.php');
+    require_once($CFG->libdir.'/authlib.php');
     require_once($CFG->dirroot.'/user/filters/lib.php');
 
     $delete       = optional_param('delete', 0, PARAM_INT);
@@ -16,6 +17,7 @@
     $acl          = optional_param('acl', '0', PARAM_INT);           // id of user to tweak mnet ACL (requires $access)
     $suspend      = optional_param('suspend', 0, PARAM_INT);
     $unsuspend    = optional_param('unsuspend', 0, PARAM_INT);
+    $unlock       = optional_param('unlock', 0, PARAM_INT);
 
     admin_externalpage_setup('editusers');
 
@@ -32,6 +34,7 @@
     $strshowallusers = get_string('showallusers');
     $strsuspend = get_string('suspenduser', 'admin');
     $strunsuspend = get_string('unsuspenduser', 'admin');
+    $strunlock = get_string('unlockaccount', 'admin');
     $strconfirm = get_string('confirm');
 
     if (empty($CFG->loginhttps)) {
@@ -143,6 +146,14 @@
             }
         }
         redirect($returnurl);
+
+    } else if ($unlock and confirm_sesskey()) {
+        require_capability('moodle/user:update', $sitecontext);
+
+        if ($user = $DB->get_record('user', array('id'=>$unlock, 'mnethostid'=>$CFG->mnet_localhost_id, 'deleted'=>0))) {
+            login_unlock_account($user);
+        }
+        redirect($returnurl);
     }
 
     // create the user filter form
@@ -167,18 +178,32 @@
         } else {
             $columndir = $dir == "ASC" ? "DESC":"ASC";
             if ($column == "lastaccess") {
-                $columnicon = $dir == "ASC" ? "up":"down";
+                $columnicon = ($dir == "ASC") ? "sort_desc" : "sort_asc";
             } else {
-                $columnicon = $dir == "ASC" ? "down":"up";
+                $columnicon = ($dir == "ASC") ? "sort_asc" : "sort_desc";
             }
-            $columnicon = " <img src=\"" . $OUTPUT->pix_url('t/' . $columnicon) . "\" alt=\"\" />";
+            $columnicon = "<img class='iconsort' src=\"" . $OUTPUT->pix_url('t/' . $columnicon) . "\" alt=\"\" />";
 
         }
         $$column = "<a href=\"user.php?sort=$column&amp;dir=$columndir\">".$string[$column]."</a>$columnicon";
     }
 
-    if ($sort == "name") {
-        $sort = "firstname";
+    $override = new stdClass();
+    $override->firstname = 'firstname';
+    $override->lastname = 'lastname';
+    $fullnamelanguage = get_string('fullnamedisplay', '', $override);
+    if (($CFG->fullnamedisplay == 'firstname lastname') or
+        ($CFG->fullnamedisplay == 'firstname') or
+        ($CFG->fullnamedisplay == 'language' and $fullnamelanguage == 'firstname lastname' )) {
+        $fullnamedisplay = "$firstname / $lastname";
+        if ($sort == "name") { // If sort has already been set to something else then ignore.
+            $sort = "firstname";
+        }
+    } else { // ($CFG->fullnamedisplay == 'language' and $fullnamelanguage == 'lastname firstname').
+        $fullnamedisplay = "$lastname / $firstname";
+        if ($sort == "name") { // This should give the desired sorting based on fullnamedisplay.
+            $sort = "lastname";
+        }
     }
 
     list($extrasql, $params) = $ufiltering->get_sql_filter();
@@ -231,44 +256,29 @@
             $users = $nusers;
         }
 
-        $override = new stdClass();
-        $override->firstname = 'firstname';
-        $override->lastname = 'lastname';
-        $fullnamelanguage = get_string('fullnamedisplay', '', $override);
-        if (($CFG->fullnamedisplay == 'firstname lastname') or
-            ($CFG->fullnamedisplay == 'firstname') or
-            ($CFG->fullnamedisplay == 'language' and $fullnamelanguage == 'firstname lastname' )) {
-            $fullnamedisplay = "$firstname / $lastname";
-        } else { // ($CFG->fullnamedisplay == 'language' and $fullnamelanguage == 'lastname firstname')
-            $fullnamedisplay = "$lastname / $firstname";
-        }
-
         $table = new html_table();
         $table->head = array ();
-        $table->align = array();
+        $table->colclasses = array();
         $table->head[] = $fullnamedisplay;
-        $table->align[] = 'left';
+        $table->attributes['class'] = 'admintable generaltable';
+        $table->colclasses[] = 'leftalign';
         foreach ($extracolumns as $field) {
             $table->head[] = ${$field};
-            $table->align[] = 'left';
+            $table->colclasses[] = 'leftalign';
         }
         $table->head[] = $city;
-        $table->align[] = 'left';
+        $table->colclasses[] = 'leftalign';
         $table->head[] = $country;
-        $table->align[] = 'left';
+        $table->colclasses[] = 'leftalign';
         $table->head[] = $lastaccess;
-        $table->align[] = 'left';
+        $table->colclasses[] = 'leftalign';
         $table->head[] = get_string('edit');
-        $table->align[] = 'center';
+        $table->colclasses[] = 'centeralign';
         $table->head[] = "";
-        $table->align[] = 'center';
+        $table->colclasses[] = 'centeralign';
 
-        $table->width = "95%";
+        $table->id = "users";
         foreach ($users as $user) {
-            if (isguestuser($user)) {
-                continue; // do not display guest here
-            }
-
             $buttons = array();
             $lastcolumn = '';
 
@@ -303,6 +313,9 @@
                         }
                     }
 
+                    if (login_is_lockedout($user)) {
+                        $buttons[] = html_writer::link(new moodle_url($returnurl, array('unlock'=>$user->id, 'sesskey'=>sesskey())), html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/unlock'), 'alt'=>$strunlock, 'class'=>'iconsmall')), array('title'=>$strunlock));
+                    }
                 }
             }
 

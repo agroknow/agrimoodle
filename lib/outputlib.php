@@ -43,7 +43,7 @@ require_once($CFG->libdir.'/outputrequirementslib.php');
  * this function.
  */
 function theme_reset_all_caches() {
-    global $CFG;
+    global $CFG, $PAGE;
     require_once("$CFG->libdir/filelib.php");
 
     $next = time();
@@ -56,6 +56,10 @@ function theme_reset_all_caches() {
 
     set_config('themerev', $next); // time is unique even when you reset/switch database
     fulldelete("$CFG->cachedir/theme");
+
+    if ($PAGE) {
+        $PAGE->reload_theme();
+    }
 }
 
 /**
@@ -316,6 +320,12 @@ class theme_config {
     public $hidefromselector = false;
 
     /**
+     * @var array list of YUI CSS modules to be included on each page. This may be used
+     * to remove cssreset and use cssnormalise module instead.
+     */
+    public $yuicssmodules = array('cssreset', 'cssfonts', 'cssgrids', 'cssbase');
+
+    /**
      * @var renderer_factory Instance of the renderer_factory implementation
      * we are using. Implementation detail.
      */
@@ -364,6 +374,9 @@ class theme_config {
         } else if ($themename == theme_config::DEFAULT_THEME) {
             throw new coding_exception('Default theme '.theme_config::DEFAULT_THEME.' not available or broken!');
 
+        } else if ($config = theme_config::find_theme_config($CFG->theme, $settings)) {
+            return new theme_config($config);
+
         } else {
             // bad luck, the requested theme has some problems - admin see details in theme config
             return new theme_config(theme_config::find_theme_config(theme_config::DEFAULT_THEME, $settings));
@@ -404,7 +417,8 @@ class theme_config {
 
         $configurable = array('parents', 'sheets', 'parents_exclude_sheets', 'plugins_exclude_sheets', 'javascripts', 'javascripts_footer',
                               'parents_exclude_javascripts', 'layouts', 'enable_dock', 'enablecourseajax', 'supportscssoptimisation',
-                              'rendererfactory', 'csspostprocess', 'editor_sheets', 'rarrow', 'larrow', 'hidefromselector', 'doctype');
+                              'rendererfactory', 'csspostprocess', 'editor_sheets', 'rarrow', 'larrow', 'hidefromselector', 'doctype',
+                              'yuicssmodules');
 
         foreach ($config as $key=>$value) {
             if (in_array($key, $configurable)) {
@@ -469,6 +483,20 @@ class theme_config {
 
         //fix arrows if needed
         $this->check_theme_arrows();
+    }
+
+    /**
+     * Let the theme initialise the page object (usually $PAGE).
+     *
+     * This may be used for example to request jQuery in add-ons.
+     *
+     * @param moodle_page $page
+     */
+    public function init_page(moodle_page $page) {
+        $themeinitfunction = 'theme_'.$this->name.'_page_init';
+        if (function_exists($themeinitfunction)) {
+            $themeinitfunction($page);
+        }
     }
 
     /**
@@ -618,20 +646,34 @@ class theme_config {
 
         $urls = array();
 
+        $svg = $this->use_svg_icons();
+
         if ($rev > -1) {
+            $url = new moodle_url("$CFG->httpswwwroot/theme/styles.php");
             if (check_browser_version('MSIE', 5)) {
                 // We need to split the CSS files for IE
-                $urls[] = new moodle_url($CFG->httpswwwroot.'/theme/styles.php', array('theme'=>$this->name,'rev'=>$rev, 'type'=>'plugins'));
-                $urls[] = new moodle_url($CFG->httpswwwroot.'/theme/styles.php', array('theme'=>$this->name,'rev'=>$rev, 'type'=>'parents'));
-                $urls[] = new moodle_url($CFG->httpswwwroot.'/theme/styles.php', array('theme'=>$this->name,'rev'=>$rev, 'type'=>'theme'));
+                $urls[] = new moodle_url($url, array('theme' => $this->name,'rev' => $rev, 'type' => 'plugins', 'svg' => '0'));
+                $urls[] = new moodle_url($url, array('theme' => $this->name,'rev' => $rev, 'type' => 'parents', 'svg' => '0'));
+                $urls[] = new moodle_url($url, array('theme' => $this->name,'rev' => $rev, 'type' => 'theme', 'svg' => '0'));
             } else {
                 if (!empty($CFG->slasharguments)) {
-                    $url = new moodle_url("$CFG->httpswwwroot/theme/styles.php");
-                    $url->set_slashargument('/'.$this->name.'/'.$rev.'/all', 'noparam', true);
-                    $urls[] = $url;
+                    $slashargs = '/'.$this->name.'/'.$rev.'/all';
+                    if (!$svg) {
+                        // We add a simple /_s to the start of the path.
+                        // The underscore is used to ensure that it isn't a valid theme name.
+                        $slashargs = '/_s'.$slashargs;
+                    }
+                    $url->set_slashargument($slashargs, 'noparam', true);
                 } else {
-                    $urls[] = new moodle_url($CFG->httpswwwroot.'/theme/styles.php', array('theme'=>$this->name,'rev'=>$rev, 'type'=>'all'));
+                    $params = array('theme' => $this->name,'rev' => $rev, 'type' => 'all');
+                    if (!$svg) {
+                        // We add an SVG param so that we know not to serve SVG images.
+                        // We do this because all modern browsers support SVG and this param will one day be removed.
+                        $params['svg'] = '0';
+                    }
+                    $url->params($params);
                 }
+                $urls[] = $url;
             }
         } else {
             // find out the current CSS and cache it now for 5 seconds
@@ -641,7 +683,11 @@ class theme_config {
                 define('THEME_DESIGNER_CACHE_LIFETIME', 4); // this can be also set in config.php
             }
             $candidatedir = "$CFG->cachedir/theme/$this->name";
-            $candidatesheet = "$candidatedir/designer.ser";
+            if ($svg) {
+                $candidatesheet = "$candidatedir/designer.ser";
+            } else {
+                $candidatesheet = "$candidatedir/designer_nosvg.ser";
+            }
             $rebuild = true;
             if (file_exists($candidatesheet) and filemtime($candidatesheet) > time() - THEME_DESIGNER_CACHE_LIFETIME) {
                 if ($css = file_get_contents($candidatesheet)) {
@@ -674,8 +720,12 @@ class theme_config {
                 ignore_user_abort($prevabort);
             }
 
-            $baseurl = $CFG->httpswwwroot.'/theme/styles_debug.php';
-
+            $baseurl = new moodle_url($CFG->httpswwwroot.'/theme/styles_debug.php');
+            if (!$svg) {
+                // We add an SVG param so that we know not to serve SVG images.
+                // We do this because all modern browsers support SVG and this param will one day be removed.
+                $baseurl->param('svg', '0');
+            }
             if (check_browser_version('MSIE', 5)) {
                 // lalala, IE does not allow more than 31 linked CSS files from main document
                 $urls[] = new moodle_url($baseurl, array('theme'=>$this->name, 'type'=>'ie', 'subtype'=>'plugins'));
@@ -798,10 +848,12 @@ class theme_config {
     protected function css_files_get_contents($file, array $keys, css_optimiser $optimiser = null) {
         global $CFG;
         if (is_array($file)) {
+            // We use a separate array to keep everything in the exact same order.
+            $return = array();
             foreach ($file as $key=>$f) {
-                $file[$key] = $this->css_files_get_contents($f, array_merge($keys, array($key)), $optimiser);
+                $return[clean_param($key, PARAM_SAFEDIR)] = $this->css_files_get_contents($f, array_merge($keys, array($key)), $optimiser);
             }
-            return $file;
+            return $return;
         } else {
             $contents = file_get_contents($file);
             $contents = $this->post_process($contents);
@@ -821,8 +873,11 @@ class theme_config {
     /**
      * Generate a URL to the file that serves theme JavaScript files.
      *
+     * If we determine that the theme has no relevant files, then we return
+     * early with a null value.
+     *
      * @param bool $inhead true means head url, false means footer
-     * @return moodle_url
+     * @return moodle_url|null
      */
     public function javascript_url($inhead) {
         global $CFG;
@@ -830,6 +885,11 @@ class theme_config {
         $rev = theme_get_revision();
         $params = array('theme'=>$this->name,'rev'=>$rev);
         $params['type'] = $inhead ? 'head' : 'footer';
+
+        // Return early if there are no files to serve
+        if (count($this->javascript_files($params['type'])) === 0) {
+            return null;
+        }
 
         if (!empty($CFG->slasharguments) and $rev > 0) {
             $url = new moodle_url("$CFG->httpswwwroot/theme/javascript.php");
@@ -889,7 +949,6 @@ class theme_config {
                 }
             }
         }
-
         return $js;
     }
 
@@ -948,12 +1007,6 @@ class theme_config {
     public function post_process($css) {
         // now resolve all image locations
         if (preg_match_all('/\[\[pix:([a-z_]+\|)?([^\]]+)\]\]/', $css, $matches, PREG_SET_ORDER)) {
-            // We are going to disable the use of SVG images when available in CSS background-image properties
-            // as support for it in browsers is at best quirky.
-            // When we choose to support SVG in background css we will need to remove this code and implement a solution that is
-            // either consistent or varies the URL for serving CSS depending upon SVG being used if available, or not.
-            $originalsvguse = $this->use_svg_icons();
-            $this->force_svg_use(false);
             $replaced = array();
             foreach ($matches as $match) {
                 if (isset($replaced[$match[0]])) {
@@ -967,7 +1020,6 @@ class theme_config {
                 $imageurl = preg_replace('|^http.?://[^/]+|', '', $imageurl);
                 $css = str_replace($match[0], $imageurl, $css);
             }
-            $this->force_svg_use($originalsvguse);
         }
 
         // now resolve all theme settings or do any other postprocessing
@@ -1024,6 +1076,74 @@ class theme_config {
         }
 
         return $url;
+    }
+
+    /**
+     * Returns URL to the stored file via pluginfile.php.
+     *
+     * Note the theme must also implement pluginfile.php handler,
+     * theme revision is used instead of the itemid.
+     *
+     * @param string $setting
+     * @param string $filearea
+     * @return string protocol relative URL or null if not present
+     */
+    public function setting_file_url($setting, $filearea) {
+        global $CFG;
+
+        if (empty($this->settings->$setting)) {
+            return null;
+        }
+
+        $component = 'theme_'.$this->name;
+        $itemid = theme_get_revision();
+        $filepath = $this->settings->$setting;
+        $syscontext = context_system::instance();
+
+        $url = moodle_url::make_file_url("$CFG->wwwroot/pluginfile.php", "/$syscontext->id/$component/$filearea/$itemid".$filepath);
+
+        // Now this is tricky because the we can not hardcode http or https here, lets use the relative link.
+        // Note: unfortunately moodle_url does not support //urls yet.
+
+        $url = preg_replace('|^https?://|i', '//', $url->out(false));
+
+        return $url;
+    }
+
+    /**
+     * Serve the theme setting file.
+     *
+     * @param string $filearea
+     * @param array $args
+     * @param bool $forcedownload
+     * @param array $options
+     * @return bool may terminate if file not found or donotdie not specified
+     */
+    public function setting_file_serve($filearea, $args, $forcedownload, $options) {
+        global $CFG;
+        require_once("$CFG->libdir/filelib.php");
+
+        $syscontext = context_system::instance();
+        $component = 'theme_'.$this->name;
+
+        $revision = array_shift($args);
+        if ($revision < 0) {
+            $lifetime = 0;
+        } else {
+            $lifetime = 60*60*24*60;
+        }
+
+        $fs = get_file_storage();
+        $relativepath = implode('/', $args);
+
+        $fullpath = "/{$syscontext->id}/{$component}/{$filearea}/0/{$relativepath}";
+        $fullpath = rtrim($fullpath, '/');
+        if ($file = $fs->get_file_by_hash(sha1($fullpath))) {
+            send_stored_file($file, $lifetime, 0, $forcedownload, $options);
+            return true;
+        } else {
+            send_file_not_found();
+        }
     }
 
     /**
@@ -1120,11 +1240,14 @@ class theme_config {
                 if (empty($_SERVER['HTTP_USER_AGENT'])) {
                     // Can't be sure, just say no.
                     $this->usesvg = false;
-                } else if (preg_match('#MSIE +[5-8]\.#', $_SERVER['HTTP_USER_AGENT'])) {
+                } else if (check_browser_version('MSIE', 0) and !check_browser_version('MSIE', 9)) {
                     // IE < 9 doesn't support SVG. Say no.
                     $this->usesvg = false;
                 } else if (preg_match('#Android +[0-2]\.#', $_SERVER['HTTP_USER_AGENT'])) {
                     // Android < 3 doesn't support SVG. Say no.
+                    $this->usesvg = false;
+                } else if (check_browser_version('Opera', 0)) {
+                    // Opera 12 still does not support SVG well enough. Say no.
                     $this->usesvg = false;
                 } else {
                     // Presumed fine.
@@ -1142,10 +1265,11 @@ class theme_config {
      * Forces the usesvg setting to either true or false, avoiding any decision making.
      *
      * This function should only ever be used when absolutely required, and before any generation of image URL's has occurred.
+     * DO NOT ABUSE THIS FUNCTION... not that you'd want to right ;)
      *
      * @param bool $setting True to force the use of svg when available, null otherwise.
      */
-    private function force_svg_use($setting) {
+    public function force_svg_use($setting) {
         $this->usesvg = (bool)$setting;
     }
 

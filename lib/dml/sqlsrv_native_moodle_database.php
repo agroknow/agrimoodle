@@ -41,6 +41,8 @@ class sqlsrv_native_moodle_database extends moodle_database {
     protected $last_error_reporting; // To handle SQL*Server-Native driver default verbosity
     protected $temptables; // Control existing temptables (sqlsrv_moodle_temptables object)
     protected $collation;  // current DB collation cache
+    /** @var array list of open recordsets */
+    protected $recordsets = array();
 
     /**
      * Constructor - instantiates the database, specifying if it's external (connect to other systems) or no (Moodle DB)
@@ -474,11 +476,15 @@ class sqlsrv_native_moodle_database extends moodle_database {
      * @return array array of database_column_info objects indexed with column names
      */
     public function get_columns($table, $usecache = true) {
-        if ($usecache and isset($this->columns[$table])) {
-            return $this->columns[$table];
+        if ($usecache) {
+            $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
+            $cache = cache::make('core', 'databasemeta', $properties);
+            if ($data = $cache->get($table)) {
+                return $data;
+            }
         }
 
-        $this->columns[$table] = array ();
+        $structure = array();
 
         if (!$this->temptables->is_temptable($table)) { // normal table, get metadata from own schema
             $sql = "SELECT column_name AS name,
@@ -558,11 +564,15 @@ class sqlsrv_native_moodle_database extends moodle_database {
             // Process binary
             $info->binary = $info->meta_type == 'B' ? true : false;
 
-            $this->columns[$table][$info->name] = new database_column_info($info);
+            $structure[$info->name] = new database_column_info($info);
         }
         $this->free_result($result);
 
-        return $this->columns[$table];
+        if ($usecache) {
+            $result = $cache->set($table, $structure);
+        }
+
+        return $structure;
     }
 
     /**
@@ -789,7 +799,20 @@ class sqlsrv_native_moodle_database extends moodle_database {
      * @return sqlsrv_native_moodle_recordset
      */
     protected function create_recordset($result) {
-        return new sqlsrv_native_moodle_recordset($result);
+        $rs = new sqlsrv_native_moodle_recordset($result, $this);
+        $this->recordsets[] = $rs;
+        return $rs;
+    }
+
+    /**
+     * Do not use outside of recordset class.
+     * @internal
+     * @param sqlsrv_native_moodle_recordset $rs
+     */
+    public function recordset_closed(sqlsrv_native_moodle_recordset $rs) {
+        if ($key = array_search($rs, $this->recordsets, true)) {
+            unset($this->recordsets[$key]);
+        }
     }
 
     /**
@@ -1226,7 +1249,7 @@ class sqlsrv_native_moodle_database extends moodle_database {
         $arr = func_get_args();
 
         foreach ($arr as $key => $ele) {
-            $arr[$key] = ' CAST('.$ele.' AS VARCHAR(255)) ';
+            $arr[$key] = ' CAST('.$ele.' AS NVARCHAR(255)) ';
         }
         $s = implode(' + ', $arr);
 
@@ -1347,6 +1370,10 @@ class sqlsrv_native_moodle_database extends moodle_database {
         if (!$this->session_lock_supported()) {
             return;
         }
+        if (!$this->used_for_db_sessions) {
+            return;
+        }
+
         parent::release_session_lock($rowid);
 
         $fullname = $this->dbname.'-'.$this->prefix.'-session-'.$rowid;
@@ -1363,6 +1390,12 @@ class sqlsrv_native_moodle_database extends moodle_database {
      * @return void
      */
     protected function begin_transaction() {
+        // Recordsets do not work well with transactions in SQL Server,
+        // let's prefetch the recordsets to memory to work around these problems.
+        foreach ($this->recordsets as $rs) {
+            $rs->transaction_starts();
+        }
+
         $this->query_start('native sqlsrv_begin_transaction', NULL, SQL_QUERY_AUX);
         $result = sqlsrv_begin_transaction($this->sqlsrv);
         $this->query_end($result);

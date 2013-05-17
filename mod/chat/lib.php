@@ -238,7 +238,7 @@ function chat_user_complete($course, $user, $mod, $chat) {
 
 /**
  * Given a course and a date, prints a summary of all chat rooms past and present
- * This function is called from course/lib.php: print_recent_activity()
+ * This function is called from block_recent_activity
  *
  * @global object
  * @global object
@@ -1228,7 +1228,7 @@ function chat_extend_navigation($navigation, $course, $module, $cm) {
         $links[] = new action_link($url, get_string('noframesjs', 'message'), $action);
 
         foreach ($links as $link) {
-            $navigation->add($link->text, $link, navigation_node::TYPE_SETTING, null ,null, new pix_icon('c/group' , ''));
+            $navigation->add($link->text, $link, navigation_node::TYPE_SETTING, null ,null, new pix_icon('i/group' , ''));
         }
     }
 
@@ -1237,7 +1237,7 @@ function chat_extend_navigation($navigation, $course, $module, $cm) {
         $users = $navigation->add(get_string('currentusers', 'chat'));
         foreach ($chatusers as $chatuser) {
             $userlink = new moodle_url('/user/view.php', array('id'=>$chatuser->id,'course'=>$course->id));
-            $users->add(fullname($chatuser).' '.format_time(time() - $chatuser->lastmessageping), $userlink, navigation_node::TYPE_USER, null, null, new pix_icon('c/user', ''));
+            $users->add(fullname($chatuser).' '.format_time(time() - $chatuser->lastmessageping), $userlink, navigation_node::TYPE_USER, null, null, new pix_icon('i/user', ''));
         }
     }
 }

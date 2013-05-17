@@ -29,12 +29,68 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
+ * The session data store class.
+ *
+ * @copyright  2012 Sam Hemelryk
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+abstract class session_data_store extends cache_store {
+
+    /**
+     * Used for the actual storage.
+     * @var array
+     */
+    private static $sessionstore = null;
+
+    /**
+     * Returns a static store by reference... REFERENCE SUPER IMPORTANT.
+     *
+     * @param string $id
+     * @return array
+     */
+    protected static function &register_store_id($id) {
+        if (is_null(self::$sessionstore)) {
+            global $SESSION;
+            if (!isset($SESSION->cachestore_session)) {
+                $SESSION->cachestore_session = array();
+            }
+            self::$sessionstore =& $SESSION->cachestore_session;
+        }
+        if (!array_key_exists($id, self::$sessionstore)) {
+            self::$sessionstore[$id] = array();
+        }
+        return self::$sessionstore[$id];
+    }
+
+    /**
+     * Flushes the data belong to the given store id.
+     * @param string $id
+     */
+    protected static function flush_store_by_id($id) {
+        unset(self::$sessionstore[$id]);
+        self::$sessionstore[$id] = array();
+    }
+
+    /**
+     * Flushes the store of all data.
+     */
+    protected static function flush_store() {
+        $ids = array_keys(self::$sessionstore);
+        unset(self::$sessionstore);
+        self::$sessionstore = array();
+        foreach ($ids as $id) {
+            self::$sessionstore[$id] = array();
+        }
+    }
+}
+
+/**
  * The Session store class.
  *
  * @copyright  2012 Sam Hemelryk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class cachestore_session extends session_data_store implements cache_store, cache_is_key_aware {
+class cachestore_session extends session_data_store implements cache_is_key_aware, cache_is_searchable {
 
     /**
      * The name of the store
@@ -81,7 +137,19 @@ class cachestore_session extends session_data_store implements cache_store, cach
      */
     public static function get_supported_features(array $configuration = array()) {
         return self::SUPPORTS_DATA_GUARANTEE +
-               self::SUPPORTS_NATIVE_TTL;
+               self::SUPPORTS_NATIVE_TTL +
+               self::IS_SEARCHABLE;
+    }
+
+    /**
+     * Returns false as this store does not support multiple identifiers.
+     * (This optional function is a performance optimisation; it must be
+     * consistent with the value from get_supported_features.)
+     *
+     * @return bool False
+     */
+    public function supports_multiple_identifiers() {
+        return false;
     }
 
     /**
@@ -111,33 +179,6 @@ class cachestore_session extends session_data_store implements cache_store, cach
      */
     public static function is_supported_mode($mode) {
         return ($mode === self::MODE_SESSION);
-    }
-
-    /**
-     * Returns true if the store instance guarantees data.
-     *
-     * @return bool
-     */
-    public function supports_data_guarantee() {
-        return true;
-    }
-
-    /**
-     * Returns true if the store instance supports multiple identifiers.
-     *
-     * @return bool
-     */
-    public function supports_multiple_indentifiers() {
-        return false;
-    }
-
-    /**
-     * Returns true if the store instance supports native ttl.
-     *
-     * @return bool
-     */
-    public function supports_native_ttl() {
-        return true;
     }
 
     /**
@@ -306,8 +347,9 @@ class cachestore_session extends session_data_store implements cache_store, cach
      * @return bool Returns true if the operation was a success, false otherwise.
      */
     public function delete($key) {
+        $result = isset($this->store[$key]);
         unset($this->store[$key]);
-        return true;
+        return $result;
     }
 
     /**
@@ -319,8 +361,10 @@ class cachestore_session extends session_data_store implements cache_store, cach
     public function delete_many(array $keys) {
         $count = 0;
         foreach ($keys as $key) {
+            if (isset($this->store[$key])) {
+                $count++;
+            }
             unset($this->store[$key]);
-            $count++;
         }
         return $count;
     }
@@ -332,6 +376,7 @@ class cachestore_session extends session_data_store implements cache_store, cach
      */
     public function purge() {
         $this->store = array();
+        return true;
     }
 
     /**
@@ -346,7 +391,7 @@ class cachestore_session extends session_data_store implements cache_store, cach
     /**
      * Performs any necessary clean up when the store instance is being deleted.
      */
-    public function cleanup() {
+    public function instance_deleted() {
         $this->purge();
     }
 
@@ -370,60 +415,28 @@ class cachestore_session extends session_data_store implements cache_store, cach
     public function my_name() {
         return $this->name;
     }
-}
-
-/**
- * The session data store class.
- *
- * @copyright  2012 Sam Hemelryk
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-abstract class session_data_store {
 
     /**
-     * Used for the actual storage.
-     * @var array
-     */
-    private static $sessionstore = null;
-
-    /**
-     * Returns a static store by reference... REFERENCE SUPER IMPORTANT.
+     * Finds all of the keys being stored in the cache store instance.
      *
-     * @param string $id
      * @return array
      */
-    protected static function &register_store_id($id) {
-        if (is_null(self::$sessionstore)) {
-            global $SESSION;
-            if (!isset($SESSION->cachestore_session)) {
-                $SESSION->cachestore_session = array();
+    public function find_all() {
+        return array_keys($this->store);
+    }
+
+    /**
+     * Finds all of the keys whose keys start with the given prefix.
+     *
+     * @param string $prefix
+     */
+    public function find_by_prefix($prefix) {
+        $return = array();
+        foreach ($this->find_all() as $key) {
+            if (strpos($key, $prefix) === 0) {
+                $return[] = $key;
             }
-            self::$sessionstore =& $SESSION->cachestore_session;
         }
-        if (!array_key_exists($id, self::$sessionstore)) {
-            self::$sessionstore[$id] = array();
-        }
-        return self::$sessionstore[$id];
-    }
-
-    /**
-     * Flushes the data belong to the given store id.
-     * @param string $id
-     */
-    protected static function flush_store_by_id($id) {
-        unset(self::$sessionstore[$id]);
-        self::$sessionstore[$id] = array();
-    }
-
-    /**
-     * Flushes the store of all data.
-     */
-    protected static function flush_store() {
-        $ids = array_keys(self::$sessionstore);
-        unset(self::$sessionstore);
-        self::$sessionstore = array();
-        foreach ($ids as $id) {
-            self::$sessionstore[$id] = array();
-        }
+        return $return;
     }
 }

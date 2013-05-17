@@ -72,6 +72,12 @@ class cache_config {
     protected $configlocks = array();
 
     /**
+     * The site identifier used when the cache config was last saved.
+     * @var string
+     */
+    protected $siteidentifier = null;
+
+    /**
      * Please use cache_config::instance to get an instance of the cache config that is ready to be used.
      */
     public function __construct() {
@@ -122,12 +128,15 @@ class cache_config {
     /**
      * Loads the configuration file and parses its contents into the expected structure.
      *
+     * @param array|false $configuration Can be used to force a configuration. Should only be used when truly required.
      * @return boolean
      */
-    public function load() {
+    public function load($configuration = false) {
         global $CFG;
 
-        $configuration = $this->include_configuration();
+        if ($configuration === false) {
+            $configuration = $this->include_configuration();
+        }
 
         $this->configstores = array();
         $this->configdefinitions = array();
@@ -135,6 +144,12 @@ class cache_config {
         $this->configmodemappings = array();
         $this->configdefinitionmappings = array();
         $this->configlockmappings = array();
+
+        $siteidentifier = 'unknown';
+        if (array_key_exists('siteidentifier', $configuration)) {
+            $siteidentifier = $configuration['siteidentifier'];
+        }
+        $this->siteidentifier = $siteidentifier;
 
         // Filter the lock instances.
         $defaultlock = null;
@@ -182,7 +197,7 @@ class cache_config {
             if (!class_exists($class)) {
                 continue;
             }
-            if (!array_key_exists('cache_store', class_implements($class))) {
+            if (!array_key_exists('cache_store', class_parents($class))) {
                 continue;
             }
             if (!array_key_exists('configuration', $store) || !is_array($store['configuration'])) {
@@ -215,6 +230,29 @@ class cache_config {
             if ($conf['mode'] < cache_store::MODE_APPLICATION || $conf['mode'] > cache_store::MODE_REQUEST) {
                 // Invalid cache mode used for the definition.
                 continue;
+            }
+            if ($conf['mode'] === cache_store::MODE_SESSION || $conf['mode'] === cache_store::MODE_REQUEST) {
+                // We force this for session and request caches.
+                // They are only allowed to use the default as we don't want people changing them.
+                $conf['sharingoptions'] = cache_definition::SHARING_DEFAULT;
+                $conf['selectedsharingoption'] = cache_definition::SHARING_DEFAULT;
+                $conf['userinputsharingkey'] = '';
+            } else {
+                // Default the sharing option as it was added for 2.5.
+                // This can be removed sometime after 2.5 is the minimum version someone can upgrade from.
+                if (!isset($conf['sharingoptions'])) {
+                    $conf['sharingoptions'] = cache_definition::SHARING_DEFAULTOPTIONS;
+                }
+                // Default the selected sharing option as it was added for 2.5.
+                // This can be removed sometime after 2.5 is the minimum version someone can upgrade from.
+                if (!isset($conf['selectedsharingoption'])) {
+                    $conf['selectedsharingoption'] = cache_definition::SHARING_DEFAULT;
+                }
+                // Default the user input sharing key as it was added for 2.5.
+                // This can be removed sometime after 2.5 is the minimum version someone can upgrade from.
+                if (!isset($conf['userinputsharingkey'])) {
+                    $conf['userinputsharingkey'] = '';
+                }
             }
             $this->configdefinitions[$id] = $conf;
         }
@@ -266,6 +304,14 @@ class cache_config {
         usort($this->configdefinitionmappings, array($this, 'sort_mappings'));
 
         return true;
+    }
+
+    /**
+     * Returns the site identifier used by the cache API.
+     * @return string
+     */
+    public function get_site_identifier() {
+        return $this->siteidentifier;
     }
 
     /**
@@ -345,6 +391,69 @@ class cache_config {
     }
 
     /**
+     * Returns the definitions mapped into the given store name.
+     *
+     * @param string $storename
+     * @return array Associative array of definitions, id=>definition
+     */
+    public function get_definitions_by_store($storename) {
+        $definitions = array();
+
+        // This function was accidentally made static at some stage in the past.
+        // It was converted to an instance method but to be backwards compatible
+        // we must step around this in code.
+        if (!isset($this)) {
+            $config = cache_config::instance();
+        } else {
+            $config = $this;
+        }
+
+        $stores = $config->get_all_stores();
+        if (!array_key_exists($storename, $stores)) {
+            // The store does not exist.
+            return false;
+        }
+
+        $defmappings = $config->get_definition_mappings();
+        // Create an associative array for the definition mappings.
+        $thedefmappings = array();
+        foreach ($defmappings as $defmapping) {
+            $thedefmappings[$defmapping['definition']] = $defmapping;
+        }
+
+        // Search for matches in default mappings.
+        $defs = $config->get_definitions();
+        foreach($config->get_mode_mappings() as $modemapping) {
+            if ($modemapping['store'] !== $storename) {
+                continue;
+            }
+            foreach($defs as $id => $definition) {
+                if ($definition['mode'] !== $modemapping['mode']) {
+                    continue;
+                }
+                // Exclude custom definitions mapping: they will be managed few lines below.
+                if (array_key_exists($id, $thedefmappings)) {
+                    continue;
+                }
+                $definitions[$id] = $definition;
+            }
+        }
+
+        // Search for matches in the custom definitions mapping
+        foreach ($defmappings as $defmapping) {
+            if ($defmapping['store'] !== $storename) {
+                continue;
+            }
+            $definition = $config->get_definition_by_id($defmapping['definition']);
+            if ($definition) {
+                $definitions[$defmapping['definition']] = $definition;
+            }
+        }
+
+        return $definitions;
+    }
+
+    /**
      * Returns all of the stores that are suitable for the given mode and requirements.
      *
      * @param int $mode One of cache_store::MODE_*
@@ -370,7 +479,8 @@ class cache_config {
      */
     public function get_stores_for_definition(cache_definition $definition) {
         // Check if MUC has been disabled.
-        if (defined('NO_CACHE_STORES') && NO_CACHE_STORES !== false) {
+        $factory = cache_factory::instance();
+        if ($factory->stores_disabled()) {
             // Yip its been disabled.
             // To facilitate this we are going to always return an empty array of stores to use.
             // This will force all cache instances to use the cachestore_dummy.
@@ -462,6 +572,16 @@ class cache_config {
                 return $this->configlocks[$lock];
             }
         }
+        return $this->get_default_lock();
+    }
+
+    /**
+     * Gets the default lock instance.
+     *
+     * @return array
+     * @throws cache_exception
+     */
+    public function get_default_lock() {
         foreach ($this->configlocks as $lockconf) {
             if (!empty($lockconf['default'])) {
                 return $lockconf;

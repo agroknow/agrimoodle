@@ -45,12 +45,8 @@ require_once(dirname(__FILE__).'/lib.php');
 function report_log_print_graph($course, $userid, $type, $date=0) {
     global $CFG;
 
-    if (empty($CFG->gdversion)) {
-        echo "(".get_string("gdneed").")";
-    } else {
-        echo '<img src="'.$CFG->wwwroot.'/report/log/graph.php?id='.$course->id.
-             '&amp;user='.$userid.'&amp;type='.$type.'&amp;date='.$date.'" alt="" />';
-    }
+    echo '<img src="'.$CFG->wwwroot.'/report/log/graph.php?id='.$course->id.
+         '&amp;user='.$userid.'&amp;type='.$type.'&amp;date='.$date.'" alt="" />';
 }
 /**
  * This function is used to generate and display Mnet selector form
@@ -190,12 +186,12 @@ function report_log_print_mnet_selector_form($hostid, $course, $selecteduser=0, 
         $sites = array();
         if ($CFG->mnet_localhost_id == $hostid) {
             if (has_capability('report/log:view', $sitecontext) && $showcourses) {
-                if ($ccc = $DB->get_records("course", null, "fullname","id,fullname,category")) {
+                if ($ccc = $DB->get_records("course", null, "fullname","id,shortname,fullname,category")) {
                     foreach ($ccc as $cc) {
                         if ($cc->id == SITEID) {
                             $sites["$hostid/$cc->id"]   = format_string($cc->fullname).' ('.get_string('site').')';
                         } else {
-                            $courses["$hostid/$cc->id"] = format_string($cc->fullname);
+                            $courses["$hostid/$cc->id"] = format_string(get_course_display_name_for_list($cc));
                         }
                     }
                 }
@@ -223,28 +219,28 @@ function report_log_print_mnet_selector_form($hostid, $course, $selecteduser=0, 
     $activities = array();
     $selectedactivity = "";
 
-/// Casting $course->modinfo to string prevents one notice when the field is null
-    if ($modinfo = unserialize((string)$course->modinfo)) {
+    $modinfo = get_fast_modinfo($course);
+    if (!empty($modinfo->cms)) {
         $section = 0;
-        foreach ($modinfo as $mod) {
-            if ($mod->mod == "label") {
+        foreach ($modinfo->cms as $cm) {
+            if (!$cm->uservisible || !$cm->has_view()) {
                 continue;
             }
-            if ($mod->section > 0 and $section <> $mod->section) {
-                $activities["section/$mod->section"] = '--- '.get_section_name($course, $mod->section).' ---';
+            if ($cm->sectionnum > 0 and $section <> $cm->sectionnum) {
+                $activities["section/$cm->sectionnum"] = '--- '.get_section_name($course, $cm->sectionnum).' ---';
             }
-            $section = $mod->section;
-            $mod->name = strip_tags(format_string($mod->name, true));
-            if (textlib::strlen($mod->name) > 55) {
-                $mod->name = textlib::substr($mod->name, 0, 50)."...";
+            $section = $cm->sectionnum;
+            $modname = strip_tags($cm->get_formatted_name());
+            if (textlib::strlen($modname) > 55) {
+                $modname = textlib::substr($modname, 0, 50)."...";
             }
-            if (!$mod->visible) {
-                $mod->name = "(".$mod->name.")";
+            if (!$cm->visible) {
+                $modname = "(".$modname.")";
             }
-            $activities["$mod->cm"] = $mod->name;
+            $activities["$cm->id"] = $modname;
 
-            if ($mod->cm == $modid) {
-                $selectedactivity = "$mod->cm";
+            if ($cm->id == $modid) {
+                $selectedactivity = "$cm->id";
             }
         }
     }
@@ -280,7 +276,10 @@ function report_log_print_mnet_selector_form($hostid, $course, $selecteduser=0, 
     $timemidnight = $today = usergetmidnight($timenow);
 
     // Put today up the top of the list
-    $dates = array("$timemidnight" => get_string("today").", ".userdate($timenow, $strftimedate) );
+    $dates = array(
+        "0" => get_string('alldays'),
+        "$timemidnight" => get_string("today").", ".userdate($timenow, $strftimedate)
+    );
 
     if (!$course->startdate or ($course->startdate > $timenow)) {
         $course->startdate = $course->timecreated;
@@ -294,7 +293,7 @@ function report_log_print_mnet_selector_form($hostid, $course, $selecteduser=0, 
         $numdates++;
     }
 
-    if ($selecteddate == "today") {
+    if ($selecteddate === "today") {
         $selecteddate = $today;
     }
 
@@ -309,7 +308,7 @@ function report_log_print_mnet_selector_form($hostid, $course, $selecteduser=0, 
         echo html_writer::select($dropdown, "host_course", $hostid.'/'.$cid);
     } else {
         $courses = array();
-        $courses[$course->id] = $course->fullname . ((empty($course->category)) ? ' ('.get_string('site').') ' : '');
+        $courses[$course->id] = get_course_display_name_for_list($course) . ((empty($course->category)) ? ' ('.get_string('site').') ' : '');
         echo html_writer::label(get_string('selectacourse'), 'menuid', false, array('class' => 'accesshide'));
         echo html_writer::select($courses,"id",$course->id, false);
         if (has_capability('report/log:view', $sitecontext)) {
@@ -354,7 +353,7 @@ function report_log_print_mnet_selector_form($hostid, $course, $selecteduser=0, 
     }
 
     echo html_writer::label(get_string('date'), 'menudate', false, array('class' => 'accesshide'));
-    echo html_writer::select($dates, "date", $selecteddate, get_string("alldays"));
+    echo html_writer::select($dates, "date", $selecteddate, false);
     echo html_writer::label(get_string('showreports'), 'menumodid', false, array('class' => 'accesshide'));
     echo html_writer::select($activities, "modid", $selectedactivity, get_string("allactivities"));
     echo html_writer::label(get_string('actions'), 'menumodaction', false, array('class' => 'accesshide'));
@@ -457,10 +456,10 @@ function report_log_print_selector_form($course, $selecteduser=0, $selecteddate=
     }
 
     if (has_capability('report/log:view', $sitecontext) && $showcourses) {
-        if ($ccc = $DB->get_records("course", null, "fullname", "id,fullname,category")) {
+        if ($ccc = $DB->get_records("course", null, "fullname", "id,shortname,fullname,category")) {
             foreach ($ccc as $cc) {
                 if ($cc->category) {
-                    $courses["$cc->id"] = format_string($cc->fullname);
+                    $courses["$cc->id"] = format_string(get_course_display_name_for_list($cc));
                 } else {
                     $courses["$cc->id"] = format_string($cc->fullname) . ' (Site)';
                 }
@@ -472,28 +471,28 @@ function report_log_print_selector_form($course, $selecteduser=0, $selecteddate=
     $activities = array();
     $selectedactivity = "";
 
-/// Casting $course->modinfo to string prevents one notice when the field is null
-    if ($modinfo = unserialize((string)$course->modinfo)) {
+    $modinfo = get_fast_modinfo($course);
+    if (!empty($modinfo->cms)) {
         $section = 0;
-        foreach ($modinfo as $mod) {
-            if ($mod->mod == "label") {
+        foreach ($modinfo->cms as $cm) {
+            if (!$cm->uservisible || !$cm->has_view()) {
                 continue;
             }
-            if ($mod->section > 0 and $section <> $mod->section) {
-                $activities["section/$mod->section"] = '--- '.get_section_name($course, $mod->section).' ---';
+            if ($cm->sectionnum > 0 and $section <> $cm->sectionnum) {
+                $activities["section/$cm->sectionnum"] = '--- '.get_section_name($course, $cm->sectionnum).' ---';
             }
-            $section = $mod->section;
-            $mod->name = strip_tags(format_string($mod->name, true));
-            if (textlib::strlen($mod->name) > 55) {
-                $mod->name = textlib::substr($mod->name, 0, 50)."...";
+            $section = $cm->sectionnum;
+            $modname = strip_tags($cm->get_formatted_name());
+            if (textlib::strlen($modname) > 55) {
+                $modname = textlib::substr($modname, 0, 50)."...";
             }
-            if (!$mod->visible) {
-                $mod->name = "(".$mod->name.")";
+            if (!$cm->visible) {
+                $modname = "(".$modname.")";
             }
-            $activities["$mod->cm"] = $mod->name;
+            $activities["$cm->id"] = $modname;
 
-            if ($mod->cm == $modid) {
-                $selectedactivity = "$mod->cm";
+            if ($cm->id == $modid) {
+                $selectedactivity = "$cm->id";
             }
         }
     }
@@ -558,7 +557,7 @@ function report_log_print_selector_form($course, $selecteduser=0, $selecteddate=
     } else {
         //        echo '<input type="hidden" name="id" value="'.$course->id.'" />';
         $courses = array();
-        $courses[$course->id] = $course->fullname . (($course->id == SITEID) ? ' ('.get_string('site').') ' : '');
+        $courses[$course->id] = get_course_display_name_for_list($course) . (($course->id == SITEID) ? ' ('.get_string('site').') ' : '');
         echo html_writer::label(get_string('selectacourse'), 'menuid', false, array('class' => 'accesshide'));
         echo html_writer::select($courses,"id",$course->id, false);
         if (has_capability('report/log:view', $sitecontext)) {

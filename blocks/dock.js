@@ -516,7 +516,7 @@ M.core_dock.fixTitleOrientation = function(item, title, text) {
     // We need to fix a font-size - sorry theme designers.
     var fontsize = '11px';
     var transform = (clockwise) ? 'rotate(90deg)' : 'rotate(270deg)';
-    var test = Y.Node.create('<h2><span style="font-size:'+fontsize+';position:absolute;">'+text+'</span></h2>');
+    var test = Y.Node.create('<h2><span class="transform-test-node" style="font-size:'+fontsize+';">'+text+'</span></h2>');
     this.nodes.body.insert(test, 0);
     var width = test.one('span').get('offsetWidth') * 1.2;
     var height = test.one('span').get('offsetHeight');
@@ -532,9 +532,15 @@ M.core_dock.fixTitleOrientation = function(item, title, text) {
         'position' : 'relative',
         'fontSize' : fontsize,
         'width' : width,
-        'top' : width/2,
-        'right' : width/2 - height
+        'top' : width/2
     });
+
+    // Positioning is different when in RTL mode.
+    if (right_to_left()) {
+        title.setStyle('left', width/2 - height);
+    } else {
+        title.setStyle('right', width/2 - height);
+    }
 
     // Rotate the text
     title.setStyles({
@@ -830,8 +836,13 @@ M.core_dock.genericblock.prototype = {
         }
 
         // Must set the image src seperatly of we get an error with XML strict headers
-        var moveto = Y.Node.create('<input type="image" class="moveto customcommand requiresjs" alt="'+M.str.block.addtodock+'" title="'+M.str.block.addtodock+'" />');
-        moveto.setAttribute('src', M.util.image_url('t/block_to_dock', 'moodle'));
+        var moveto = Y.Node.create('<input type="image" class="moveto customcommand requiresjs" alt="'+M.str.block.addtodock+'" title="'+
+            Y.Escape.html(M.util.get_string('dockblock', 'block', node.one('.header .title h2').getHTML())) +'" />');
+        var icon = 't/block_to_dock';
+        if (right_to_left()) {
+            icon = 't/block_to_dock_rtl';
+        }
+        moveto.setAttribute('src', M.util.image_url(icon, 'moodle'));
         moveto.on('movetodock|click', this.move_to_dock, this, commands);
 
         var blockaction = node.one('.block_action');
@@ -896,8 +907,13 @@ M.core_dock.genericblock.prototype = {
         }
 
         // Must set the image src seperatly of we get an error with XML strict headers
-        var movetoimg = Y.Node.create('<img alt="'+M.str.block.undockitem+'" title="'+M.str.block.undockitem+'" />');
-        movetoimg.setAttribute('src', M.util.image_url('t/dock_to_block', 'moodle'));
+        var movetoimg = Y.Node.create('<img alt="'+Y.Escape.html(M.str.block.undockitem)+'" title="'+
+            Y.Escape.html(M.util.get_string('undockblock', 'block', blocktitle.innerHTML)) +'" />');
+        var icon = 't/dock_to_block';
+        if (right_to_left()) {
+            icon = 't/dock_to_block_rtl';
+        }
+        movetoimg.setAttribute('src', M.util.image_url(icon, 'moodle'));
         var moveto = Y.Node.create('<a class="moveto customcommand requiresjs"></a>').append(movetoimg);
         if (location.href.match(/\?/)) {
             moveto.set('href', location.href+'&dock='+this.id);
@@ -922,7 +938,7 @@ M.core_dock.genericblock.prototype = {
             }, this);
             // Add a close icon
             // Must set the image src seperatly of we get an error with XML strict headers
-            var closeicon = Y.Node.create('<span class="hidepanelicon" tabindex="0"><img alt="" style="width:11px;height:11px;cursor:pointer;" /></span>');
+            var closeicon = Y.Node.create('<span class="hidepanelicon" tabindex="0"><img alt="'+M.str.block.hidepanel+'" title="'+M.str.block.hidedockpanel+'" /></span>');
             closeicon.one('img').setAttribute('src', M.util.image_url('t/dockclose', 'moodle'));
             closeicon.on('forceclose|click', this.hide, this);
             closeicon.on('dock:actionkey',this.hide, this, {actions:{enter:true,toggle:true}});

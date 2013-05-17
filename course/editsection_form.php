@@ -20,10 +20,15 @@ class editsection_form extends moodleform {
 
         $mform  = $this->_form;
         $course = $this->_customdata['course'];
-        $mform->addElement('checkbox', 'usedefaultname', get_string('sectionusedefaultname'));
-        $mform->setDefault('usedefaultname', true);
 
-        $mform->addElement('text', 'name', get_string('sectionname'), array('size'=>'30'));
+        $mform->addElement('header', 'generalhdr', get_string('general'));
+
+        $elementgroup = array();
+        $elementgroup[] = $mform->createElement('text', 'name', '', array('size' => '30'));
+        $elementgroup[] = $mform->createElement('checkbox', 'usedefaultname', '', get_string('sectionusedefaultname'));
+        $mform->addGroup($elementgroup, 'name_group', get_string('sectionname'), ' ', false);
+
+        $mform->setDefault('usedefaultname', true);
         $mform->setType('name', PARAM_TEXT);
         $mform->disabledIf('name','usedefaultname','checked');
 
@@ -51,9 +56,11 @@ class editsection_form extends moodleform {
 
         $mform  = $this->_form;
         $course = $this->_customdata['course'];
+        $context = context_course::instance($course->id);
 
         if (!empty($CFG->enableavailability)) {
-            $mform->addElement('header', '', get_string('availabilityconditions', 'condition'));
+            $mform->addElement('header', 'availabilityconditions', get_string('availabilityconditions', 'condition'));
+            $mform->setExpanded('availabilityconditions', false);
             // String used by conditions more than once
             $strcondnone = get_string('none', 'condition');
             // Grouping conditions - only if grouping is enabled at site level
@@ -62,7 +69,6 @@ class editsection_form extends moodleform {
                 $options[0] = get_string('none');
                 if ($groupings = $DB->get_records('groupings', array('courseid' => $course->id))) {
                     foreach ($groupings as $grouping) {
-                        $context = context_course::instance($course->id);
                         $options[$grouping->id] = format_string(
                                 $grouping->name, true, array('context' => $context));
                     }
@@ -71,11 +77,19 @@ class editsection_form extends moodleform {
                 $mform->addHelpButton('groupingid', 'groupingsection', 'group');
             }
 
-            // Date and time conditions
+            // Available from/to defaults to midnight because then the display
+            // will be nicer where it tells users when they can access it (it
+            // shows only the date and not time).
+            $date = usergetdate(time());
+            $midnight = make_timestamp($date['year'], $date['mon'], $date['mday']);
+
+            // Date and time conditions.
             $mform->addElement('date_time_selector', 'availablefrom',
-                    get_string('availablefrom', 'condition'), array('optional' => true));
+                    get_string('availablefrom', 'condition'),
+                    array('optional' => true, 'defaulttime' => $midnight));
             $mform->addElement('date_time_selector', 'availableuntil',
-                    get_string('availableuntil', 'condition'), array('optional' => true));
+                    get_string('availableuntil', 'condition'),
+                    array('optional' => true, 'defaulttime' => $midnight));
 
             // Conditions based on grades
             $gradeoptions = array();
@@ -105,13 +119,15 @@ class editsection_form extends moodleform {
             $count = count($fullcs->conditionsgrade) + 1;
 
             // Grade conditions
-            $this->repeat_elements(array($group), $count, array(), 'conditiongraderepeats',
-                    'conditiongradeadds', 2, get_string('addgrades', 'condition'), true);
+            $this->repeat_elements(array($group), $count, array(
+                'conditiongradegroup[conditiongrademin]' => array('type' => PARAM_RAW),
+                'conditiongradegroup[conditiongrademax]' => array('type' => PARAM_RAW)
+                ), 'conditiongraderepeats', 'conditiongradeadds', 2, get_string('addgrades', 'condition'), true);
             $mform->addHelpButton('conditiongradegroup[0]', 'gradecondition', 'condition');
 
             // Conditions based on user fields
             $operators = condition_info::get_condition_user_field_operators();
-            $useroptions = condition_info::get_condition_user_fields();
+            $useroptions = condition_info::get_condition_user_fields(array('context' => $context));
             asort($useroptions);
 
             $useroptions = array(0 => $strcondnone) + $useroptions;
@@ -119,13 +135,13 @@ class editsection_form extends moodleform {
             $grouparray[] =& $mform->createElement('select', 'conditionfield', '', $useroptions);
             $grouparray[] =& $mform->createElement('select', 'conditionfieldoperator', '', $operators);
             $grouparray[] =& $mform->createElement('text', 'conditionfieldvalue');
-            $mform->setType('conditionfieldvalue', PARAM_RAW);
             $group = $mform->createElement('group', 'conditionfieldgroup', get_string('userfield', 'condition'), $grouparray);
 
             $fieldcount = count($fullcs->conditionsfield) + 1;
 
-            $this->repeat_elements(array($group), $fieldcount, array(), 'conditionfieldrepeats', 'conditionfieldadds', 2,
-                                   get_string('adduserfields', 'condition'), true);
+            $this->repeat_elements(array($group), $fieldcount,  array(
+                'conditionfieldgroup[conditionfieldvalue]' => array('type' => PARAM_RAW)),
+                'conditionfieldrepeats', 'conditionfieldadds', 2, get_string('adduserfields', 'condition'), true);
             $mform->addHelpButton('conditionfieldgroup[0]', 'userfield', 'condition');
 
             // Conditions based on completion
@@ -220,8 +236,39 @@ class editsection_form extends moodleform {
         // Conditions: Don't let them set dates which make no sense
         if (array_key_exists('availablefrom', $data) &&
                 $data['availablefrom'] && $data['availableuntil'] &&
-                $data['availablefrom'] > $data['availableuntil']) {
+                $data['availablefrom'] >= $data['availableuntil']) {
             $errors['availablefrom'] = get_string('badavailabledates', 'condition');
+        }
+
+        // Conditions: Verify that the grade conditions are numbers, and make sense.
+        if (array_key_exists('conditiongradegroup', $data)) {
+            foreach ($data['conditiongradegroup'] as $i => $gradedata) {
+                if ($gradedata['conditiongrademin'] !== '' &&
+                        !is_numeric(unformat_float($gradedata['conditiongrademin']))) {
+                    $errors["conditiongradegroup[{$i}]"] = get_string('gradesmustbenumeric', 'condition');
+                    continue;
+                }
+                if ($gradedata['conditiongrademax'] !== '' &&
+                        !is_numeric(unformat_float($gradedata['conditiongrademax']))) {
+                    $errors["conditiongradegroup[{$i}]"] = get_string('gradesmustbenumeric', 'condition');
+                    continue;
+                }
+                if ($gradedata['conditiongrademin'] !== '' && $gradedata['conditiongrademax'] !== '' &&
+                        unformat_float($gradedata['conditiongrademax']) <= unformat_float($gradedata['conditiongrademin'])) {
+                    $errors["conditiongradegroup[{$i}]"] = get_string('badgradelimits', 'condition');
+                    continue;
+                }
+                if ($gradedata['conditiongrademin'] === '' && $gradedata['conditiongrademax'] === '' &&
+                        $gradedata['conditiongradeitemid']) {
+                    $errors["conditiongradegroup[{$i}]"] = get_string('gradeitembutnolimits', 'condition');
+                    continue;
+                }
+                if (($gradedata['conditiongrademin'] !== '' || $gradedata['conditiongrademax'] !== '') &&
+                        !$gradedata['conditiongradeitemid']) {
+                    $errors["conditiongradegroup[{$i}]"] = get_string('gradelimitsbutnoitem', 'condition');
+                    continue;
+                }
+            }
         }
 
         // Conditions: Verify that the user profile field has not been declared more than once

@@ -60,6 +60,12 @@ class block_base {
     var $title         = NULL;
 
     /**
+     * The name of the block to be displayed in the block title area if the title is empty.
+     * @var string arialabel
+     */
+    var $arialabel         = NULL;
+
+    /**
      * The type of content that this block creates. Currently support options - BLOCK_TYPE_LIST, BLOCK_TYPE_TEXT
      * @var int $content_type
      */
@@ -240,8 +246,10 @@ class block_base {
         if (!$this->hide_header()) {
             $bc->title = $this->title;
         }
+
         if (empty($bc->title)) {
             $bc->arialabel = new lang_string('pluginname', get_class($this));
+            $this->arialabel = $bc->arialabel;
         }
 
         if ($this->page->user_is_editing()) {
@@ -565,7 +573,8 @@ class block_base {
         // The blocks in My Moodle are a special case and use a different capability.
         if (!empty($USER->id)
             && $page->context->contextlevel == CONTEXT_USER // Page belongs to a user
-            && $page->context->instanceid == $USER->id) { // Page belongs to this user
+            && $page->context->instanceid == $USER->id // Page belongs to this user
+            && $page->pagetype == 'my-index') { // Ensure we are on the My Moodle page
             $capability = 'block/' . $this->name() . ':myaddinstance';
             return $this->has_add_block_capability($page, $capability)
                     && has_capability('moodle/my:manageblocks', $page->context);

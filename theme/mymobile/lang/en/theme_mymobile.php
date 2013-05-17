@@ -15,17 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Label module version info
+ * mymobile language pack
  *
- * @package    theme
- * @subpackage mymobile
+ * @package    theme_mymobile
  * @copyright  John Stabinger
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $string['choosereadme'] = '<div class="clearfix"><div class="theme_screenshot"><h2>MyMobile</h2><img src="mymobile/pix/screenshot.png" /><h2>About</h2><p>MyMobile is a mobile theme for Moodle 2.x. More information on modifying themes can be found in the <a href="http://docs.moodle.org/en/Theme">MoodleDocs</a>.</p></div></div>';
-$string['colourswatch'] = 'Mobile theme color swatch';
-$string['colourswatch_desc'] = 'Toggle the color swatch of the theme between grey and light/blue.';
+$string['colourswatch'] = 'Mobile theme colour swatch';
+$string['colourswatch_desc'] = 'Toggle the colour swatch of the theme between grey and light/blue.';
 $string['grey'] = 'Grey';
 $string['light'] = 'Light/Blue';
 $string['mtoggle'] = 'Toggle 2nd Column';

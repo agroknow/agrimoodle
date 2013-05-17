@@ -28,11 +28,10 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->libdir . '/outputcomponents.php');
 
-
 /**
  * Unit tests for the user_picture class
  */
-class user_picture_testcase extends advanced_testcase {
+class outputcomponents_testcase extends advanced_testcase {
 
     public function test_fields_aliasing() {
         $fields = user_picture::fields();
@@ -151,7 +150,7 @@ class user_picture_testcase extends advanced_testcase {
         // try legacy picture == 1
         $user1->picture = 1;
         $up1 = new user_picture($user1);
-        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/15/user/icon/standard/f2?rev=1', $up1->get_url($page, $renderer)->out(false));
+        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/'.$context1->id.'/user/icon/standard/f2?rev=1', $up1->get_url($page, $renderer)->out(false));
         $user1->picture = 11;
 
         // try valid user with picture when user context is not cached - 1 query expected
@@ -159,7 +158,7 @@ class user_picture_testcase extends advanced_testcase {
         $reads = $DB->perf_get_reads();
         $up1 = new user_picture($user1);
         $this->assertEquals($reads, $DB->perf_get_reads());
-        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/15/user/icon/standard/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
+        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/'.$context1->id.'/user/icon/standard/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
         $this->assertEquals($reads+1, $DB->perf_get_reads());
 
         // try valid user with contextid hint - no queries expected
@@ -168,7 +167,7 @@ class user_picture_testcase extends advanced_testcase {
         $reads = $DB->perf_get_reads();
         $up1 = new user_picture($user1);
         $this->assertEquals($reads, $DB->perf_get_reads());
-        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/15/user/icon/standard/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
+        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/'.$context1->id.'/user/icon/standard/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
         $this->assertEquals($reads, $DB->perf_get_reads());
 
         // try valid user without image - no queries expected
@@ -197,7 +196,6 @@ class user_picture_testcase extends advanced_testcase {
         $this->assertEquals($CFG->wwwroot.'/theme/image.php/standard/core/1/u/f2', $up3->get_url($page, $renderer)->out(false));
         $this->assertTrue($reads < $DB->perf_get_reads());
 
-
         // test gravatar
         set_config('enablegravatar', 1);
 
@@ -217,13 +215,13 @@ class user_picture_testcase extends advanced_testcase {
         $this->assertEquals('http://www.gravatar.com/avatar/ab53a2911ddf9b4817ac01ddcd3d975f?s=35&d=http%3A%2F%2Fwww.example.com%2Fmoodle%2Fpix%2Fu%2Ff2.png', $up2->get_url($page, $renderer)->out(false));
         // uploaded image takes precedence before gravatar
         $up1 = new user_picture($user1);
-        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/15/user/icon/standard/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
+        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/'.$context1->id.'/user/icon/standard/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
 
         // https version
         $CFG->httpswwwroot = str_replace('http:', 'https:', $CFG->wwwroot);
 
         $up1 = new user_picture($user1);
-        $this->assertEquals($CFG->httpswwwroot.'/pluginfile.php/15/user/icon/standard/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
+        $this->assertEquals($CFG->httpswwwroot.'/pluginfile.php/'.$context1->id.'/user/icon/standard/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
 
         $up3 = new user_picture($user3);
         $this->assertEquals($CFG->httpswwwroot.'/theme/image.php/standard/core/1/u/f2', $up3->get_url($page, $renderer)->out(false));
@@ -261,7 +259,7 @@ class user_picture_testcase extends advanced_testcase {
         $renderer = $page->get_renderer('core');
 
         $up1 = new user_picture($user1);
-        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/15/user/icon/formal_white/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
+        $this->assertEquals($CFG->wwwroot.'/pluginfile.php/'.$context1->id.'/user/icon/formal_white/f2?rev=11', $up1->get_url($page, $renderer)->out(false));
 
         $up2 = new user_picture($user2);
         $this->assertEquals($CFG->wwwroot.'/theme/image.php/formal_white/core/1/u/f2', $up2->get_url($page, $renderer)->out(false));
@@ -278,13 +276,6 @@ class user_picture_testcase extends advanced_testcase {
         $up3 = new user_picture($user3);
         $this->assertEquals($CFG->wwwroot.'/theme/image.php?theme=standard&component=core&rev=1&image=u%2Ff2', $up3->get_url($page, $renderer)->out(false));
     }
-}
-
-
-/**
- * Unit tests for the custom_menu class
- */
-class custom_menu_testcase extends basic_testcase {
 
     public function test_empty_menu() {
         $emptymenu = new custom_menu();
@@ -394,5 +385,34 @@ EOF;
         $children = $infomenu->get_children();
         $infomenu = array_pop( $children);
         $this->assertFalse($infomenu->has_children());
+    }
+
+    public function test_prepare() {
+        $expecteda = array('1',
+                           '<a href="index.php?page=1">2</a>',
+                           '<a href="index.php?page=2">3</a>',
+                           '<a href="index.php?page=3">4</a>',
+                           '<a href="index.php?page=4">5</a>',
+                           '<a href="index.php?page=5">6</a>',
+                           '<a href="index.php?page=6">7</a>',
+                           '<a href="index.php?page=7">8</a>',
+                           );
+        $expectedb = array('<a href="page?page=3">4</a>',
+                           '<a href="page?page=4">5</a>',
+                           '6',
+                           '<a href="page?page=6">7</a>',
+                           '<a href="page?page=7">8</a>',
+                           );
+
+        $mpage = new moodle_page();
+        $rbase = new renderer_base($mpage, "/");
+        $pbara = new paging_bar(40, 0, 5, 'index.php');
+        $pbara->prepare($rbase,$mpage, "/");
+        $pbarb = new paging_bar(100, 5, 5, 'page');
+        $pbarb->maxdisplay = 5;
+        $pbarb->prepare($rbase,$mpage,"/");
+
+        $this->assertEquals($pbara->pagelinks, $expecteda);
+        $this->assertEquals($pbarb->pagelinks, $expectedb);
     }
 }

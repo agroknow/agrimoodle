@@ -150,6 +150,11 @@ class restore_gradebook_structure_step extends restore_structure_step {
         if ($data->itemtype=='manual') {
             // manual grade items store category id in categoryid
             $data->categoryid = $this->get_mappingid('grade_category', $data->categoryid, NULL);
+            // if mapping failed put in course's grade category
+            if (NULL == $data->categoryid) {
+                $coursecat = grade_category::fetch_course_category($this->get_courseid());
+                $data->categoryid = $coursecat->id;
+            }
         } else if ($data->itemtype=='course') {
             // course grade item stores their category id in iteminstance
             $coursecat = grade_category::fetch_course_category($this->get_courseid());
@@ -190,6 +195,15 @@ class restore_gradebook_structure_step extends restore_structure_step {
                 $data->id = $newitemid = $existinggradeitem->id;
                 $DB->update_record('grade_items', $data);
             }
+        } else if ($data->itemtype == 'manual') {
+            // Manual items aren't assigned to a cm, so don't go duplicating them in the target if one exists.
+            $gi = array(
+                'itemtype' => $data->itemtype,
+                'courseid' => $data->courseid,
+                'itemname' => $data->itemname,
+                'categoryid' => $data->categoryid,
+            );
+            $newitemid = $DB->get_field('grade_items', 'id', $gi);
         }
 
         if (empty($newitemid)) {
@@ -288,8 +302,13 @@ class restore_gradebook_structure_step extends restore_structure_step {
 
         $data->courseid = $this->get_courseid();
 
-        $newitemid = $DB->insert_record('grade_settings', $data);
-        //$this->set_mapping('grade_setting', $oldid, $newitemid);
+        if (!$DB->record_exists('grade_settings', array('courseid' => $data->courseid, 'name' => $data->name))) {
+            $newitemid = $DB->insert_record('grade_settings', $data);
+        } else {
+            $newitemid = $data->id;
+        }
+
+        $this->set_mapping('grade_setting', $oldid, $newitemid);
     }
 
     /**
@@ -764,6 +783,8 @@ class restore_groups_structure_step extends restore_structure_step {
         }
         // Save the id mapping
         $this->set_mapping('group', $oldid, $newitemid, $restorefiles);
+        // Invalidate the course group data cache just in case.
+        cache_helper::invalidate_by_definition('core', 'groupdata', array(), array($data->courseid));
     }
 
     public function process_grouping($data) {
@@ -807,23 +828,17 @@ class restore_groups_structure_step extends restore_structure_step {
         }
         // Save the id mapping
         $this->set_mapping('grouping', $oldid, $newitemid, $restorefiles);
+        // Invalidate the course group data cache just in case.
+        cache_helper::invalidate_by_definition('core', 'groupdata', array(), array($data->courseid));
     }
 
     public function process_grouping_group($data) {
-        global $DB;
+        global $CFG;
+
+        require_once($CFG->dirroot.'/group/lib.php');
 
         $data = (object)$data;
-
-        $data->groupingid = $this->get_new_parentid('grouping'); // Use new parentid
-        $data->groupid    = $this->get_mappingid('group', $data->groupid); // Get from mappings
-
-        $params = array();
-        $params['groupingid'] = $data->groupingid;
-        $params['groupid']    = $data->groupid;
-
-        if (!$DB->record_exists('groupings_groups', $params)) {
-            $DB->insert_record('groupings_groups', $data);  // No need to set this mapping (no child info nor files)
-        }
+        groups_assign_grouping($this->get_new_parentid('grouping'), $this->get_mappingid('group', $data->groupid), $data->timeadded);
     }
 
     protected function after_execute() {
@@ -832,6 +847,8 @@ class restore_groups_structure_step extends restore_structure_step {
         $this->add_related_files('group', 'description', 'group');
         // Add grouping related files, matching with "grouping" mappings
         $this->add_related_files('grouping', 'description', 'grouping');
+        // Invalidate the course group data.
+        cache_helper::invalidate_by_definition('core', 'groupdata', array(), array($this->get_courseid()));
     }
 
 }
@@ -1259,16 +1276,16 @@ class restore_section_structure_step extends restore_structure_step {
         $sectionid = $this->get_task()->get_sectionid();
 
         // Get data object for current section availability (if any).
-        $data = $DB->get_record('course_sections_availability',
-                array('coursesectionid' => $sectionid), 'id, sourcecmid, gradeitemid', IGNORE_MISSING);
+        $records = $DB->get_records('course_sections_availability',
+                array('coursesectionid' => $sectionid), 'id, sourcecmid, gradeitemid');
 
         // If it exists, update mappings.
-        if ($data) {
+        foreach ($records as $data) {
             // Only update mappings for entries which are created by this restore.
             // Otherwise, when you restore to an existing course, it will mess up
             // existing section availability entries.
             if (!$this->get_mappingid('course_sections_availability', $data->id, false)) {
-                return;
+                continue;
             }
 
             // Update source cmid / grade id to new value.
@@ -1281,7 +1298,12 @@ class restore_section_structure_step extends restore_structure_step {
                 $data->gradeitemid = null;
             }
 
-            $DB->update_record('course_sections_availability', $data);
+            // Delete the record if the condition wasn't found, otherwise update it.
+            if ($data->sourcecmid === null && $data->gradeitemid === null) {
+                $DB->delete_records('course_sections_availability', array('id' => $data->id));
+            } else {
+                $DB->update_record('course_sections_availability', $data);
+            }
         }
     }
 }
@@ -1447,7 +1469,7 @@ class restore_course_structure_step extends restore_structure_step {
 
         // Add course related files, without itemid to match
         $this->add_related_files('course', 'summary', null);
-        $this->add_related_files('course', 'legacy', null);
+        $this->add_related_files('course', 'overviewfiles', null);
 
         // Deal with legacy allowed modules.
         if ($this->legacyrestrictmodules) {
@@ -1474,6 +1496,29 @@ class restore_course_structure_step extends restore_structure_step {
     }
 }
 
+/**
+ * Execution step that will migrate legacy files if present.
+ */
+class restore_course_legacy_files_step extends restore_execution_step {
+    public function define_execution() {
+        global $DB;
+
+        // Do a check for legacy files and skip if there are none.
+        $sql = 'SELECT count(*)
+                  FROM {backup_files_temp}
+                 WHERE backupid = ?
+                   AND contextid = ?
+                   AND component = ?
+                   AND filearea  = ?';
+        $params = array($this->get_restoreid(), $this->task->get_old_contextid(), 'course', 'legacy');
+
+        if ($DB->count_records_sql($sql, $params)) {
+            $DB->set_field('course', 'legacyfiles', 2, array('id' => $this->get_courseid()));
+            restore_dbops::send_files_to_pool($this->get_basepath(), $this->get_restoreid(), 'course',
+                'legacy', $this->task->get_old_contextid(), $this->task->get_userid());
+        }
+    }
+}
 
 /*
  * Structure step that will read the roles.xml file (at course/activity/block levels)
@@ -1808,6 +1853,14 @@ class restore_filters_structure_step extends restore_structure_step {
 
         $data = (object)$data;
 
+        if (strpos($data->filter, 'filter/') === 0) {
+            $data->filter = substr($data->filter, 7);
+
+        } else if (strpos($data->filter, '/') !== false) {
+            // Unsupported old filter.
+            return;
+        }
+
         if (!filter_is_enabled($data->filter)) { // Not installed or not enabled, nothing to do
             return;
         }
@@ -1817,6 +1870,14 @@ class restore_filters_structure_step extends restore_structure_step {
     public function process_config($data) {
 
         $data = (object)$data;
+
+        if (strpos($data->filter, 'filter/') === 0) {
+            $data->filter = substr($data->filter, 7);
+
+        } else if (strpos($data->filter, '/') !== false) {
+            // Unsupported old filter.
+            return;
+        }
 
         if (!filter_is_enabled($data->filter)) { // Not installed or not enabled, nothing to do
             return;
@@ -3002,13 +3063,15 @@ class restore_create_categories_and_questions extends restore_structure_step {
         $hint = new restore_path_element('question_hint',
                 '/question_categories/question_category/questions/question/question_hints/question_hint');
 
+        $tag = new restore_path_element('tag','/question_categories/question_category/questions/question/tags/tag');
+
         // Apply for 'qtype' plugins optional paths at question level
         $this->add_plugin_structure('qtype', $question);
 
         // Apply for 'local' plugins optional paths at question level
         $this->add_plugin_structure('local', $question);
 
-        return array($category, $question, $hint);
+        return array($category, $question, $hint, $tag);
     }
 
     protected function process_question_category($data) {
@@ -3072,9 +3135,6 @@ class restore_create_categories_and_questions extends restore_structure_step {
             $data->penalty = 1;
         }
 
-        $data->timecreated  = $this->apply_date_offset($data->timecreated);
-        $data->timemodified = $this->apply_date_offset($data->timemodified);
-
         $userid = $this->get_mappingid('user', $data->createdby);
         $data->createdby = $userid ? $userid : $this->task->get_userid();
 
@@ -3128,6 +3188,22 @@ class restore_create_categories_and_questions extends restore_structure_step {
                        AND ' . $DB->sql_compare_text('hint', 255) . ' = ' . $DB->sql_compare_text('?', 255);
             $params = array($newquestionid, $data->hint);
             $newitemid = $DB->get_field_sql($sql, $params);
+
+            // Not able to find the hint, let's try cleaning the hint text
+            // of all the question's hints in DB as slower fallback. MDL-33863.
+            if (!$newitemid) {
+                $potentialhints = $DB->get_records('question_hints',
+                        array('questionid' => $newquestionid), '', 'id, hint');
+                foreach ($potentialhints as $potentialhint) {
+                    // Clean in the same way than {@link xml_writer::xml_safe_utf8()}.
+                    $cleanhint = preg_replace('/[\x-\x8\xb-\xc\xe-\x1f\x7f]/is','', $potentialhint->hint); // Clean CTRL chars.
+                    $cleanhint = preg_replace("/\r\n|\r/", "\n", $cleanhint); // Normalize line ending.
+                    if ($cleanhint === $data->hint) {
+                        $newitemid = $data->id;
+                    }
+                }
+            }
+
             // If we haven't found the newitemid, something has gone really wrong, question in DB
             // is missing hints, exception
             if (!$newitemid) {
@@ -3140,6 +3216,29 @@ class restore_create_categories_and_questions extends restore_structure_step {
         }
         // Create mapping (I'm not sure if this is really needed?)
         $this->set_mapping('question_hint', $oldid, $newitemid);
+    }
+
+    protected function process_tag($data) {
+        global $CFG, $DB;
+
+        $data = (object)$data;
+        $newquestion = $this->get_new_parentid('question');
+
+        if (!empty($CFG->usetags)) { // if enabled in server
+            // TODO: This is highly inneficient. Each time we add one tag
+            // we fetch all the existing because tag_set() deletes them
+            // so everything must be reinserted on each call
+            $tags = array();
+            $existingtags = tag_get_tags('question', $newquestion);
+            // Re-add all the existitng tags
+            foreach ($existingtags as $existingtag) {
+                $tags[] = $existingtag->rawname;
+            }
+            // Add the one being restored
+            $tags[] = $data->rawname;
+            // Send all the tags back to the question
+            tag_set('question', $newquestion, $tags);
+        }
     }
 
     protected function after_execute() {

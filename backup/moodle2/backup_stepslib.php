@@ -232,20 +232,9 @@ abstract class backup_questions_activity_structure_step extends backup_activity_
         // Set the sources
         $quba->set_source_table('question_usages',
                 array('id'                => '../' . $usageidname));
-        $qa->set_source_sql('
-                SELECT *
-                FROM {question_attempts}
-                WHERE questionusageid = :questionusageid
-                ORDER BY slot',
-                array('questionusageid'   => backup::VAR_PARENTID));
-        $step->set_source_sql('
-                SELECT *
-                FROM {question_attempt_steps}
-                WHERE questionattemptid = :questionattemptid
-                ORDER BY sequencenumber',
-                array('questionattemptid' => backup::VAR_PARENTID));
-        $variable->set_source_table('question_attempt_step_data',
-                array('attemptstepid'     => backup::VAR_PARENTID));
+        $qa->set_source_table('question_attempts', array('questionusageid' => backup::VAR_PARENTID), 'slot ASC');
+        $step->set_source_table('question_attempt_steps', array('questionattemptid' => backup::VAR_PARENTID), 'sequencenumber ASC');
+        $variable->set_source_table('question_attempt_step_data', array('attemptstepid' => backup::VAR_PARENTID));
 
         // Annotate ids
         $qa->annotate_ids('question', 'questionid');
@@ -522,6 +511,7 @@ class backup_course_structure_step extends backup_structure_step {
         $course->annotate_ids('grouping', 'defaultgroupingid');
 
         $course->annotate_files('course', 'summary', null);
+        $course->annotate_files('course', 'overviewfiles', null);
         $course->annotate_files('course', 'legacy', null);
 
         // Return root element ($course)
@@ -569,7 +559,7 @@ class backup_enrolments_structure_step extends backup_structure_step {
         $userenrolments->add_child($enrolment);
 
         // Define sources - the instances are restored using the same sortorder, we do not need to store it in xml and deal with it afterwards.
-        $enrol->set_source_sql("SELECT * FROM {enrol} WHERE courseid = :courseid ORDER BY sortorder", array('courseid' => backup::VAR_COURSEID));
+        $enrol->set_source_table('enrol', array('courseid' => backup::VAR_COURSEID), 'sortorder ASC');
 
         // User enrolments only added only if users included
         if ($users) {
@@ -912,7 +902,7 @@ class backup_gradebook_structure_step extends backup_structure_step {
         $grade_category   = new backup_nested_element('grade_category', array('id'), array(
                 //'courseid',
                 'parent', 'depth', 'path', 'fullname', 'aggregation', 'keephigh',
-                'dropload', 'aggregateonlygraded', 'aggregateoutcomes', 'aggregatesubcats',
+                'droplow', 'aggregateonlygraded', 'aggregateoutcomes', 'aggregatesubcats',
                 'timecreated', 'timemodified', 'hidden'));
 
         $letters = new backup_nested_element('grade_letters');
@@ -1820,6 +1810,10 @@ class backup_questions_structure_step extends backup_structure_step {
         $qhint = new backup_nested_element('question_hint', array('id'), array(
             'hint', 'hintformat', 'shownumcorrect', 'clearwrong', 'options'));
 
+        $tags = new backup_nested_element('tags');
+
+        $tag = new backup_nested_element('tag', array('id'), array('name', 'rawname'));
+
         // Build the tree
 
         $qcategories->add_child($qcategory);
@@ -1827,6 +1821,9 @@ class backup_questions_structure_step extends backup_structure_step {
         $questions->add_child($question);
         $question->add_child($qhints);
         $qhints->add_child($qhint);
+
+        $question->add_child($tags);
+        $tags->add_child($tag);
 
         // Define the sources
 
@@ -1846,6 +1843,12 @@ class backup_questions_structure_step extends backup_structure_step {
                 WHERE questionid = :questionid
                 ORDER BY id',
                 array('questionid' => backup::VAR_PARENTID));
+
+        $tag->set_source_sql("SELECT t.id, t.name, t.rawname
+                              FROM {tag} t
+                              JOIN {tag_instance} ti ON ti.tagid = t.id
+                              WHERE ti.itemid = ?
+                              AND ti.itemtype = 'question'", array(backup::VAR_PARENTID));
 
         // don't need to annotate ids nor files
         // (already done by {@link backup_annotate_all_question_files}

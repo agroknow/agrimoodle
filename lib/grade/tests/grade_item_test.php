@@ -58,10 +58,12 @@ class grade_item_testcase extends grade_base_testcase {
         $this->sub_test_grade_item_is_course_item();
         $this->sub_test_grade_item_fetch_course_item();
         $this->sub_test_grade_item_depends_on();
+        $this->sub_test_refresh_grades();
         $this->sub_test_grade_item_is_calculated();
         $this->sub_test_grade_item_set_calculation();
         $this->sub_test_grade_item_get_calculation();
         $this->sub_test_grade_item_compute();
+        $this->sub_test_update_final_grade();
     }
 
     protected function sub_test_grade_item_construct() {
@@ -483,6 +485,18 @@ class grade_item_testcase extends grade_base_testcase {
         $this->assertEquals($res, $deps);
     }
 
+    protected function sub_test_refresh_grades() {
+        // Testing with the grade item for a mod_assignment instance.
+        $grade_item = new grade_item($this->grade_items[0], false);
+        $this->assertTrue(method_exists($grade_item, 'refresh_grades'));
+        $this->assertTrue($grade_item->refresh_grades());
+
+        // Break the grade item and check error handling.
+        $grade_item->iteminstance = 123456789;
+        $this->assertFalse($grade_item->refresh_grades());
+        $this->assertDebuggingCalled();
+    }
+
     protected function sub_test_grade_item_is_calculated() {
         $grade_item = new grade_item($this->grade_items[1], false);
         $this->assertTrue(method_exists($grade_item, 'is_calculated'));
@@ -543,5 +557,35 @@ class grade_item_testcase extends grade_base_testcase {
 
         $grade_grade = grade_grade::fetch(array('userid'=>$this->grade_grades[5]->userid, 'itemid'=>$this->grade_grades[5]->itemid));
         $this->assertEquals($this->grade_grades[5]->finalgrade, $grade_grade->finalgrade);
+    }
+
+    protected function sub_test_update_final_grade() {
+
+        // MDL-31713 Check that min and max are set on the grade_grade instance
+        // if the grade is overridden before the activity has supplied a grade.
+        $min = 2;
+        $max = 8;
+
+        // Create a brand new grade item.
+        $grade_item = new grade_item();
+        $this->assertTrue(method_exists($grade_item, 'insert'));
+
+        $grade_item->courseid = $this->courseid;
+        $grade_item->categoryid = $this->grade_categories[1]->id;
+        $grade_item->itemname = 'brand new unit test grade item';
+        $grade_item->itemtype = 'mod';
+        $grade_item->itemmodule = 'quiz';
+        $grade_item->iteminfo = 'Grade item used for unit testing';
+        $grade_item->grademin = $min;
+        $grade_item->grademax = $max;
+        $grade_item->insert();
+
+        // Override the student grade.
+        $grade_item->update_final_grade($this->user[1]->id, 7, 'gradebook', '', FORMAT_MOODLE);
+
+        // Check the student's grade has the correct min and max grade.
+        $grade_grade = grade_grade::fetch(array('userid'=>$this->user[1]->id, 'itemid'=>$grade_item->id));
+        $this->assertEquals($min, $grade_grade->rawgrademin);
+        $this->assertEquals($max, $grade_grade->rawgrademax);
     }
 }

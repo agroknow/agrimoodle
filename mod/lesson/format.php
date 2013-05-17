@@ -241,6 +241,7 @@ function lesson_save_question_options($question, $lesson) {
             // The first answer should always be the correct answer
             $correctanswer = clone($defaultanswer);
             $correctanswer->answer = get_string('thatsthecorrectanswer', 'lesson');
+            $correctanswer->jumpto = LESSON_NEXTPAGE;
             $DB->insert_record("lesson_answers", $correctanswer);
 
             // The second answer should always be the wrong answer
@@ -282,7 +283,7 @@ function lesson_save_question_options($question, $lesson) {
 class qformat_default {
 
     var $displayerrors = true;
-    var $category = NULL;
+    var $category = null;
     var $questionids = array();
     var $qtypeconvert = array('numerical'   => LESSON_PAGE_NUMERICAL,
                                'multichoice' => LESSON_PAGE_MULTICHOICE,
@@ -364,14 +365,6 @@ class qformat_default {
                     }
                     $newpage->contents = $question->questiontext;
                     $newpage->contentsformat = isset($question->questionformat) ? $question->questionformat : FORMAT_HTML;
-
-                    // Sometimes, questiontext is not a simple text, but one array
-                    // containing both text and format, so we need to support here
-                    // that case with the following dirty patch. MDL-35147
-                    if (is_array($question->questiontext)) {
-                        $newpage->contents = isset($question->questiontext['text']) ? $question->questiontext['text'] : '';
-                        $newpage->contentsformat = isset($question->questiontext['format']) ? $question->questiontext['format'] : FORMAT_HTML;
-                    }
 
                     // set up page links
                     if ($pageid) {
@@ -510,14 +503,14 @@ class qformat_default {
     }
 
 
-    function readquestion($lines) {
+    protected function readquestion($lines) {
     /// Given an array of lines known to define a question in
     /// this format, this function converts it into a question
     /// object suitable for processing and insertion into Moodle.
 
         echo "<p>This flash question format has not yet been completed!</p>";
 
-        return NULL;
+        return null;
     }
 
     /**

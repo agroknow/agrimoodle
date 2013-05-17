@@ -871,7 +871,11 @@ class moodle_page {
         // notify course format that this page is set for the course
         if ($this->_course->id != $SITE->id) {
             require_once($CFG->dirroot.'/course/lib.php');
-            course_get_format($this->_course)->page_set_course($this);
+            $courseformat = course_get_format($this->_course);
+            $this->add_body_class('format-'. $courseformat->get_format());
+            $courseformat->page_set_course($this);
+        } else {
+            $this->add_body_class('format-site');
         }
     }
 
@@ -1290,6 +1294,18 @@ class moodle_page {
     public function force_theme($themename) {
         $this->ensure_theme_not_set();
         $this->_theme = theme_config::load($themename);
+    }
+
+    /**
+     * Reload theme settings.
+     *
+     * This is used when we need to reset settings
+     * because they are now double cached in theme.
+     */
+    public function reload_theme() {
+        if (!is_null($this->_theme)) {
+            $this->_theme = theme_config::load($this->_theme->name);
+        }
     }
 
     /**

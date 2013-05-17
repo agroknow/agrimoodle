@@ -150,6 +150,9 @@ YUI.add('moodle-course-modchooser', function(Y) {
     {
         NAME : MODCHOOSERNAME,
         ATTRS : {
+            maxheight : {
+                value : 800
+            }
         }
     });
     M.course = M.course || {};
@@ -158,6 +161,6 @@ YUI.add('moodle-course-modchooser', function(Y) {
     }
 },
 '@VERSION@', {
-    requires:['base', 'overlay', 'moodle-core-chooserdialogue', 'transition']
+    requires:['base', 'overlay', 'moodle-core-chooserdialogue', 'moodle-course-coursebase']
 }
 );

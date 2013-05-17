@@ -26,6 +26,7 @@
 require_once('../../config.php');
 require_once('lib.php');
 require_once("$CFG->libdir/rsslib.php");
+require_once("$CFG->libdir/form/filemanager.php");
 
 $id    = optional_param('id', 0, PARAM_INT);    // course module id
 $d     = optional_param('d', 0, PARAM_INT);    // database id
@@ -121,9 +122,9 @@ if ($cancel) {
 
 /// RSS and CSS and JS meta
 if (!empty($CFG->enablerssfeeds) && !empty($CFG->data_enablerssfeeds) && $data->rssarticles > 0) {
-    $rsspath = rss_get_url($context->id, $USER->id, 'mod_data', $data->id);
     $courseshortname = format_string($course->shortname, true, array('context' => context_course::instance($course->id)));
-    $PAGE->add_alternate_version($courseshortname . ': %fullname%', $rsspath, 'application/rss+xml');
+    $rsstitle = $courseshortname . ': ' . format_string($data->name);
+    rss_add_http_header($context, 'mod_data', $data, $rsstitle);
 }
 if ($data->csstemplate) {
     $PAGE->requires->css('/mod/data/css.php?d='.$data->id);

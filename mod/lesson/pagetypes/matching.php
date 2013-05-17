@@ -71,17 +71,18 @@ class lesson_page_type_matching extends lesson_page {
         $responses = array();
         foreach ($answers as $answer) {
             // get all the response
-            if ($answer->response != NULL) {
-                $responses[] = trim($answer->response);
+            if ($answer->response != null) {
+                $responses[$answer->id] = trim($answer->response);
             }
         }
 
         $responseoptions = array(''=>get_string('choosedots'));
         if (!empty($responses)) {
-            shuffle($responses);
-            $responses = array_unique($responses);
-            foreach ($responses as $response) {
-                $responseoptions[htmlspecialchars(trim($response))] = $response;
+            $shuffleresponses = $responses;
+            shuffle($shuffleresponses);
+            foreach ($shuffleresponses as  $response) {
+                $key = array_search($response, $responses);
+                $responseoptions[$key] = $response;
             }
         }
         if (isset($USER->modattempts[$this->lesson->id]) && !empty($attempt->useranswer)) {
@@ -115,9 +116,9 @@ class lesson_page_type_matching extends lesson_page {
                 $answer->answer = $properties->answer_editor[$i]['text'];
                 $answer->answerformat = $properties->answer_editor[$i]['format'];
             }
-            if (!empty($properties->response_editor[$i]) && is_array($properties->response_editor[$i])) {
-                $answer->response = $properties->response_editor[$i]['text'];
-                $answer->responseformat = $properties->response_editor[$i]['format'];
+            if (!empty($properties->response_editor[$i])) {
+                $answer->response = $properties->response_editor[$i];
+                $answer->responseformat = 0;
             }
 
             if (isset($properties->jumpto[$i])) {
@@ -160,38 +161,37 @@ class lesson_page_type_matching extends lesson_page {
         }
 
         $response = $data->response;
-        if (!is_array($response)) {
-            $result->noanswer = true;
-            return $result;
-        }
+        $getanswers = $this->get_answers();
 
-        $answers = $this->get_answers();
+        $correct = array_shift($getanswers);
+        $wrong   = array_shift($getanswers);
 
-        $correct = array_shift($answers);
-        $wrong   = array_shift($answers);
-
-        foreach ($answers as $key=>$answer) {
-            if ($answer->answer === '' or $answer->response === '') {
-                // incomplete option!
-                unset($answers[$key]);
+        $answers = array();
+        foreach ($getanswers as $key=>$answer) {
+            if ($answer->answer !== '' or $answer->response !== '') {
+                $answers[$answer->id] = $answer;
             }
+            unset($getanswers[$key]);
         }
-        // get he users exact responses for record keeping
+        // get the user's exact responses for record keeping
         $hits = 0;
         $userresponse = array();
-        foreach ($response as $key => $value) {
-            foreach($answers as $answer) {
-                if ($value === $answer->response) {
-                    $userresponse[] = $answer->id;
-                }
-                if ((int)$answer->id === (int)$key) {
-                    $result->studentanswer .= '<br />'.format_text($answer->answer, $answer->answerformat, $formattextdefoptions).' = '.$value;
-                }
-                if ((int)$answer->id === (int)$key and $value === $answer->response) {
+        foreach ($response as $id => $value) {
+            if ($value == '') {
+                $result->noanswer = true;
+                return $result;
+            }
+            $userresponse[] = $value;
+            // Make sure the user's answer exists in question's answer
+            if (array_key_exists($id, $answers)) {
+                $answer = $answers[$id];
+                $result->studentanswer .= '<br />'.format_text($answer->answer, $answer->answerformat, $formattextdefoptions).' = '.$answers[$value]->response;
+                if ($id == $value) {
                     $hits++;
                 }
             }
         }
+
         $result->userresponse = implode(",", $userresponse);
 
         if ($hits == count($answers)) {
@@ -223,7 +223,7 @@ class lesson_page_type_matching extends lesson_page {
 
         foreach ($answers as $answer) {
             if ($n < 2) {
-                if ($answer->answer != NULL) {
+                if ($answer->answer != null) {
                     $cells = array();
                     if ($n == 0) {
                         $cells[] = "<span class=\"label\">".get_string("correctresponse", "lesson").'</span>';
@@ -315,9 +315,9 @@ class lesson_page_type_matching extends lesson_page {
                 $this->answers[$i]->answer = $properties->answer_editor[$i]['text'];
                 $this->answers[$i]->answerformat = $properties->answer_editor[$i]['format'];
             }
-            if (!empty($properties->response_editor[$i]) && is_array($properties->response_editor[$i])) {
-                $this->answers[$i]->response = $properties->response_editor[$i]['text'];
-                $this->answers[$i]->responseformat = $properties->response_editor[$i]['format'];
+            if (!empty($properties->response_editor[$i])) {
+                $this->answers[$i]->response = $properties->response_editor[$i];
+                $this->answers[$i]->responseformat = 0;
             }
 
             if (isset($properties->jumpto[$i])) {
@@ -377,8 +377,8 @@ class lesson_page_type_matching extends lesson_page {
         $formattextdefoptions = new stdClass;
         $formattextdefoptions->para = false;  //I'll use it widely in this page
         foreach ($answers as $answer) {
-            if ($n == 0 && $useranswer != NULL && $useranswer->correct) {
-                if ($answer->response == NULL && $useranswer != NULL) {
+            if ($n == 0 && $useranswer != null && $useranswer->correct) {
+                if ($answer->response == null && $useranswer != null) {
                     $answerdata->response = get_string("thatsthecorrectanswer", "lesson");
                 } else {
                     $answerdata->response = $answer->response;
@@ -388,8 +388,8 @@ class lesson_page_type_matching extends lesson_page {
                 } else {
                     $answerdata->score = get_string("receivedcredit", "lesson");
                 }
-            } elseif ($n == 1 && $useranswer != NULL && !$useranswer->correct) {
-                if ($answer->response == NULL && $useranswer != NULL) {
+            } elseif ($n == 1 && $useranswer != null && !$useranswer->correct) {
+                if ($answer->response == null && $useranswer != null) {
                     $answerdata->response = get_string("thatsthewronganswer", "lesson");
                 } else {
                     $answerdata->response = $answer->response;
@@ -402,7 +402,7 @@ class lesson_page_type_matching extends lesson_page {
             } elseif ($n > 1) {
                 $data = '<label class="accesshide" for="answer_' . $n . '">' . get_string('answer', 'lesson') . '</label>';
                 $data .= "<select id=\"answer_". $n ."\" disabled=\"disabled\"><option selected=\"selected\">".strip_tags(format_string($answer->answer))."</option></select>";
-                if ($useranswer != NULL) {
+                if ($useranswer != null) {
                     $userresponse = explode(",", $useranswer->useranswer);
                     $data .= '<label class="accesshide" for="stu_answer_response_' . $n . '">' . get_string('matchesanswer', 'lesson') . '</label>';
                     $data .= "<select id=\"stu_answer_response_" . $n . "\" disabled=\"disabled\"><option selected=\"selected\">";
@@ -472,12 +472,20 @@ class lesson_add_page_form_matching extends lesson_add_page_form_base {
 
         for ($i = 2; $i < $this->_customdata['lesson']->maxanswers+2; $i++) {
             $this->_form->addElement('header', 'matchingpair'.($i-1), get_string('matchingpair', 'lesson', $i-1));
-            $this->add_answer($i, NULL, ($i < 4));
-            $this->add_response($i, get_string('matchesanswer','lesson'), ($i < 4));
+            $this->add_answer($i, null, ($i < 4));
+            $required = ($i < 4);
+            $label = get_string('matchesanswer','lesson');
+            $count = $i;
+            $this->_form->addElement('text', 'response_editor['.$count.']', $label, array('size'=>'50'));
+            // Temporary fix until MDL-38885 gets integrated.
+            $this->_form->setType('response_editor', PARAM_TEXT);
+            $this->_form->setDefault('response_editor['.$count.']', '');
+            if ($required) {
+                $this->_form->addRule('response_editor['.$count.']', get_string('required'), 'required', null, 'client');
+            }
         }
     }
 }
-
 
 class lesson_display_answer_form_matching extends moodleform {
 
@@ -514,12 +522,13 @@ class lesson_display_answer_form_matching extends moodleform {
         $i = 0;
         foreach ($answers as $answer) {
             $mform->addElement('html', '<div class="answeroption">');
-            if ($answer->response != NULL) {
+            if ($answer->response != null) {
                 $responseid = 'response['.$answer->id.']';
                 if ($hasattempt) {
                     $responseid = 'response_'.$answer->id;
                     $mform->addElement('hidden', 'response['.$answer->id.']', htmlspecialchars(trim($answers[$useranswers[$i]]->response)));
-                    $mform->setType('response['.$answer->id.']', PARAM_TEXT);
+                    // Temporary fixed until MDL-38885 gets integrated
+                    $mform->setType('response', PARAM_TEXT);
                 }
                 $mform->addElement('select', $responseid, format_text($answer->answer,$answer->answerformat,$options), $responseoptions, $disabled);
                 $mform->setType($responseid, PARAM_TEXT);

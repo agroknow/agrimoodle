@@ -303,10 +303,19 @@
     }
 
     /// Define a table showing a list of users in the current role selection
+    $tablecolumns = array();
+    $tableheaders = array();
+    if ($bulkoperations && $mode === MODE_BRIEF) {
+        $tablecolumns[] = 'select';
+        $tableheaders[] = get_string('select');
+    }
+    $tablecolumns[] = 'userpic';
+    $tablecolumns[] = 'fullname';
 
-    $tablecolumns = array('userpic', 'fullname');
     $extrafields = get_extra_user_fields($context);
-    $tableheaders = array(get_string('userpic'), get_string('fullnameuser'));
+    $tableheaders[] = get_string('userpic');
+    $tableheaders[] = get_string('fullnameuser');
+
     if ($mode === MODE_BRIEF) {
         foreach ($extrafields as $field) {
             $tablecolumns[] = $field;
@@ -326,7 +335,7 @@
         $tableheaders[] = get_string('lastaccess');
     }
 
-    if ($bulkoperations) {
+    if ($bulkoperations && $mode === MODE_USERDETAILS) {
         $tablecolumns[] = 'select';
         $tableheaders[] = get_string('select');
     }
@@ -488,14 +497,15 @@
         $heading .= ": $a->number";
 
         if (user_can_assign($context, $roleid)) {
-            $heading .= ' <a href="'.$CFG->wwwroot.'/'.$CFG->admin.'/roles/assign.php?roleid='.$roleid.'&amp;contextid='.$context->id.'">';
-            $heading .= '<img src="'.$OUTPUT->pix_url('i/edit') . '" class="icon" alt="" /></a>';
+            $headingurl = new moodle_url($CFG->wwwroot . '/' . $CFG->admin . '/roles/assign.php',
+                    array('roleid' => $roleid, 'contextid' => $context->id));
+            $heading .= $OUTPUT->action_icon($headingurl, new pix_icon('t/edit', get_string('edit')));
         }
         echo $OUTPUT->heading($heading, 3);
     } else {
         if ($course->id != SITEID && has_capability('moodle/course:enrolreview', $context)) {
             $editlink = $OUTPUT->action_icon(new moodle_url('/enrol/users.php', array('id' => $course->id)),
-                                             new pix_icon('i/edit', get_string('edit')));
+                                             new pix_icon('t/edit', get_string('edit')));
         } else {
             $editlink = '';
         }
@@ -609,7 +619,7 @@
                     }
                     if ($user->maildisplay == 1 or ($user->maildisplay == 2 and ($course->id != SITEID) and !isguestuser()) or
                                 has_capability('moodle/course:viewhiddenuserfields', $context) or
-                                in_array('email', $extrafields)) {
+                                in_array('email', $extrafields) or ($user->id == $USER->id)) {
                         $row->cells[1]->text .= get_string('email').get_string('labelsep', 'langconfig').html_writer::link("mailto:$user->email", $user->email) . '<br />';
                     }
                     foreach ($extrafields as $field) {
@@ -727,7 +737,12 @@
                     $profilelink = '<strong>'.fullname($user).'</strong>';
                 }
 
-                $data = array ($OUTPUT->user_picture($user, array('size' => 35, 'courseid'=>$course->id)), $profilelink);
+                $data = array();
+                if ($bulkoperations) {
+                    $data[] = '<input type="checkbox" class="usercheckbox" name="user'.$user->id.'" />';
+                }
+                $data[] = $OUTPUT->user_picture($user, array('size' => 35, 'courseid'=>$course->id));
+                $data[] = $profilelink;
 
                 if ($mode === MODE_BRIEF) {
                     foreach ($extrafields as $field) {
@@ -750,7 +765,7 @@
                     foreach ($ras AS $key=>$ra) {
                         $rolename = $allrolenames[$ra['roleid']] ;
                         if ($ra['ctxlevel'] == CONTEXT_COURSECAT) {
-                            $rastring .= $rolename. ' @ ' . '<a href="'.$CFG->wwwroot.'/course/category.php?id='.$ra['ctxinstanceid'].'">'.s($ra['ccname']).'</a>';
+                            $rastring .= $rolename. ' @ ' . '<a href="'.$CFG->wwwroot.'/course/index.php?categoryid='.$ra['ctxinstanceid'].'">'.s($ra['ccname']).'</a>';
                         } elseif ($ra['ctxlevel'] == CONTEXT_SYSTEM) {
                             $rastring .= $rolename. ' - ' . get_string('globalrole','role');
                         } else {
@@ -765,9 +780,6 @@
                     }
                 }
 
-                if ($bulkoperations) {
-                    $data[] = '<input type="checkbox" class="usercheckbox" name="user'.$user->id.'" />';
-                }
                 $table->add_data($data);
             }
         }

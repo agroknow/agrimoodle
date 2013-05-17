@@ -195,7 +195,7 @@ function user_get_default_fields() {
  * @param stdClass $context context object
  * @param stdClass $course moodle course
  * @param array $userfields required fields
- * @return array
+ * @return array|null
  */
 function user_get_user_details($user, $course = null, array $userfields = array()) {
     global $USER, $DB, $CFG;
@@ -244,7 +244,7 @@ function user_get_user_details($user, $course = null, array $userfields = array(
     } else {
         $canviewhiddenuserfields = has_capability('moodle/user:viewhiddendetails', $context);
     }
-    $canviewfullnames        = has_capability('moodle/site:viewfullnames', $context);
+    $canviewfullnames = has_capability('moodle/site:viewfullnames', $context);
     if (!empty($course)) {
         $canviewuseremail = has_capability('moodle/course:useremail', $context);
     } else {
@@ -326,11 +326,11 @@ function user_get_user_details($user, $course = null, array $userfields = array(
     }
 
     if ($user->phone1 && in_array('phone1', $userfields) &&
-            (isset($showuseridentityfields['phone1']) or $canviewhiddenuserfields)) {
+            (in_array('phone1', $showuseridentityfields) or $canviewhiddenuserfields)) {
         $userdetails['phone1'] = $user->phone1;
     }
     if ($user->phone2 && in_array('phone2', $userfields) &&
-            (isset($showuseridentityfields['phone2']) or $canviewhiddenuserfields)) {
+            (in_array('phone2', $showuseridentityfields) or $canviewhiddenuserfields)) {
         $userdetails['phone2'] = $user->phone2;
     }
 
@@ -396,7 +396,7 @@ function user_get_user_details($user, $course = null, array $userfields = array(
     if (in_array('email', $userfields) && ($isadmin // The admin is allowed the users email
       or $currentuser // Of course the current user is as well
       or $canviewuseremail  // this is a capability in course context, it will be false in usercontext
-      or isset($showuseridentityfields['email'])
+      or in_array('email', $showuseridentityfields)
       or $user->maildisplay == 1
       or ($user->maildisplay == 2 and enrol_sharing_course($user, $USER)))) {
         $userdetails['email'] = $user->email;
@@ -410,17 +410,17 @@ function user_get_user_details($user, $course = null, array $userfields = array(
     }
 
     //Departement/Institution/Idnumber are not displayed on any profile, however you can get them from editing profile.
-    if ($isadmin or $currentuser or isset($showuseridentityfields['idnumber'])) {
+    if ($isadmin or $currentuser or in_array('idnumber', $showuseridentityfields)) {
         if (in_array('idnumber', $userfields) && $user->idnumber) {
             $userdetails['idnumber'] = $user->idnumber;
         }
     }
-    if ($isadmin or $currentuser or isset($showuseridentityfields['institution'])) {
+    if ($isadmin or $currentuser or in_array('institution', $showuseridentityfields)) {
         if (in_array('institution', $userfields) && $user->institution) {
             $userdetails['institution'] = $user->institution;
         }
     }
-    if ($isadmin or $currentuser or isset($showuseridentityfields['department'])) {
+    if ($isadmin or $currentuser or in_array('department', $showuseridentityfields)) {
         if (in_array('department', $userfields) && isset($user->department)) { //isset because it's ok to have department 0
             $userdetails['department'] = $user->department;
         }
@@ -482,6 +482,59 @@ function user_get_user_details($user, $course = null, array $userfields = array(
     }
 
     return $userdetails;
+}
+
+/**
+ * Tries to obtain user details, either recurring directly to the user's system profile
+ * or through one of the user's course enrollments (course profile).
+ *
+ * @param object $user The user.
+ * @return array if unsuccessful or the allowed user details.
+ */
+function user_get_user_details_courses($user) {
+    global $USER;
+    $userdetails = null;
+
+    //  Get the courses that the user is enrolled in (only active).
+    $courses = enrol_get_users_courses($user->id, true);
+
+    $systemprofile = false;
+    if (can_view_user_details_cap($user) || ($user->id == $USER->id) || has_coursecontact_role($user->id)) {
+        $systemprofile = true;
+    }
+
+    // Try using system profile.
+    if ($systemprofile) {
+        $userdetails = user_get_user_details($user, null);
+    } else {
+        // Try through course profile.
+        foreach ($courses as $course) {
+            if ($can_view_user_details_cap($user, $course) || ($user->id == $USER->id) || has_coursecontact_role($user->id)) {
+                $userdetails = user_get_user_details($user, $course);
+            }
+        }
+    }
+
+    return $userdetails;
+}
+
+/**
+ * Check if $USER have the necessary capabilities to obtain user details.
+ *
+ * @param object $user
+ * @param object $course if null then only consider system profile otherwise also consider the course's profile.
+ * @return bool true if $USER can view user details.
+ */
+function can_view_user_details_cap($user, $course = null) {
+    // Check $USER has the capability to view the user details at user context.
+    $usercontext = get_context_instance(CONTEXT_USER, $user->id);
+    $result = has_capability('moodle/user:viewdetails', $usercontext);
+    // Otherwise can $USER see them at course context.
+    if (!$result && !empty($course)) {
+        $context = get_context_instance(CONTEXT_COURSE, $course->id);
+        $result = has_capability('moodle/user:viewdetails', $context);
+    }
+    return $result;
 }
 
 /**

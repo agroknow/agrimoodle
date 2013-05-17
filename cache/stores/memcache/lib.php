@@ -37,7 +37,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2012 Sam Hemelryk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class cachestore_memcache implements cache_store {
+class cachestore_memcache extends cache_store implements cache_is_configurable {
 
     /**
      * The name of the store
@@ -50,6 +50,12 @@ class cachestore_memcache implements cache_store {
      * @var Memcache
      */
     protected $connection;
+
+    /**
+     * Key prefix for this memcache.
+     * @var string
+     */
+    protected $prefix;
 
     /**
      * An array of servers to use in the connection args.
@@ -70,10 +76,22 @@ class cachestore_memcache implements cache_store {
     protected $isready = false;
 
     /**
+     * Set to true once this store instance has been initialised.
+     * @var bool
+     */
+    protected $isinitialised = false;
+
+    /**
      * The cache definition this store was initialised for.
      * @var cache_definition
      */
     protected $definition;
+
+    /**
+     * Default prefix for key names.
+     * @var string
+     */
+    const DEFAULT_PREFIX = 'mdl_';
 
     /**
      * Constructs the store instance.
@@ -105,8 +123,18 @@ class cachestore_memcache implements cache_store {
             }
             $this->servers[] = $server;
         }
+        if (empty($configuration['prefix'])) {
+            $this->prefix = self::DEFAULT_PREFIX;
+        } else {
+            $this->prefix = $configuration['prefix'];
+        }
 
-        $this->isready = true;
+        $this->connection = new Memcache;
+        foreach ($this->servers as $server) {
+            $this->connection->addServer($server[0], $server[1], true, $server[2]);
+            // Test the connection to this server.
+        }
+        $this->isready = @$this->connection->set($this->parse_key('ping'), 'ping', MEMCACHE_COMPRESSED, 1);
     }
 
     /**
@@ -121,10 +149,7 @@ class cachestore_memcache implements cache_store {
             throw new coding_exception('This memcache instance has already been initialised.');
         }
         $this->definition = $definition;
-        $this->connection = new Memcache;
-        foreach ($this->servers as $server) {
-            $this->connection->addServer($server[0], $server[1], true, $server[2]);
-        }
+        $this->isinitialised = true;
     }
 
     /**
@@ -133,7 +158,7 @@ class cachestore_memcache implements cache_store {
      * @return bool
      */
     public function is_initialised() {
-        return ($this->connection !== null);
+        return ($this->isinitialised);
     }
 
     /**
@@ -174,30 +199,14 @@ class cachestore_memcache implements cache_store {
     }
 
     /**
-     * Returns true if the store instance supports multiple identifiers.
+     * Returns false as this store does not support multiple identifiers.
+     * (This optional function is a performance optimisation; it must be
+     * consistent with the value from get_supported_features.)
      *
-     * @return bool
+     * @return bool False
      */
-    public function supports_multiple_indentifiers() {
+    public function supports_multiple_identifiers() {
         return false;
-    }
-
-    /**
-     * Returns true if the store instance guarantees data.
-     *
-     * @return bool
-     */
-    public function supports_data_guarantee() {
-        return false;
-    }
-
-    /**
-     * Returns true if the store instance supports native ttl.
-     *
-     * @return bool
-     */
-    public function supports_native_ttl() {
-        return true;
     }
 
     /**
@@ -211,13 +220,27 @@ class cachestore_memcache implements cache_store {
     }
 
     /**
+     * Parses the given key to make it work for this memcache backend.
+     *
+     * @param string $key The raw key.
+     * @return string The resulting key.
+     */
+    protected function parse_key($key) {
+        if (strlen($key) > 245) {
+            $key = '_sha1_'.sha1($key);
+        }
+        $key = $this->prefix . $key;
+        return $key;
+    }
+
+    /**
      * Retrieves an item from the cache store given its key.
      *
      * @param string $key The key to retrieve
      * @return mixed The data that was associated with the key, or false if the key did not exist.
      */
     public function get($key) {
-        return $this->connection->get($key);
+        return $this->connection->get($this->parse_key($key));
     }
 
     /**
@@ -230,16 +253,23 @@ class cachestore_memcache implements cache_store {
      *      be set to false.
      */
     public function get_many($keys) {
-        $result = $this->connection->get($keys);
+        $mkeys = array();
+        foreach ($keys as $key) {
+            $mkeys[$key] = $this->parse_key($key);
+        }
+        $result = $this->connection->get($mkeys);
         if (!is_array($result)) {
             $result = array();
         }
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $result)) {
-                $result[$key] = false;
+        $return = array();
+        foreach ($mkeys as $key => $mkey) {
+            if (!array_key_exists($mkey, $result)) {
+                $return[$key] = false;
+            } else {
+                $return[$key] = $result[$mkey];
             }
         }
-        return $result;
+        return $return;
     }
 
     /**
@@ -250,7 +280,7 @@ class cachestore_memcache implements cache_store {
      * @return bool True if the operation was a success false otherwise.
      */
     public function set($key, $data) {
-        return $this->connection->set($key, $data, MEMCACHE_COMPRESSED, $this->definition->get_ttl());
+        return $this->connection->set($this->parse_key($key), $data, MEMCACHE_COMPRESSED, $this->definition->get_ttl());
     }
 
     /**
@@ -264,7 +294,7 @@ class cachestore_memcache implements cache_store {
     public function set_many(array $keyvaluearray) {
         $count = 0;
         foreach ($keyvaluearray as $pair) {
-            if ($this->connection->set($pair['key'], $pair['value'], MEMCACHE_COMPRESSED, $this->definition->get_ttl())) {
+            if ($this->connection->set($this->parse_key($pair['key']), $pair['value'], MEMCACHE_COMPRESSED, $this->definition->get_ttl())) {
                 $count++;
             }
         }
@@ -278,7 +308,7 @@ class cachestore_memcache implements cache_store {
      * @return bool Returns true if the operation was a success, false otherwise.
      */
     public function delete($key) {
-        return $this->connection->delete($key);
+        return $this->connection->delete($this->parse_key($key));
     }
 
     /**
@@ -303,7 +333,10 @@ class cachestore_memcache implements cache_store {
      * @return boolean True on success. False otherwise.
      */
     public function purge() {
-        $this->connection->flush();
+        if ($this->isready) {
+            $this->connection->flush();
+        }
+
         return true;
     }
 
@@ -322,6 +355,7 @@ class cachestore_memcache implements cache_store {
         }
         return array(
             'servers' => $servers,
+            'prefix' => $data->prefix,
         );
     }
 
@@ -340,23 +374,30 @@ class cachestore_memcache implements cache_store {
             }
             $data['servers'] = join("\n", $servers);
         }
-        $editform->set_data($data);
-    }
+        if (!empty($config['prefix'])) {
+            $data['prefix'] = $config['prefix'];
+        } else {
+            $data['prefix'] = self::DEFAULT_PREFIX;
+        }
 
-    /**
-     * Returns true if the user can add an instance of the store plugin.
-     *
-     * @return bool
-     */
-    public static function can_add_instance() {
-        return true;
+        $editform->set_data($data);
     }
 
     /**
      * Performs any necessary clean up when the store instance is being deleted.
      */
-    public function cleanup() {
-        $this->purge();
+    public function instance_deleted() {
+        if ($this->connection) {
+            $connection = $this->connection;
+        } else {
+            $connection = new Memcache;
+            foreach ($this->servers as $server) {
+                $connection->addServer($server[0], $server[1], true, $server[2]);
+            }
+        }
+        @$connection->flush();
+        unset($connection);
+        unset($this->connection);
     }
 
     /**

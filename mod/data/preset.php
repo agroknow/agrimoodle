@@ -176,7 +176,7 @@ if (optional_param('sesskey', false, PARAM_BOOL) && confirm_sesskey()) {
         echo $OUTPUT->footer();
         exit(0);
     } else {
-        $action = optional_param('action', null, PARAM_ALPHA);
+        $action = optional_param('action', null, PARAM_ALPHANUM);
         $fullname = optional_param('fullname', '', PARAM_PATH); // directory the preset is in
         //
         // find out preset owner userid and shortname
@@ -216,7 +216,7 @@ if (optional_param('sesskey', false, PARAM_BOOL) && confirm_sesskey()) {
         } else if ($action == 'finishimport') {
             $overwritesettings = optional_param('overwritesettings', false, PARAM_BOOL);
             if (!$fullname) {
-                $presetdir = $CFG->tempdir.'/forms/'.required_param('directory', PARAM_ALPHANUMEXT);
+                $presetdir = $CFG->tempdir.'/forms/'.required_param('directory', PARAM_FILE);
                 if (!file_exists($presetdir) || !is_dir($presetdir)) {
                     print_error('cannotimport');
                 }

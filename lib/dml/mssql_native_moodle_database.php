@@ -410,11 +410,16 @@ class mssql_native_moodle_database extends moodle_database {
      * @return array array of database_column_info objects indexed with column names
      */
     public function get_columns($table, $usecache=true) {
-        if ($usecache and isset($this->columns[$table])) {
-            return $this->columns[$table];
+
+        if ($usecache) {
+            $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
+            $cache = cache::make('core', 'databasemeta', $properties);
+            if ($data = $cache->get($table)) {
+                return $data;
+            }
         }
 
-        $this->columns[$table] = array();
+        $structure = array();
 
         if (!$this->temptables->is_temptable($table)) { // normal table, get metadata from own schema
             $sql = "SELECT column_name AS name,
@@ -494,11 +499,15 @@ class mssql_native_moodle_database extends moodle_database {
             // Process binary
             $info->binary = $info->meta_type == 'B' ? true : false;
 
-            $this->columns[$table][$info->name] = new database_column_info($info);
+            $structure[$info->name] = new database_column_info($info);
         }
         $this->free_result($result);
 
-        return $this->columns[$table];
+        if ($usecache) {
+            $result = $cache->set($table, $structure);
+        }
+
+        return $structure;
     }
 
     /**
@@ -713,7 +722,11 @@ class mssql_native_moodle_database extends moodle_database {
         $this->query_end($result);
 
         if ($limitfrom) { // Skip $limitfrom records
-            mssql_data_seek($result, $limitfrom);
+            if (!@mssql_data_seek($result, $limitfrom)) {
+                // Nothing, most probably seek past the end.
+                mssql_free_result($result);
+                $result = null;
+            }
         }
 
         return $this->create_recordset($result);
@@ -1176,7 +1189,7 @@ class mssql_native_moodle_database extends moodle_database {
     public function sql_concat() {
         $arr = func_get_args();
         foreach ($arr as $key => $ele) {
-            $arr[$key] = ' CAST(' . $ele . ' AS VARCHAR(255)) ';
+            $arr[$key] = ' CAST(' . $ele . ' AS NVARCHAR(255)) ';
         }
         $s = implode(' + ', $arr);
         if ($s === '') {
@@ -1296,6 +1309,10 @@ s only returning name of SQL substring function, it now requires all parameters.
         if (!$this->session_lock_supported()) {
             return;
         }
+        if (!$this->used_for_db_sessions) {
+            return;
+        }
+
         parent::release_session_lock($rowid);
 
         $fullname = $this->dbname.'-'.$this->prefix.'-session-'.$rowid;

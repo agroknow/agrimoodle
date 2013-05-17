@@ -123,26 +123,15 @@ function blog_rss_get_params($filters) {
 
     if (!$filters) {
         $thingid = SITEID;
-        $rsscontext = $sitecontext;
         $filtertype = 'site';
     } else if (array_key_exists('course', $filters)) {
         $thingid = $filters['course'];
-
-        $coursecontext = context_course::instance($thingid);
-        $rsscontext = $coursecontext;
-
         $filtertype = 'course';
     } else if (array_key_exists('user', $filters)) {
         $thingid = $filters['user'];
-
-        $usercontext = context_user::instance($thingid);
-        $rsscontext = $usercontext;
-
         $filtertype = 'user';
     } else if (array_key_exists('group', $filters)) {
         $thingid = $filters['group'];
-
-        $rsscontext = $sitecontext; //is this the context we should be using for group blogs?
         $filtertype = 'group';
     }
 
@@ -158,9 +147,21 @@ function blog_rss_get_params($filters) {
 function blog_rss_get_feed($context, $args) {
     global $CFG, $SITE, $DB;
 
+    if (empty($CFG->enableblogs)) {
+        debugging('Blogging disabled on this site, RSS feeds are not available');
+        return null;
+    }
+
     if (empty($CFG->enablerssfeeds)) {
         debugging('Sorry, RSS feeds are disabled on this site');
         return '';
+    }
+
+    if ($CFG->bloglevel == BLOG_SITE_LEVEL) {
+        if (isguestuser()) {
+            debugging(get_string('nopermissiontoshow','error'));
+            return '';
+        }
     }
 
     $sitecontext = context_system::instance();

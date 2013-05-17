@@ -138,6 +138,14 @@ function quiz_update_instance($quiz, $mform) {
         quiz_update_grades($quiz);
     }
 
+    $updateattempts = $oldquiz->timelimit != $quiz->timelimit
+                   || $oldquiz->timeclose != $quiz->timeclose
+                   || $oldquiz->graceperiod != $quiz->graceperiod;
+    if ($updateattempts) {
+        require_once($CFG->dirroot . '/mod/quiz/locallib.php');
+        quiz_update_open_attempts(array('quizid'=>$quiz->id));
+    }
+
     // Delete any previous preview attempts.
     quiz_delete_previews($quiz);
 
@@ -284,13 +292,25 @@ function quiz_update_effective_access($quiz, $userid) {
             $override->timeopen = min($opens);
         }
         if (is_null($override->timeclose) && count($closes)) {
-            $override->timeclose = max($closes);
+            if (in_array(0, $closes)) {
+                $override->timeclose = 0;
+            } else {
+                $override->timeclose = max($closes);
+            }
         }
         if (is_null($override->timelimit) && count($limits)) {
-            $override->timelimit = max($limits);
+            if (in_array(0, $limits)) {
+                $override->timelimit = 0;
+            } else {
+                $override->timelimit = max($limits);
+            }
         }
         if (is_null($override->attempts) && count($attempts)) {
-            $override->attempts = max($attempts);
+            if (in_array(0, $attempts)) {
+                $override->attempts = 0;
+            } else {
+                $override->attempts = max($attempts);
+            }
         }
         if (is_null($override->password) && count($passwords)) {
             $override->password = array_shift($passwords);
@@ -446,32 +466,20 @@ function quiz_user_complete($course, $user, $mod, $quiz) {
  */
 function quiz_cron() {
     global $CFG;
+
+    require_once($CFG->dirroot . '/mod/quiz/cronlib.php');
     mtrace('');
 
-    // Since the quiz specifies $module->cron = 60, so that the subplugins can
-    // have frequent cron if they need it, we now need to do our own scheduling.
-    $quizconfig = get_config('quiz');
-    if (!isset($quizconfig->overduelastrun)) {
-        $quizconfig->overduelastrun = 0;
-        $quizconfig->overduedoneto  = 0;
-    }
-
     $timenow = time();
-    if ($timenow > $quizconfig->overduelastrun + 3600) {
-        require_once($CFG->dirroot . '/mod/quiz/cronlib.php');
-        $overduehander = new mod_quiz_overdue_attempt_updater();
+    $overduehander = new mod_quiz_overdue_attempt_updater();
 
-        $processto = $timenow - $quizconfig->graceperiodmin;
+    $processto = $timenow - get_config('quiz', 'graceperiodmin');
 
-        mtrace('  Looking for quiz overdue quiz attempts between ' .
-                userdate($quizconfig->overduedoneto) . ' and ' . userdate($processto) . '...');
+    mtrace('  Looking for quiz overdue quiz attempts...');
 
-        list($count, $quizcount) = $overduehander->update_overdue_attempts($timenow, $quizconfig->overduedoneto, $processto);
-        set_config('overduelastrun', $timenow, 'quiz');
-        set_config('overduedoneto', $processto, 'quiz');
+    list($count, $quizcount) = $overduehander->update_overdue_attempts($timenow, $processto);
 
-        mtrace('  Considered ' . $count . ' attempts in ' . $quizcount . ' quizzes.');
-    }
+    mtrace('  Considered ' . $count . ' attempts in ' . $quizcount . ' quizzes.');
 
     // Run cron for our sub-plugin types.
     cron_execute_plugin_type('quiz', 'quiz reports');
@@ -721,18 +729,19 @@ function quiz_grade_item_update($quiz, $grades = null) {
             // NOTE: this is an extremely nasty hack! It is not a bug if this confirmation fails badly. --skodak.
             $confirm_regrade = optional_param('confirm_regrade', 0, PARAM_INT);
             if (!$confirm_regrade) {
-                $message = get_string('gradeitemislocked', 'grades');
-                $back_link = $CFG->wwwroot . '/mod/quiz/report.php?q=' . $quiz->id .
-                        '&amp;mode=overview';
-                $regrade_link = qualified_me() . '&amp;confirm_regrade=1';
-                echo $OUTPUT->box_start('generalbox', 'notice');
-                echo '<p>'. $message .'</p>';
-                echo $OUTPUT->container_start('buttons');
-                echo $OUTPUT->single_button($regrade_link, get_string('regradeanyway', 'grades'));
-                echo $OUTPUT->single_button($back_link,  get_string('cancel'));
-                echo $OUTPUT->container_end();
-                echo $OUTPUT->box_end();
-
+                if (!AJAX_SCRIPT) {
+                    $message = get_string('gradeitemislocked', 'grades');
+                    $back_link = $CFG->wwwroot . '/mod/quiz/report.php?q=' . $quiz->id .
+                            '&amp;mode=overview';
+                    $regrade_link = qualified_me() . '&amp;confirm_regrade=1';
+                    echo $OUTPUT->box_start('generalbox', 'notice');
+                    echo '<p>'. $message .'</p>';
+                    echo $OUTPUT->container_start('buttons');
+                    echo $OUTPUT->single_button($regrade_link, get_string('regradeanyway', 'grades'));
+                    echo $OUTPUT->single_button($back_link,  get_string('cancel'));
+                    echo $OUTPUT->container_end();
+                    echo $OUTPUT->box_end();
+                }
                 return GRADE_UPDATE_ITEM_LOCKED;
             }
         }
@@ -1026,6 +1035,8 @@ function quiz_process_options($quiz) {
         $quiz->feedbackboundaries[-1] = $quiz->grade + 1;
         $quiz->feedbackboundaries[$numboundaries] = 0;
         $quiz->feedbackboundarycount = $numboundaries;
+    } else {
+        $quiz->feedbackboundarycount = -1;
     }
 
     // Combing the individual settings into the review columns.
@@ -1544,48 +1555,6 @@ function quiz_get_extra_capabilities() {
 }
 
 /**
- * This fucntion extends the global navigation for the site.
- * It is important to note that you should not rely on PAGE objects within this
- * body of code as there is no guarantee that during an AJAX request they are
- * available
- *
- * @param navigation_node $quiznode The quiz node within the global navigation
- * @param object $course The course object returned from the DB
- * @param object $module The module object returned from the DB
- * @param object $cm The course module instance returned from the DB
- */
-function quiz_extend_navigation($quiznode, $course, $module, $cm) {
-    global $CFG;
-
-    $context = context_module::instance($cm->id);
-
-    if (has_capability('mod/quiz:view', $context)) {
-        $url = new moodle_url('/mod/quiz/view.php', array('id'=>$cm->id));
-        $quiznode->add(get_string('info', 'quiz'), $url, navigation_node::TYPE_SETTING,
-                null, null, new pix_icon('i/info', ''));
-    }
-
-    if (has_any_capability(array('mod/quiz:viewreports', 'mod/quiz:grade'), $context)) {
-        require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
-        $reportlist = quiz_report_list($context);
-
-        $url = new moodle_url('/mod/quiz/report.php',
-                array('id' => $cm->id, 'mode' => reset($reportlist)));
-        $reportnode = $quiznode->add(get_string('results', 'quiz'), $url,
-                navigation_node::TYPE_SETTING,
-                null, null, new pix_icon('i/report', ''));
-
-        foreach ($reportlist as $report) {
-            $url = new moodle_url('/mod/quiz/report.php',
-                    array('id' => $cm->id, 'mode' => $report));
-            $reportnode->add(get_string($report, 'quiz_'.$report), $url,
-                    navigation_node::TYPE_SETTING,
-                    null, 'quiz_report_' . $report, new pix_icon('i/item', ''));
-        }
-    }
-}
-
-/**
  * This function extends the settings navigation block for the site.
  *
  * It is safe to rely on PAGE here as we will only ever be within the module
@@ -1593,6 +1562,7 @@ function quiz_extend_navigation($quiznode, $course, $module, $cm) {
  *
  * @param settings_navigation $settings
  * @param navigation_node $quiznode
+ * @return void
  */
 function quiz_extend_settings_navigation($settings, $quiznode) {
     global $PAGE, $CFG;
@@ -1638,8 +1608,27 @@ function quiz_extend_settings_navigation($settings, $quiznode) {
                 array('cmid'=>$PAGE->cm->id, 'sesskey'=>sesskey()));
         $node = navigation_node::create(get_string('preview', 'quiz'), $url,
                 navigation_node::TYPE_SETTING, null, 'mod_quiz_preview',
-                new pix_icon('t/preview', ''));
+                new pix_icon('i/preview', ''));
         $quiznode->add_node($node, $beforekey);
+    }
+
+    if (has_any_capability(array('mod/quiz:viewreports', 'mod/quiz:grade'), $PAGE->cm->context)) {
+        require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
+        $reportlist = quiz_report_list($PAGE->cm->context);
+
+        $url = new moodle_url('/mod/quiz/report.php',
+                array('id' => $PAGE->cm->id, 'mode' => reset($reportlist)));
+        $reportnode = $quiznode->add_node(navigation_node::create(get_string('results', 'quiz'), $url,
+                navigation_node::TYPE_SETTING,
+                null, null, new pix_icon('i/report', '')), $beforekey);
+
+        foreach ($reportlist as $report) {
+            $url = new moodle_url('/mod/quiz/report.php',
+                    array('id' => $PAGE->cm->id, 'mode' => $report));
+            $reportnode->add_node(navigation_node::create(get_string($report, 'quiz_'.$report), $url,
+                    navigation_node::TYPE_SETTING,
+                    null, 'quiz_report_' . $report, new pix_icon('i/item', '')));
+        }
     }
 
     question_extend_settings_navigation($quiznode, $PAGE->cm->context)->trim_if_empty();

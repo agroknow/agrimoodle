@@ -696,7 +696,7 @@ abstract class lesson_add_page_form_base extends moodleform {
         $mform = $this->_form;
         $editoroptions = $this->_customdata['editoroptions'];
 
-        $mform->addElement('header', 'qtypeheading', get_string('addaquestionpage', 'lesson', get_string($this->qtypestring, 'lesson')));
+        $mform->addElement('header', 'qtypeheading', get_string('createaquestionpage', 'lesson', get_string($this->qtypestring, 'lesson')));
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
@@ -722,6 +722,7 @@ abstract class lesson_add_page_form_base extends moodleform {
 
         if ($this->_customdata['edit'] === true) {
             $mform->addElement('hidden', 'edit', 1);
+            $mform->setType('edit', PARAM_BOOL);
             $this->add_action_buttons(get_string('cancel'), get_string('savepage', 'lesson'));
         } else if ($this->qtype === 'questiontype') {
             $this->add_action_buttons(get_string('cancel'), get_string('addaquestionpage', 'lesson'));
@@ -761,10 +762,14 @@ abstract class lesson_add_page_form_base extends moodleform {
         if ($label === null) {
             $label = get_string("score", "lesson");
         }
+        $elname = $name;
         if (is_int($name)) {
             $name = "score[$name]";
+            $elname = 'score';
         }
         $this->_form->addElement('text', $name, $label, array('size'=>5));
+        // Temporary fix until MDL-38885 gets integrated.
+        $this->_form->setType($elname, PARAM_INT);
         if ($value !== null) {
             $this->_form->setDefault($name, $value);
         }
@@ -774,12 +779,12 @@ abstract class lesson_add_page_form_base extends moodleform {
      * Convenience function: Adds an answer editor
      *
      * @param int $count The count of the element to add
-     * @param string $label, NULL means default
+     * @param string $label, null means default
      * @param bool $required
      * @return void
      */
-    protected final function add_answer($count, $label = NULL, $required = false) {
-        if ($label === NULL) {
+    protected final function add_answer($count, $label = null, $required = false) {
+        if ($label === null) {
             $label = get_string('answer', 'lesson');
         }
         $this->_form->addElement('editor', 'answer_editor['.$count.']', $label, array('rows'=>'4', 'columns'=>'80'), array('noclean'=>true));
@@ -792,12 +797,12 @@ abstract class lesson_add_page_form_base extends moodleform {
      * Convenience function: Adds an response editor
      *
      * @param int $count The count of the element to add
-     * @param string $label, NULL means default
+     * @param string $label, null means default
      * @param bool $required
      * @return void
      */
-    protected final function add_response($count, $label = NULL, $required = false) {
-        if ($label === NULL) {
+    protected final function add_response($count, $label = null, $required = false) {
+        if ($label === null) {
             $label = get_string('response', 'lesson');
         }
         $this->_form->addElement('editor', 'response_editor['.$count.']', $label, array('rows'=>'4', 'columns'=>'80'), array('noclean'=>true));
@@ -948,7 +953,7 @@ class lesson extends lesson_base {
         require_once($CFG->libdir.'/gradelib.php');
         require_once($CFG->dirroot.'/calendar/lib.php');
 
-        $DB->delete_records("lesson", array("id"=>$this->properties->id));;
+        $DB->delete_records("lesson", array("id"=>$this->properties->id));
         $DB->delete_records("lesson_pages", array("lessonid"=>$this->properties->id));
         $DB->delete_records("lesson_answers", array("lessonid"=>$this->properties->id));
         $DB->delete_records("lesson_attempts", array("lessonid"=>$this->properties->id));
@@ -963,7 +968,7 @@ class lesson extends lesson_base {
             }
         }
 
-        grade_update('mod/lesson', $this->properties->course, 'mod', 'lesson', $this->properties->id, 0, NULL, array('deleted'=>1));
+        grade_update('mod/lesson', $this->properties->course, 'mod', 'lesson', $this->properties->id, 0, null, array('deleted'=>1));
         return true;
     }
 
@@ -2309,9 +2314,14 @@ abstract class lesson_page extends lesson_base {
         }
         if (count($this->answers)>0) {
             $count = 0;
+            $qtype = $properties->qtype;
             foreach ($this->answers as $answer) {
-                $properties->{'answer_editor['.$count.']'} = array('text'=>$answer->answer, 'format'=>$answer->answerformat);
-                $properties->{'response_editor['.$count.']'} = array('text'=>$answer->response, 'format'=>$answer->responseformat);
+                $properties->{'answer_editor['.$count.']'} = array('text' => $answer->answer, 'format' => $answer->answerformat);
+                if ($qtype != LESSON_PAGE_MATCHING) {
+                    $properties->{'response_editor['.$count.']'} = array('text' => $answer->response, 'format' => $answer->responseformat);
+                } else {
+                    $properties->{'response_editor['.$count.']'} = $answer->response;
+                }
                 $properties->{'jumpto['.$count.']'} = $answer->jumpto;
                 $properties->{'score['.$count.']'} = $answer->score;
                 $count++;

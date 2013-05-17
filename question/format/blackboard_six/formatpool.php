@@ -58,6 +58,8 @@ class qformat_blackboard_six_pool extends qformat_blackboard_six_base {
 
         $questions = array();
 
+        $this->process_category($xml, $questions);
+
         $this->process_tf($xml, $questions);
         $this->process_mc($xml, $questions);
         $this->process_ma($xml, $questions);
@@ -88,12 +90,16 @@ class qformat_blackboard_six_pool extends qformat_blackboard_six_base {
                 array('#', 'BODY', 0, '#', 'TEXT', 0, '#'),
                 '', true, get_string('importnotext', 'qformat_blackboard_six'));
 
-        $question->questiontext = $this->cleaned_text_field($text);
-        $question->questiontextformat = FORMAT_HTML; // Needed because add_blank_combined_feedback uses it.
+        $questiontext = $this->cleaned_text_field($text);
+        $question->questiontext = $questiontext['text'];
+        $question->questiontextformat = $questiontext['format']; // Needed because add_blank_combined_feedback uses it.
+        if (isset($questiontext['itemid'])) {
+            $question->questiontextitemid = $questiontext['itemid'];
+        }
 
         // Put name in question object. We must ensure it is not empty and it is less than 250 chars.
         $id = $this->getpath($questiondata, array('@', 'id'), '',  true);
-        $question->name = $this->create_default_question_name($question->questiontext['text'],
+        $question->name = $this->create_default_question_name($question->questiontext,
                 get_string('defaultname', 'qformat_blackboard_six' , $id));
 
         $question->generalfeedback = '';
@@ -103,6 +109,21 @@ class qformat_blackboard_six_pool extends qformat_blackboard_six_base {
         // TODO : read the mark from the POOL TITLE QUESTIONLIST section.
         $question->defaultmark = 1;
         return $question;
+    }
+
+    /**
+     * Add a category question entry based on the pool file title
+     * @param array $xml the xml tree
+     * @param array $questions the questions already parsed
+     */
+    public function process_category($xml, &$questions) {
+        $title = $this->getpath($xml, array('POOL', '#', 'TITLE', 0, '@', 'value'), '', true);
+
+        $dummyquestion = new stdClass();
+        $dummyquestion->qtype = 'category';
+        $dummyquestion->category = $this->cleaninput($this->clean_question_name($title));
+
+        $questions[] = $dummyquestion;
     }
 
     /**
@@ -129,6 +150,7 @@ class qformat_blackboard_six_pool extends qformat_blackboard_six_base {
             $answer = $this->getpath($thisquestion,
                     array('#', 'ANSWER', 0, '#', 'TEXT', 0, '#'), '', true);
             $question->graderinfo =  $this->cleaned_text_field($answer);
+            $question->responsetemplate =  $this->text_field('');
             $question->feedback = '';
             $question->responseformat = 'editor';
             $question->responsefieldlines = 15;
@@ -453,7 +475,7 @@ class qformat_blackboard_six_pool extends qformat_blackboard_six_base {
                 $subanswercount++;
             }
             if ($subquestioncount < 2 || $subanswercount < 3) {
-                    $this->error(get_string('notenoughtsubans', 'qformat_blackboard_six', $question->questiontext['text']));
+                    $this->error(get_string('notenoughtsubans', 'qformat_blackboard_six', $question->questiontext));
             } else {
                 $questions[] = $question;
             }

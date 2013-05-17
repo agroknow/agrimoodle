@@ -161,13 +161,6 @@ Navbar & Breadcrumb
     color: #787878;
 }
 
-.jsenabled .course_category_tree .controls {
-    visibility: visible;
-    float: right;
-}
-.category_label {
-    padding-left: 20px;
-}
 /*
 Collapse All - Expand All
 -------------------------*/
@@ -229,27 +222,23 @@ textarea {
     cursor: default;
 }
 /*
-Coursebox Info & Summary
-------------------------*/
-.coursebox h3,
-.coursebox .info,
-.coursebox .summary {
-    text-align: left;
+Courses and categories lists
+----------------------------*/
+.coursebox .content .summary {
     width: 100%;
-    height: auto;
-}
-.coursebox .info {
     float: left;
 }
-.coursebox .summary {
-    float: right;
+.coursebox .content .coursecat {
+    width: 47%;
 }
-.coursebox .summary p {
-    margin: 5px 0 0;
+.coursebox > .info > .name,
+.coursebox .content .teachers,
+.coursebox .content .courseimage,
+.coursebox .content .coursefile {
+    width: 47%;
 }
-.coursebox .info h3.name {
-    padding: 0;
-    margin: 5px 0 0;
+#page-course-index-category .generalbox.info {
+    padding: 5px;
 }
 /*
 Course Section Topic & Weekly
@@ -478,4 +467,16 @@ tab styles for ie6 & ie7
 }
 body#page-course-view-topics.path-course div.moodle-dialogue-base div.yui3-widget{
     z-index: 600!important;
+}
+
+/* Moodle forms
+----------------*/
+
+.mform .btn-cancel {
+    color: #007EBA;
+    text-decoration: none;
+}
+.mform .btn-cancel:hover, .mform .btn-cancel:focus {
+    color: #cc3300;
+    text-decoration: underline;
 }

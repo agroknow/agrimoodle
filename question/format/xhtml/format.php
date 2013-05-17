@@ -93,7 +93,7 @@ class qformat_xhtml extends qformat_default {
             }
             $expout .= "</ul>\n";
             break;
-        case SHORTANSWER:
+        case 'shortanswer':
             $expout .= html_writer::start_tag('ul', array('class' => 'shortanswer'));
             $expout .= html_writer::start_tag('li');
             $expout .= html_writer::label(get_string('answer'), 'quest_'.$id, false, array('class' => 'accesshide'));
@@ -101,7 +101,7 @@ class qformat_xhtml extends qformat_default {
             $expout .= html_writer::end_tag('li');
             $expout .= html_writer::end_tag('ul');
             break;
-        case NUMERICAL:
+        case 'numerical':
             $expout .= html_writer::start_tag('ul', array('class' => 'numerical'));
             $expout .= html_writer::start_tag('li');
             $expout .= html_writer::label(get_string('answer'), 'quest_'.$id, false, array('class' => 'accesshide'));
@@ -109,7 +109,7 @@ class qformat_xhtml extends qformat_default {
             $expout .= html_writer::end_tag('li');
             $expout .= html_writer::end_tag('ul');
             break;
-        case MATCH:
+        case 'match':
             $expout .= html_writer::start_tag('ul', array('class' => 'match'));
 
             // build answer list
@@ -130,21 +130,21 @@ class qformat_xhtml extends qformat_default {
             foreach($question->options->subquestions as $subquestion) {
                 // build drop down for answers
                 $quest_text = $this->repchar( $subquestion->questiontext );
-                $dropdown = html_writer::label(get_string('answer', 'qtype_match', $option+1), 'quest_'.$id.'_'.$option, false, array('class' => 'accesshide'));
-                $dropdown .= html_writer::select($selectoptions, "quest_{$id}_{$option}", '', false, array('id' => "quest_{$id}_{$option}"));
-                $expout .= html_writer::tag('li', $quest_text);;
-                $expout .= $dropdown;
-                $option++;
+                if ($quest_text != '') {
+                    $dropdown = html_writer::label(get_string('answer', 'qtype_match', $option+1), 'quest_'.$id.'_'.$option, false, array('class' => 'accesshide'));
+                    $dropdown .= html_writer::select($selectoptions, "quest_{$id}_{$option}", '', false, array('id' => "quest_{$id}_{$option}"));
+                    $expout .= html_writer::tag('li', $quest_text);
+                    $expout .= $dropdown;
+                    $option++;
+                }
             }
             $expout .= html_writer::end_tag('ul');
             break;
         case 'description':
             break;
-        case 'multichoice':
-            $expout .= "<!-- CLOZE type is not supported  -->\n";
-            break;
+        case 'multianswer':
         default:
-            echo $OUTPUT->notification("No handler for qtype $question->qtype for GIFT export" );
+            $expout .= "<!-- export of $question->qtype type is not supported  -->\n";
         }
         // close off div
         $expout .= "</div>\n\n\n";

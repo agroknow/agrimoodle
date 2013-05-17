@@ -72,8 +72,8 @@ class core_backup_renderer extends plugin_renderer_base {
      * @return string
      */
     public function backup_details($details, $nextstageurl) {
-        $yestick = $this->output->pix_icon('i/tick_green_big', get_string('yes'));
-        $notick = $this->output->pix_icon('i/cross_red_big', get_string('no'));
+        $yestick = $this->output->pix_icon('i/valid', get_string('yes'));
+        $notick = $this->output->pix_icon('i/valid', get_string('no'));
 
         $html  = html_writer::start_tag('div', array('class'=>'backup-restore'));
 
@@ -147,9 +147,9 @@ class core_backup_renderer extends plugin_renderer_base {
                         $table->data = array();
                     }
                     $name = get_string('pluginname', $activity->modulename);
-                    $icon = new pix_icon('icon', $name, $activity->modulename);
+                    $icon = new pix_icon('icon', $name, $activity->modulename, array('class' => 'iconlarge icon-pre'));
                     $table->data[] = array(
-                        $this->output->render($icon).'&nbsp;'.$name,
+                        $this->output->render($icon).$name,
                         $activity->title,
                         ($activity->settings[$activitykey.'_userinfo'])?$yestick:$notick,
                     );
@@ -590,8 +590,14 @@ class core_backup_renderer extends plugin_renderer_base {
             return $output;
         }
 
-        $output .= html_writer::tag('div', get_string('totalcoursesearchresults', 'backup', $component->get_count()), array('class'=>'ics-totalresults'));
+        $countstr = '';
+        if ($component->has_more_results()) {
+            $countstr = get_string('morecoursesearchresults', 'backup', $component->get_count());
+        } else {
+            $countstr = get_string('totalcoursesearchresults', 'backup', $component->get_count());
+        }
 
+        $output .= html_writer::tag('div', $countstr, array('class'=>'ics-totalresults'));
         $output .= html_writer::start_tag('div', array('class' => 'ics-results'));
 
         $table = new html_table();
@@ -608,6 +614,14 @@ class core_backup_renderer extends plugin_renderer_base {
                 format_string($course->shortname, true, array('context' => context_course::instance($course->id))),
                 format_string($course->fullname, true, array('context' => context_course::instance($course->id)))
             );
+            $table->data[] = $row;
+        }
+        if ($component->has_more_results()) {
+            $cell = new html_table_cell(get_string('moreresults', 'backup'));
+            $cell->colspan = 3;
+            $cell->attributes['class'] = 'notifyproblem';
+            $row = new html_table_row(array($cell));
+            $row->attributes['class'] = 'rcs-course';
             $table->data[] = $row;
         }
         $output .= html_writer::table($table);

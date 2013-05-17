@@ -18,14 +18,40 @@
 /**
  * Moodle deployment utility
  *
- * This script looks after deploying available updates to the local Moodle site.
+ * This script looks after deploying new add-ons and available updates for them
+ * to the local Moodle site. It can operate via both HTTP and CLI mode.
+ * Moodle itself calls this utility via the HTTP mode when the admin is about to
+ * install or update an add-on. You can use the CLI mode in your custom deployment
+ * shell scripts.
  *
  * CLI usage example:
+ *
+ *  $ sudo -u apache php mdeploy.php --install \
+ *                                   --package=https://moodle.org/plugins/download.php/...zip \
+ *                                   --typeroot=/var/www/moodle/htdocs/blocks
+ *                                   --name=loancalc
+ *                                   --md5=...
+ *                                   --dataroot=/var/www/moodle/data
+ *
  *  $ sudo -u apache php mdeploy.php --upgrade \
  *                                   --package=https://moodle.org/plugins/download.php/...zip \
- *                                   --dataroot=/home/mudrd8mz/moodledata/moodle24
+ *                                   --typeroot=/var/www/moodle/htdocs/blocks
+ *                                   --name=loancalc
+ *                                   --md5=...
+ *                                   --dataroot=/var/www/moodle/data
+ *
+ * When called via HTTP, additional parameters returnurl, passfile and password must be
+ * provided. Optional proxy configuration can be passed using parameters proxy, proxytype
+ * and proxyuserpwd.
+ *
+ * Changes
+ *
+ * 1.1 - Added support to install a new plugin from the Moodle Plugins directory.
+ * 1.0 - Initial version used in Moodle 2.4 to deploy available updates.
  *
  * @package     core
+ * @subpackage  mdeploy
+ * @version     1.1
  * @copyright   2012 David Mudrak <david@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -171,6 +197,9 @@ class input_manager extends singleton_pattern {
         $supportedoptions = array(
             array('', 'passfile', input_manager::TYPE_FILE, 'File name of the passphrase file (HTTP access only)'),
             array('', 'password', input_manager::TYPE_RAW, 'Session passphrase (HTTP access only)'),
+            array('', 'proxy', input_manager::TYPE_RAW, 'HTTP proxy host and port (e.g. \'our.proxy.edu:8888\')'),
+            array('', 'proxytype', input_manager::TYPE_RAW, 'Proxy type (HTTP or SOCKS5)'),
+            array('', 'proxyuserpwd', input_manager::TYPE_RAW, 'Proxy username and password (e.g. \'username:password\')'),
             array('', 'returnurl', input_manager::TYPE_URL, 'Return URL (HTTP access only)'),
             array('d', 'dataroot', input_manager::TYPE_PATH, 'Full path to the dataroot (moodledata) directory'),
             array('h', 'help', input_manager::TYPE_FLAG, 'Prints usage information'),
@@ -261,8 +290,17 @@ class input_manager extends singleton_pattern {
                 if (strpos($raw, '~') !== false) {
                     throw new invalid_option_exception('Using the tilde (~) character in paths is not supported');
                 }
+                $colonpos = strpos($raw, ':');
+                if ($colonpos !== false) {
+                    if ($colonpos !== 1 or strrpos($raw, ':') !== 1) {
+                        throw new invalid_option_exception('Using the colon (:) character in paths is supported for Windows drive labels only.');
+                    }
+                    if (preg_match('/^[a-zA-Z]:/', $raw) !== 1) {
+                        throw new invalid_option_exception('Using the colon (:) character in paths is supported for Windows drive labels only.');
+                    }
+                }
                 $raw = str_replace('\\', '/', $raw);
-                $raw = preg_replace('~[[:cntrl:]]|[&<>"`\|\':]~u', '', $raw);
+                $raw = preg_replace('~[[:cntrl:]]|[&<>"`\|\']~u', '', $raw);
                 $raw = preg_replace('~\.\.+~', '', $raw);
                 $raw = preg_replace('~//+~', '/', $raw);
                 $raw = preg_replace('~/(\./)+~', '/', $raw);
@@ -618,9 +656,12 @@ class output_http_provider extends output_provider {
      * @param Exception $e uncaught exception
      */
     public function exception(Exception $e) {
+
+        $docslink = 'http://docs.moodle.org/en/admin/mdeploy/'.get_class($e);
         $this->start_output();
         echo('<h1>Oops! It did it again</h1>');
-        echo('<p><strong>Moodle deployment utility had a trouble with your request. See the debugging information for more details.</strong></p>');
+        echo('<p><strong>Moodle deployment utility had a trouble with your request.
+            See <a href="'.$docslink.'">the docs page</a> and the debugging information for more details.</strong></p>');
         echo('<pre>');
         echo exception_handlers::format_exception_info($e);
         echo('</pre>');
@@ -716,7 +757,7 @@ class worker extends singleton_pattern {
                 $this->log('Package downloaded into '.$target);
             } else {
                 $this->log('cURL error ' . $this->curlerrno . ' ' . $this->curlerror);
-                $this->log('Unable to download the file');
+                $this->log('Unable to download the file from ' . $source . ' into ' . $target);
                 throw new download_file_exception('Unable to download the package');
             }
 
@@ -748,7 +789,7 @@ class worker extends singleton_pattern {
             }
 
             // Looking good, let's try it.
-            if (!$this->move_directory($sourcelocation, $backuplocation)) {
+            if (!$this->move_directory($sourcelocation, $backuplocation, true)) {
                 throw new backup_folder_exception('Unable to backup the current version of the plugin (moving failed)');
             }
 
@@ -760,7 +801,53 @@ class worker extends singleton_pattern {
             $this->done();
 
         } else if ($this->input->get_option('install')) {
-            // Installing a new plugin not implemented yet.
+            $this->log('Plugin installation requested');
+
+            $plugintyperoot = $this->input->get_option('typeroot');
+            $pluginname     = $this->input->get_option('name');
+            $source         = $this->input->get_option('package');
+            $md5remote      = $this->input->get_option('md5');
+
+            // Check if the plugin location if available for us.
+            $pluginlocation = $plugintyperoot.'/'.$pluginname;
+
+            $this->log('New plugin code location: '.$pluginlocation);
+
+            if (file_exists($pluginlocation)) {
+                throw new filesystem_exception('Unable to prepare the plugin location (directory already exists)');
+            }
+
+            if (!$this->create_directory_precheck($pluginlocation)) {
+                throw new filesystem_exception('Unable to prepare the plugin location (cannot create new directory)');
+            }
+
+            // Fetch the ZIP file into a temporary location.
+            $target = $this->target_location($source);
+            $this->log('Downloading package '.$source);
+
+            if ($this->download_file($source, $target)) {
+                $this->log('Package downloaded into '.$target);
+            } else {
+                $this->log('cURL error ' . $this->curlerrno . ' ' . $this->curlerror);
+                $this->log('Unable to download the file');
+                throw new download_file_exception('Unable to download the package');
+            }
+
+            // Compare MD5 checksum of the ZIP file
+            $md5local = md5_file($target);
+
+            if ($md5local !== $md5remote) {
+                $this->log('MD5 checksum failed. Expected: '.$md5remote.' Got: '.$md5local);
+                throw new checksum_exception('MD5 checksum failed');
+            }
+            $this->log('MD5 checksum ok');
+
+            // Unzip the plugin package file into the plugin location.
+            $this->unzip_plugin($target, $plugintyperoot, $pluginlocation, false);
+            $this->log('Package successfully extracted');
+
+            // Redirect to the given URL (in HTTP) or exit (in CLI).
+            $this->done();
         }
 
         // Print help in CLI by default.
@@ -966,6 +1053,38 @@ class worker extends singleton_pattern {
         curl_setopt($ch, CURLOPT_TIMEOUT, 3600);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20); // nah, moodle.org is never unavailable! :-p
         curl_setopt($ch, CURLOPT_URL, $source);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Allow redirection, we trust in ssl.
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+
+        if ($cacertfile = $this->get_cacert()) {
+            // Do not use CA certs provided by the operating system. Instead,
+            // use this CA cert to verify the ZIP provider.
+            $this->log('Using custom CA certificate '.$cacertfile);
+            curl_setopt($ch, CURLOPT_CAINFO, $cacertfile);
+        } else {
+            $this->log('Using operating system CA certificates.');
+        }
+
+        $proxy = $this->input->get_option('proxy', false);
+        if (!empty($proxy)) {
+            curl_setopt($ch, CURLOPT_PROXY, $proxy);
+
+            $proxytype = $this->input->get_option('proxytype', false);
+            if (strtoupper($proxytype) === 'SOCKS5') {
+                $this->log('Using SOCKS5 proxy');
+                curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
+            } else if (!empty($proxytype)) {
+                $this->log('Using HTTP proxy');
+                curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+                curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, false);
+            }
+
+            $proxyuserpwd = $this->input->get_option('proxyuserpwd', false);
+            if (!empty($proxyuserpwd)) {
+                curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyuserpwd);
+                curl_setopt($ch, CURLOPT_PROXYAUTH, CURLAUTH_BASIC | CURLAUTH_NTLM);
+            }
+        }
 
         $targetfile = fopen($target, 'w');
 
@@ -990,13 +1109,45 @@ class worker extends singleton_pattern {
         $this->curlinfo = curl_getinfo($ch);
 
         if (!$result or $this->curlerrno) {
+            $this->log('Curl Error.');
             return false;
 
-        } else if (is_array($this->curlinfo) and (empty($this->curlinfo['http_code']) or $this->curlinfo['http_code'] != 200)) {
+        } else if (is_array($this->curlinfo) and (empty($this->curlinfo['http_code']) or ($this->curlinfo['http_code'] != 200))) {
+            $this->log('Curl remote error.');
+            $this->log(print_r($this->curlinfo,true));
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Get the location of ca certificates.
+     * @return string absolute file path or empty if default used
+     */
+    protected function get_cacert() {
+        $dataroot = $this->input->get_option('dataroot');
+
+        // Bundle in dataroot always wins.
+        if (is_readable($dataroot.'/moodleorgca.crt')) {
+            return realpath($dataroot.'/moodleorgca.crt');
+        }
+
+        // Next comes the default from php.ini
+        $cacert = ini_get('curl.cainfo');
+        if (!empty($cacert) and is_readable($cacert)) {
+            return realpath($cacert);
+        }
+
+        // Windows PHP does not have any certs, we need to use something.
+        if (stristr(PHP_OS, 'win') && !stristr(PHP_OS, 'darwin')) {
+            if (is_readable(__DIR__.'/lib/cacert.pem')) {
+                return realpath(__DIR__.'/lib/cacert.pem');
+            }
+        }
+
+        // Use default, this should work fine on all properly configured *nix systems.
+        return null;
     }
 
     /**
@@ -1081,18 +1232,36 @@ class worker extends singleton_pattern {
     }
 
     /**
-     * Checks to see if a source foldr could be safely moved into the given new location
+     * Checks to see if a source folder could be safely moved into the given new location
      *
      * @param string $destination full path to the new expected location of a folder
      * @return bool
      */
     protected function move_directory_target_precheck($target) {
 
-        if (file_exists($target)) {
+        // Check if the target folder does not exist yet, can be created
+        // and removed again.
+        $result = $this->create_directory_precheck($target);
+
+        // At the moment, it seems to be enough to check. We may want to add
+        // more steps in the future.
+
+        return $result;
+    }
+
+    /**
+     * Make sure the given directory can be created (and removed)
+     *
+     * @param string $path full path to the folder
+     * @return bool
+     */
+    protected function create_directory_precheck($path) {
+
+        if (file_exists($path)) {
             return false;
         }
 
-        $result = mkdir($target, 02777) && rmdir($target);
+        $result = mkdir($path, 02777) && rmdir($path);
 
         return $result;
     }
@@ -1100,15 +1269,33 @@ class worker extends singleton_pattern {
     /**
      * Moves the given source into a new location recursively
      *
+     * The target location can not exist.
+     *
      * @param string $source full path to the existing directory
      * @param string $destination full path to the new location of the folder
+     * @param bool $keepsourceroot should the root of the $source be kept or removed at the end
      * @return bool
      */
-    protected function move_directory($source, $target) {
+    protected function move_directory($source, $target, $keepsourceroot = false) {
 
         if (file_exists($target)) {
             throw new filesystem_exception('Unable to move the directory - target location already exists');
         }
+
+        return $this->move_directory_into($source, $target, $keepsourceroot);
+    }
+
+    /**
+     * Moves the given source into a new location recursively
+     *
+     * If the target already exists, files are moved into it. The target is created otherwise.
+     *
+     * @param string $source full path to the existing directory
+     * @param string $destination full path to the new location of the folder
+     * @param bool $keepsourceroot should the root of the $source be kept or removed at the end
+     * @return bool
+     */
+    protected function move_directory_into($source, $target, $keepsourceroot = false) {
 
         if (is_dir($source)) {
             $handle = opendir($source);
@@ -1116,7 +1303,11 @@ class worker extends singleton_pattern {
             throw new filesystem_exception('Source location is not a directory');
         }
 
-        mkdir($target, 02777);
+        if (is_dir($target)) {
+            $result = true;
+        } else {
+            $result = mkdir($target, 02777);
+        }
 
         while ($filename = readdir($handle)) {
             $sourcepath = $source.'/'.$filename;
@@ -1127,26 +1318,37 @@ class worker extends singleton_pattern {
             }
 
             if (is_dir($sourcepath)) {
-                $this->move_directory($sourcepath, $targetpath);
+                $result = $result && $this->move_directory($sourcepath, $targetpath, false);
 
             } else {
-                rename($sourcepath, $targetpath);
+                $result = $result && rename($sourcepath, $targetpath);
             }
         }
 
         closedir($handle);
-        return rmdir($source);
+
+        if (!$keepsourceroot) {
+            $result = $result && rmdir($source);
+        }
+
+        clearstatcache();
+
+        return $result;
     }
 
     /**
      * Deletes the given directory recursively
      *
      * @param string $path full path to the directory
+     * @param bool $keeppathroot should the root of the $path be kept (i.e. remove the content only) or removed too
+     * @return bool
      */
-    protected function remove_directory($path) {
+    protected function remove_directory($path, $keeppathroot = false) {
+
+        $result = true;
 
         if (!file_exists($path)) {
-            return;
+            return $result;
         }
 
         if (is_dir($path)) {
@@ -1163,15 +1365,22 @@ class worker extends singleton_pattern {
             }
 
             if (is_dir($filepath)) {
-                $this->remove_directory($filepath);
+                $result = $result && $this->remove_directory($filepath, false);
 
             } else {
-                unlink($filepath);
+                $result = $result && unlink($filepath);
             }
         }
 
         closedir($handle);
-        return rmdir($path);
+
+        if (!$keeppathroot) {
+            $result = $result && rmdir($path);
+        }
+
+        clearstatcache();
+
+        return $result;
     }
 
     /**
@@ -1180,7 +1389,7 @@ class worker extends singleton_pattern {
      * @param string $ziplocation full path to the ZIP file
      * @param string $plugintyperoot full path to the plugin's type location
      * @param string $expectedlocation expected full path to the plugin after it is extracted
-     * @param string $backuplocation location of the previous version of the plugin
+     * @param string|bool $backuplocation location of the previous version of the plugin or false for no backup
      */
     protected function unzip_plugin($ziplocation, $plugintyperoot, $expectedlocation, $backuplocation) {
 
@@ -1188,7 +1397,9 @@ class worker extends singleton_pattern {
         $result = $zip->open($ziplocation);
 
         if ($result !== true) {
-            $this->move_directory($backuplocation, $expectedlocation);
+            if ($backuplocation !== false) {
+                $this->move_directory($backuplocation, $expectedlocation);
+            }
             throw new zip_exception('Unable to open the zip package');
         }
 
@@ -1206,8 +1417,10 @@ class worker extends singleton_pattern {
 
         if (!$zip->extractTo($plugintyperoot)) {
             $zip->close();
-            $this->remove_directory($expectedlocation); // just in case something was created
-            $this->move_directory($backuplocation, $expectedlocation);
+            $this->remove_directory($expectedlocation, true); // just in case something was created
+            if ($backuplocation !== false) {
+                $this->move_directory_into($backuplocation, $expectedlocation);
+            }
             throw new zip_exception('Unable to extract the zip package');
         }
 

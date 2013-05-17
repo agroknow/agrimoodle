@@ -30,6 +30,7 @@ require_once('recent_form.php');
 $id = required_param('id', PARAM_INT);
 
 $PAGE->set_url('/course/recent.php', array('id'=>$id));
+$PAGE->set_pagelayout('report');
 
 if (!$course = $DB->get_record('course', array('id'=>$id))) {
     print_error("That's an invalid course id");
@@ -271,24 +272,4 @@ if (!empty($activities)) {
 }
 
 echo $OUTPUT->footer();
-
-function compare_activities_by_time_desc($a, $b) {
-    // make sure the activities actually have a timestamp property
-    if ((!array_key_exists('timestamp', $a)) or (!array_key_exists('timestamp', $b))) {
-      return 0;
-    }
-    if ($a->timestamp == $b->timestamp)
-        return 0;
-    return ($a->timestamp > $b->timestamp) ? -1 : 1;
-}
-
-function compare_activities_by_time_asc($a, $b) {
-    // make sure the activities actually have a timestamp property
-    if ((!array_key_exists('timestamp', $a)) or (!array_key_exists('timestamp', $b))) {
-      return 0;
-    }
-    if ($a->timestamp == $b->timestamp)
-        return 0;
-    return ($a->timestamp < $b->timestamp) ? -1 : 1;
-}
 

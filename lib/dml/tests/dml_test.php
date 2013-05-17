@@ -1814,7 +1814,7 @@ class dml_testcase extends database_driver_testcase {
         $this->assertSame(false, $DB->get_field($tablename, 'course', array('course' => 11), IGNORE_MISSING));
         try {
             $DB->get_field($tablename, 'course', array('course' => 4), MUST_EXIST);
-            $this->assertFail('Exception expected due to missing record');
+            $this->fail('Exception expected due to missing record');
         } catch (dml_exception $ex) {
             $this->assertTrue(true);
         }
@@ -1967,7 +1967,7 @@ class dml_testcase extends database_driver_testcase {
         // custom sequence - missing id error
         try {
             $DB->insert_record_raw($tablename, array('course' => 3, 'onechar' => 'bb'), true, false, true);
-            $this->assertFail('Exception expected due to missing record');
+            $this->fail('Exception expected due to missing record');
         } catch (coding_exception $ex) {
             $this->assertTrue(true);
         }
@@ -1975,7 +1975,7 @@ class dml_testcase extends database_driver_testcase {
         // wrong column error
         try {
             $DB->insert_record_raw($tablename, array('xxxxx' => 3, 'onechar' => 'bb'));
-            $this->assertFail('Exception expected due to invalid column');
+            $this->fail('Exception expected due to invalid column');
         } catch (dml_exception $ex) {
             $this->assertTrue(true);
         }
@@ -3796,7 +3796,7 @@ class dml_testcase extends database_driver_testcase {
         $this->assertEquals('123456', $DB->get_field_sql($sql, $params));
         // float, null and strings
         $params = array(123.45, null, 'test');
-        $this->assertNull($DB->get_field_sql($sql, $params), 'ANSI behaviour: Concatenating NULL must return NULL - But in Oracle :-(. [%s]'); // Concatenate NULL with anything result = NULL
+        $this->assertNull($DB->get_field_sql($sql, $params)); // Concatenate NULL with anything result = NULL
 
         // Testing fieldnames + values and also integer fieldnames
         $table = $this->get_test_table();
@@ -3844,7 +3844,7 @@ class dml_testcase extends database_driver_testcase {
         $this->assertEquals("Firstname Surname", $DB->get_field_sql($sql, $params));
     }
 
-    function sql_sql_order_by_text() {
+    function test_sql_order_by_text() {
         $DB = $this->tdb;
         $dbman = $DB->get_manager();
 
@@ -3926,6 +3926,9 @@ class dml_testcase extends database_driver_testcase {
         $table = $this->get_test_table();
         $tablename = $table->getName();
 
+        $this->assertSame('', $DB->sql_empty()); // Since 2.5 the hack is applied automatically to all bound params.
+        $this->assertDebuggingCalled();
+
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, null);
         $table->add_field('namenotnull', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'default value');
@@ -3938,17 +3941,17 @@ class dml_testcase extends database_driver_testcase {
         $DB->insert_record($tablename, array('name'=>'lalala'));
         $DB->insert_record($tablename, array('name'=>0));
 
-        $records = $DB->get_records_sql("SELECT * FROM {{$tablename}} WHERE name = '".$DB->sql_empty()."'");
+        $records = $DB->get_records_sql("SELECT * FROM {{$tablename}} WHERE name = ?", array(''));
         $this->assertEquals(count($records), 1);
         $record = reset($records);
         $this->assertEquals($record->name, '');
 
-        $records = $DB->get_records_sql("SELECT * FROM {{$tablename}} WHERE namenotnull = '".$DB->sql_empty()."'");
+        $records = $DB->get_records_sql("SELECT * FROM {{$tablename}} WHERE namenotnull = ?", array(''));
         $this->assertEquals(count($records), 1);
         $record = reset($records);
         $this->assertEquals($record->namenotnull, '');
 
-        $records = $DB->get_records_sql("SELECT * FROM {{$tablename}} WHERE namenotnullnodeflt = '".$DB->sql_empty()."'");
+        $records = $DB->get_records_sql("SELECT * FROM {{$tablename}} WHERE namenotnullnodeflt = ?", array(''));
         $this->assertEquals(count($records), 4);
         $record = reset($records);
         $this->assertEquals($record->namenotnullnodeflt, '');
@@ -4199,6 +4202,27 @@ class dml_testcase extends database_driver_testcase {
         $DB->insert_record($tablename, array('course' => 7, 'content' => 'xx', 'name'=>'1abc'));
         $this->assertEquals(count($DB->get_records_sql($sql, array(1))), 1);
         $this->assertEquals(count($DB->get_records_sql($sql, array("1"))), 1);
+
+        // Test get_in_or_equal() with a big number of elements. Note that ideally
+        // we should be detecting and warning about any use over, say, 200 elements
+        // and recommend to change code to use subqueries and/or chunks instead.
+        $currentcount = $DB->count_records($tablename);
+        $numelements = 10000; // Verify that we can handle 10000 elements (crazy!)
+        $values = range(1, $numelements);
+
+        list($insql, $inparams) = $DB->get_in_or_equal($values, SQL_PARAMS_QM); // With QM params.
+        $sql = "SELECT *
+                  FROM {{$tablename}}
+                 WHERE id $insql";
+        $results = $DB->get_records_sql($sql, $inparams);
+        $this->assertEquals($currentcount, count($results));
+
+        list($insql, $inparams) = $DB->get_in_or_equal($values, SQL_PARAMS_NAMED); // With NAMED params.
+        $sql = "SELECT *
+                  FROM {{$tablename}}
+                 WHERE id $insql";
+        $results = $DB->get_records_sql($sql, $inparams);
+        $this->assertEquals($currentcount, count($results));
     }
 
     function test_onelevel_commit() {
@@ -4437,6 +4461,35 @@ class dml_testcase extends database_driver_testcase {
                 $DB->set_field($tablename, 'course', $record1->course+1, array('id'=>$record1->id));
                 $DB->set_field($tablename2, 'course', $record2->course+1, array('id'=>$record2->id));
                 $t->allow_commit();
+                $j++;
+            }
+            $rs2->close();
+            $this->assertEquals(4, $j);
+        }
+        $rs1->close();
+        $this->assertEquals(3, $i);
+
+        // Test nested recordsets isolation without transaction.
+        $DB->delete_records($tablename);
+        $DB->insert_record($tablename, array('course'=>1));
+        $DB->insert_record($tablename, array('course'=>2));
+        $DB->insert_record($tablename, array('course'=>3));
+
+        $DB->delete_records($tablename2);
+        $DB->insert_record($tablename2, array('course'=>5));
+        $DB->insert_record($tablename2, array('course'=>6));
+        $DB->insert_record($tablename2, array('course'=>7));
+        $DB->insert_record($tablename2, array('course'=>8));
+
+        $rs1 = $DB->get_recordset($tablename);
+        $i = 0;
+        foreach ($rs1 as $record1) {
+            $i++;
+            $rs2 = $DB->get_recordset($tablename2);
+            $j = 0;
+            foreach ($rs2 as $record2) {
+                $DB->set_field($tablename, 'course', $record1->course+1, array('id'=>$record1->id));
+                $DB->set_field($tablename2, 'course', $record2->course+1, array('id'=>$record2->id));
                 $j++;
             }
             $rs2->close();

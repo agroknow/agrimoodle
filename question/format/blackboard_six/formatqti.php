@@ -53,6 +53,10 @@ class qformat_blackboard_six_qti extends qformat_blackboard_six_base {
         }
 
         $questions = array();
+
+        // Treat the assessment title as a category title.
+        $this->process_category($xml, $questions);
+
         // First step : we are only interested in the <item> tags.
         $rawquestions = $this->getpath($xml,
                 array('questestinterop', '#', 'assessment', 0, '#', 'section', 0, '#', 'item'),
@@ -87,7 +91,7 @@ class qformat_blackboard_six_qti extends qformat_blackboard_six_base {
                     $this->process_essay($question, $questions);
                     break;
                 default:
-                    $this->error(get_string('unknownorunhandledtype', 'qformat_blackboard_six', $question->qtype));
+                    $this->error(get_string('unknownorunhandledtype', 'question', $question->qtype));
                     break;
             }
         }
@@ -506,11 +510,13 @@ class qformat_blackboard_six_qti extends qformat_blackboard_six_base {
     public function process_common($quest) {
         $question = $this->defaultquestion();
         $text = $quest->QUESTION_BLOCK->text;
-
-        $question->questiontext = $this->cleaned_text_field($text);
-        $question->questiontextformat = FORMAT_HTML; // Needed because add_blank_combined_feedback uses it.
-
-        $question->name = $this->create_default_question_name($question->questiontext['text'],
+        $questiontext = $this->cleaned_text_field($text);
+        $question->questiontext = $questiontext['text'];
+        $question->questiontextformat = $questiontext['format']; // Needed because add_blank_combined_feedback uses it.
+        if (isset($questiontext['itemid'])) {
+            $question->questiontextitemid = $questiontext['itemid'];
+        }
+        $question->name = $this->create_default_question_name($question->questiontext,
                 get_string('defaultname', 'qformat_blackboard_six' , $quest->id));
         $question->generalfeedback = '';
         $question->generalfeedbackformat = FORMAT_HTML;
@@ -775,6 +781,7 @@ class qformat_blackboard_six_qti extends qformat_blackboard_six_base {
         $question->responseformat = 'editor';
         $question->responsefieldlines = 15;
         $question->attachments = 0;
+        $question->responsetemplate =  $this->text_field('');
 
         $questions[]=$question;
     }
@@ -863,10 +870,25 @@ class qformat_blackboard_six_qti extends qformat_blackboard_six_base {
             $subanswercount++;
         }
         if ($subquestioncount < 2 || $subanswercount < 3) {
-                $this->error(get_string('notenoughtsubans', 'qformat_blackboard_six', $question->questiontext['text']));
+                $this->error(get_string('notenoughtsubans', 'qformat_blackboard_six', $question->questiontext));
         } else {
             $questions[] = $question;
         }
+    }
+
+    /**
+     * Add a category question entry based on the assessment title
+     * @param array $xml the xml tree
+     * @param array $questions the questions already parsed
+     */
+    public function process_category($xml, &$questions) {
+        $title = $this->getpath($xml, array('questestinterop', '#', 'assessment', 0, '@', 'title'), '', true);
+
+        $dummyquestion = new stdClass();
+        $dummyquestion->qtype = 'category';
+        $dummyquestion->category = $this->cleaninput($this->clean_question_name($title));
+
+        $questions[] = $dummyquestion;
     }
 
     /**

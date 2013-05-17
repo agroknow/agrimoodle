@@ -86,6 +86,37 @@ class testable_input_manager extends input_manager {
 
 
 /**
+ * Testable subclass
+ *
+ * @copyright 2012 David Mudrak <david@moodle.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class testable_worker extends worker {
+
+    /**
+     * Provides access to the protected method.
+     */
+    public function move_directory($source, $target, $keepsourceroot = false) {
+        return parent::move_directory($source, $target, $keepsourceroot);
+    }
+
+    /**
+     * Provides access to the protected method.
+     */
+    public function remove_directory($path, $keeppathroot = false) {
+        return parent::remove_directory($path, $keeppathroot);
+    }
+
+    /**
+     * Provides access to the protected method.
+     */
+    public function create_directory_precheck($path) {
+        return parent::create_directory_precheck($path);
+    }
+}
+
+
+/**
  * Test cases for the mdeploy utility
  *
  * @copyright 2012 David Mudrak <david@moodle.com>
@@ -120,7 +151,9 @@ class mdeploytest extends PHPUnit_Framework_TestCase {
             array('0', input_manager::TYPE_FLAG, true),
             array('muhehe', input_manager::TYPE_FLAG, true),
 
-            array('C:\\WINDOWS\\user.dat', input_manager::TYPE_PATH, 'C/WINDOWS/user.dat'),
+            array('C:\\WINDOWS\\user.dat', input_manager::TYPE_PATH, 'C:/WINDOWS/user.dat'),
+            array('D:\xampp\htdocs\24_integration/mdeploy.php', input_manager::TYPE_PATH, 'D:/xampp/htdocs/24_integration/mdeploy.php'),
+            array('d:/xampp/htdocs/24_integration/mdeploy.php', input_manager::TYPE_PATH, 'd:/xampp/htdocs/24_integration/mdeploy.php'),
             array('../../../etc/passwd', input_manager::TYPE_PATH, '/etc/passwd'),
             array('///////.././public_html/test.php', input_manager::TYPE_PATH, '/public_html/test.php'),
 
@@ -137,6 +170,30 @@ class mdeploytest extends PHPUnit_Framework_TestCase {
 
             array('5e8d2ea4f50d154730100b1645fbad67', input_manager::TYPE_MD5, '5e8d2ea4f50d154730100b1645fbad67'),
         );
+    }
+
+    /**
+     * @expectedException invalid_option_exception
+     */
+    public function test_input_type_path_multiple_colons() {
+        $input = testable_input_manager::instance();
+        $input->cast_value('C:\apache\log:file', input_manager::TYPE_PATH); // must throw exception
+    }
+
+    /**
+     * @expectedException invalid_option_exception
+     */
+    public function test_input_type_path_invalid_drive_label() {
+        $input = testable_input_manager::instance();
+        $input->cast_value('0:/srv/moodledata', input_manager::TYPE_PATH); // must throw exception
+    }
+
+    /**
+     * @expectedException invalid_option_exception
+     */
+    public function test_input_type_path_invalid_colon() {
+        $input = testable_input_manager::instance();
+        $input->cast_value('/var/www/moodle:2.5', input_manager::TYPE_PATH); // must throw exception
     }
 
     /**
@@ -211,5 +268,36 @@ class mdeploytest extends PHPUnit_Framework_TestCase {
         } catch (missing_option_exception $e) {
             $this->assertTrue(true);
         }
+    }
+
+    public function test_moving_and_removing_directories() {
+        $worker = testable_worker::instance();
+
+        $root = sys_get_temp_dir().'/'.uniqid('mdeploytest', true);
+        mkdir($root.'/a', 0777, true);
+        touch($root.'/a/a.txt');
+
+        $this->assertTrue(file_exists($root.'/a/a.txt'));
+        $this->assertFalse(file_exists($root.'/b/a.txt'));
+        $this->assertTrue($worker->move_directory($root.'/a', $root.'/b'));
+        $this->assertFalse(is_dir($root.'/a'));
+        $this->assertTrue(file_exists($root.'/b/a.txt'));
+        $this->assertTrue($worker->move_directory($root.'/b', $root.'/c', true));
+        $this->assertTrue(file_exists($root.'/c/a.txt'));
+        $this->assertFalse(file_exists($root.'/b/a.txt'));
+        $this->assertTrue(is_dir($root.'/b'));
+        $this->assertTrue($worker->remove_directory($root.'/c', true));
+        $this->assertFalse(file_exists($root.'/c/a.txt'));
+        $this->assertTrue($worker->remove_directory($root.'/c'));
+        $this->assertFalse(is_dir($root.'/c'));
+    }
+
+    public function test_create_directory_precheck() {
+        $worker = testable_worker::instance();
+
+        $root = sys_get_temp_dir().'/'.uniqid('mdeploytest', true);
+        $this->assertFalse(file_exists($root));
+        $this->assertTrue($worker->create_directory_precheck($root));
+        $this->assertFalse(file_exists($root)); // The precheck is supposed to remove it again.
     }
 }

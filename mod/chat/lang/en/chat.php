@@ -23,10 +23,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['activityoverview'] = 'You have upcoming chat';
+$string['activityoverview'] = 'You have upcoming chat sessions';
 $string['ajax'] = 'Version using Ajax';
 $string['autoscroll'] = 'Auto scroll';
-$string['beep'] = 'beep';
+$string['beep'] = 'Beep';
 $string['cantlogin'] = 'Could not log in to chat room!!';
 $string['composemessage'] = 'Compose a message';
 $string['configmethod'] = 'The ajax chat method provide an ajax based chat interface, it contacts server regularly for update. The normal chat method involves the clients regularly contacting the server for updates. It requires no configuration and works everywhere, but it can create a large load on the server with many chatters.  Using a server daemon requires shell access to Unix, but it results in a fast scalable chat environment.';
@@ -54,7 +54,7 @@ $string['chat:deletelog'] = 'Delete chat logs';
 $string['chat:exportparticipatedsession'] = 'Export chat session which you took part in';
 $string['chat:exportsession'] = 'Export any chat session';
 $string['chat:chat'] = 'Access a chat room';
-$string['chatintro'] = 'Introduction text';
+$string['chatintro'] = 'Description';
 $string['chatname'] = 'Name of this chat room';
 $string['chat:readlog'] = 'Read chat logs';
 $string['chatreport'] = 'Chat sessions';
@@ -114,7 +114,7 @@ $string['refreshuserlist'] = 'Refresh user list';
 $string['removemessages'] = 'Remove all messages';
 $string['repeatdaily'] = 'At the same time every day';
 $string['repeatnone'] = 'No repeats - publish the specified time only';
-$string['repeattimes'] = 'Repeat sessions';
+$string['repeattimes'] = 'Repeat/publish session times';
 $string['repeatweekly'] = 'At the same time every week';
 $string['saidto'] = 'said to';
 $string['savemessages'] = 'Save past sessions';
@@ -126,7 +126,7 @@ $string['serverip'] = 'Server ip';
 $string['servermax'] = 'Max users';
 $string['serverport'] = 'Server port';
 $string['sessions'] = 'Chat sessions';
-$string['sessionstart'] = 'Chat session will be start in: {$a}';
+$string['sessionstart'] = 'The next chat session will start in {$a}';
 $string['strftimemessage'] = '%H:%M';
 $string['studentseereports'] = 'Everyone can view past sessions';
 $string['studentseereports_help'] = 'If set to No, only users have mod/chat:readlog capability are able to see the chat logs';

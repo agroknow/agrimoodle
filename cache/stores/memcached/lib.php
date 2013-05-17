@@ -43,8 +43,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2012 Sam Hemelryk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class cachestore_memcached implements cache_store {
-
+class cachestore_memcached extends cache_store implements cache_is_configurable {
     /**
      * The name of the store
      * @var store
@@ -74,6 +73,12 @@ class cachestore_memcached implements cache_store {
      * @var bool
      */
     protected $isready = false;
+
+    /**
+     * Set to true when this store instance has been initialised.
+     * @var bool
+     */
+    protected $isinitialised = false;
 
     /**
      * The cache definition this store was initialised with.
@@ -128,7 +133,15 @@ class cachestore_memcached implements cache_store {
         $this->options[Memcached::OPT_HASH] = $hashmethod;
         $this->options[Memcached::OPT_BUFFER_WRITES] = $bufferwrites;
 
-        $this->isready = true;
+        $this->connection = new Memcached(crc32($this->name));
+        $servers = $this->connection->getServerList();
+        if (empty($servers)) {
+            foreach ($this->options as $key => $value) {
+                $this->connection->setOption($key, $value);
+            }
+            $this->connection->addServers($this->servers);
+        }
+        $this->isready = @$this->connection->set("ping", 'ping', 1);
     }
 
     /**
@@ -143,14 +156,7 @@ class cachestore_memcached implements cache_store {
             throw new coding_exception('This memcached instance has already been initialised.');
         }
         $this->definition = $definition;
-        $this->connection = new Memcached(crc32($this->name));
-        $servers = $this->connection->getServerList();
-        if (empty($servers)) {
-            foreach ($this->options as $key => $value) {
-                $this->connection->setOption($key, $value);
-            }
-            $this->connection->addServers($this->servers);
-        }
+        $this->isinitialised = true;
     }
 
     /**
@@ -159,7 +165,7 @@ class cachestore_memcached implements cache_store {
      * @return bool
      */
     public function is_initialised() {
-        return ($this->connection !== null);
+        return ($this->isinitialised);
     }
 
     /**
@@ -200,30 +206,14 @@ class cachestore_memcached implements cache_store {
     }
 
     /**
-     * Returns true if the store instance supports multiple identifiers.
+     * Returns false as this store does not support multiple identifiers.
+     * (This optional function is a performance optimisation; it must be
+     * consistent with the value from get_supported_features.)
      *
-     * @return bool
+     * @return bool False
      */
-    public function supports_multiple_indentifiers() {
+    public function supports_multiple_identifiers() {
         return false;
-    }
-
-    /**
-     * Returns true if the store instance guarantees data.
-     *
-     * @return bool
-     */
-    public function supports_data_guarantee() {
-        return false;
-    }
-
-    /**
-     * Returns true if the store instance supports native ttl.
-     *
-     * @return bool
-     */
-    public function supports_native_ttl() {
-        return true;
     }
 
     /**
@@ -330,7 +320,10 @@ class cachestore_memcached implements cache_store {
      * @return boolean True on success. False otherwise.
      */
     public function purge() {
-        $this->connection->flush();
+        if ($this->isready) {
+            $this->connection->flush();
+        }
+
         return true;
     }
 
@@ -427,19 +420,24 @@ class cachestore_memcached implements cache_store {
     }
 
     /**
-     * Returns true if the user can add an instance of the store plugin.
-     *
-     * @return bool
-     */
-    public static function can_add_instance() {
-        return true;
-    }
-
-    /**
      * Performs any necessary clean up when the store instance is being deleted.
      */
-    public function cleanup() {
-        $this->purge();
+    public function instance_deleted() {
+        if ($this->connection) {
+            $connection = $this->connection;
+        } else {
+            $connection = new Memcached(crc32($this->name));
+            $servers = $connection->getServerList();
+            if (empty($servers)) {
+                foreach ($this->options as $key => $value) {
+                    $connection->setOption($key, $value);
+                }
+                $connection->addServers($this->servers);
+            }
+        }
+        @$connection->flush();
+        unset($connection);
+        unset($this->connection);
     }
 
     /**

@@ -147,6 +147,8 @@ class qtype_multichoice_single_question_test extends advanced_testcase {
         $this->assertEquals("Frog<br />XXX <img src='http://example.com/pic.png' alt='Graph' />",
                 $mc->make_html_inline(" <p> Frog </p> \n\r
                     <p> XXX <img src='http://example.com/pic.png' alt='Graph' /> </p> "));
+        $this->assertEquals('Frog', $mc->make_html_inline('<p>Frog</p><p></p>'));
+        $this->assertEquals('Frog<br />†', $mc->make_html_inline('<p>Frog</p><p>†</p>'));
     }
 }
 
@@ -222,9 +224,9 @@ class qtype_multichoice_multi_question_test extends advanced_testcase {
 
         $qsummary = $mc->get_question_summary();
 
-        $this->assertRegExp('/' . preg_quote($mc->questiontext) . '/', $qsummary);
+        $this->assertRegExp('/' . preg_quote($mc->questiontext, '/') . '/', $qsummary);
         foreach ($mc->answers as $answer) {
-            $this->assertRegExp('/' . preg_quote($answer->answer) . '/', $qsummary);
+            $this->assertRegExp('/' . preg_quote($answer->answer, '/') . '/', $qsummary);
         }
     }
 

@@ -20,8 +20,7 @@
  * The general idea behind this file is that any errors should throw exceptions
  * which will be returned and acted upon by the calling AJAX script.
  *
- * @package    core
- * @subpackage enrol
+ * @package    core_enrol
  * @copyright  2010 Sam Hemelryk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -96,9 +95,16 @@ switch ($action) {
         $page = optional_param('page', 0, PARAM_INT);
         $outcome->response = $manager->search_other_users($search, $searchanywhere, $page);
         $extrafields = get_extra_user_fields($context);
+        $useroptions = array();
+        // User is not enrolled, either link to site profile or do not link at all.
+        if (has_capability('moodle/user:viewdetails', context_system::instance())) {
+            $useroptions['courseid'] = SITEID;
+        } else {
+            $useroptions['link'] = false;
+        }
         foreach ($outcome->response['users'] as &$user) {
             $user->userId = $user->id;
-            $user->picture = $OUTPUT->user_picture($user);
+            $user->picture = $OUTPUT->user_picture($user, $useroptions);
             $user->fullname = fullname($user);
             $fieldvalues = array();
             foreach ($extrafields as $field) {

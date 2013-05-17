@@ -43,6 +43,8 @@ function lesson_add_instance($data, $mform) {
     global $DB;
 
     $cmid = $data->coursemodule;
+    $draftitemid = $data->mediafile;
+    $context = context_module::instance($cmid);
 
     lesson_process_pre_save($data);
 
@@ -50,14 +52,9 @@ function lesson_add_instance($data, $mform) {
     $lessonid = $DB->insert_record("lesson", $data);
     $data->id = $lessonid;
 
-    $context = context_module::instance($cmid);
     $lesson = $DB->get_record('lesson', array('id'=>$lessonid), '*', MUST_EXIST);
 
-    if ($filename = $mform->get_new_filename('mediafilepicker')) {
-        if ($file = $mform->save_stored_file('mediafilepicker', $context->id, 'mod_lesson', 'mediafile', 0, '/', $filename)) {
-            $DB->set_field('lesson', 'mediafile', '/'.$file->get_filename(), array('id'=>$lesson->id));
-        }
-    }
+    lesson_update_media_file($lessonid, $context, $draftitemid);
 
     lesson_process_post_save($data);
 
@@ -80,22 +77,15 @@ function lesson_update_instance($data, $mform) {
 
     $data->id = $data->instance;
     $cmid = $data->coursemodule;
+    $draftitemid = $data->mediafile;
+    $context = context_module::instance($cmid);
 
     lesson_process_pre_save($data);
 
     unset($data->mediafile);
     $DB->update_record("lesson", $data);
 
-    $context = context_module::instance($cmid);
-    if ($filename = $mform->get_new_filename('mediafilepicker')) {
-        if ($file = $mform->save_stored_file('mediafilepicker', $context->id, 'mod_lesson', 'mediafile', 0, '/', $filename, true)) {
-            $DB->set_field('lesson', 'mediafile', '/'.$file->get_filename(), array('id'=>$data->id));
-        } else {
-            $DB->set_field('lesson', 'mediafile', '', array('id'=>$data->id));
-        }
-    } else {
-        $DB->set_field('lesson', 'mediafile', '', array('id'=>$data->id));
-    }
+    lesson_update_media_file($data->id, $context, $draftitemid);
 
     lesson_process_post_save($data);
 
@@ -411,7 +401,7 @@ function lesson_update_grades($lesson, $userid=0, $nullifnone=true) {
     } else if ($userid and $nullifnone) {
         $grade = new stdClass();
         $grade->userid   = $userid;
-        $grade->rawgrade = NULL;
+        $grade->rawgrade = null;
         lesson_grade_item_update($lesson, $grade);
 
     } else {
@@ -459,7 +449,7 @@ function lesson_upgrade_grades() {
  * @param array|object $grades optional array/object of grade(s); 'reset' means reset grades in gradebook
  * @return int 0 if ok, error code otherwise
  */
-function lesson_grade_item_update($lesson, $grades=NULL) {
+function lesson_grade_item_update($lesson, $grades=null) {
     global $CFG;
     if (!function_exists('grade_update')) { //workaround for buggy PHP versions
         require_once($CFG->libdir.'/gradelib.php');
@@ -484,7 +474,7 @@ function lesson_grade_item_update($lesson, $grades=NULL) {
 
     if ($grades  === 'reset') {
         $params['reset'] = true;
-        $grades = NULL;
+        $grades = null;
     } else if (!empty($grades)) {
         // Need to calculate raw grade (Note: $grades has many forms)
         if (is_object($grades)) {
@@ -958,4 +948,34 @@ function lesson_page_type_list($pagetype, $parentcontext, $currentcontext) {
         'mod-lesson-view'=>get_string('page-mod-lesson-view', 'lesson'),
         'mod-lesson-edit'=>get_string('page-mod-lesson-edit', 'lesson'));
     return $module_pagetype;
+}
+
+/**
+ * Update the lesson activity to include any file
+ * that was uploaded, or if there is none, set the
+ * mediafile field to blank.
+ *
+ * @param int $lessonid the lesson id
+ * @param stdClass $context the context
+ * @param int $draftitemid the draft item
+ */
+function lesson_update_media_file($lessonid, $context, $draftitemid) {
+    global $DB;
+
+    // Set the filestorage object.
+    $fs = get_file_storage();
+    // Save the file if it exists that is currently in the draft area.
+    file_save_draft_area_files($draftitemid, $context->id, 'mod_lesson', 'mediafile', 0);
+    // Get the file if it exists.
+    $files = $fs->get_area_files($context->id, 'mod_lesson', 'mediafile', 0, 'itemid, filepath, filename', false);
+    // Check that there is a file to process.
+    if (count($files) == 1) {
+        // Get the first (and only) file.
+        $file = reset($files);
+        // Set the mediafile column in the lessons table.
+        $DB->set_field('lesson', 'mediafile', '/' . $file->get_filename(), array('id' => $lessonid));
+    } else {
+        // Set the mediafile column in the lessons table.
+        $DB->set_field('lesson', 'mediafile', '', array('id' => $lessonid));
+    }
 }

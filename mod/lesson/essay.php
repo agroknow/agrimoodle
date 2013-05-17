@@ -32,7 +32,7 @@ require_once($CFG->libdir.'/eventslib.php');
 $id   = required_param('id', PARAM_INT);             // Course Module ID
 $mode = optional_param('mode', 'display', PARAM_ALPHA);
 
-$cm = get_coursemodule_from_id('lesson', $id, 0, false, MUST_EXIST);;
+$cm = get_coursemodule_from_id('lesson', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 $lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST));
 
@@ -269,12 +269,12 @@ switch ($mode) {
                 list($sort, $sortparams) = users_order_by_sql('u');
                 $params = array_merge($params, $sortparams);
                 if (!empty($cm->groupingid)) {
-                    $params["groupinid"] = $cm->groupingid;
+                    $params["groupingid"] = $cm->groupingid;
                     $sql = "SELECT DISTINCT $ufields
                             FROM {lesson_attempts} a
                                 INNER JOIN {user} u ON u.id = a.userid
                                 INNER JOIN {groups_members} gm ON gm.userid = u.id
-                                INNER JOIN {groupings_groups} gg ON gm.groupid = :groupinid
+                                INNER JOIN {groupings_groups} gg ON gm.groupid = gg.groupid AND gg.groupingid = :groupingid
                             WHERE a.lessonid = :lessonid
                             ORDER BY $sort";
                 } else {
@@ -387,12 +387,14 @@ switch ($mode) {
         // Grading form
         // Expects the following to be set: $attemptid, $answer, $user, $page, $attempt
         $essayinfo = unserialize($attempt->useranswer);
+        $currentpage = $lesson->load_page($attempt->pageid);
 
         $mform = new essay_grading_form(null, array('scoreoptions'=>$scoreoptions, 'user'=>$user));
         $data = new stdClass;
         $data->id = $cm->id;
         $data->attemptid = $attemptid;
         $data->score = $essayinfo->score;
+        $data->question = format_string($currentpage->contents, $currentpage->contentsformat);
         $data->studentanswer = format_string($essayinfo->answer, $essayinfo->answerformat);
         $data->response = $essayinfo->response;
         $mform->set_data($data);

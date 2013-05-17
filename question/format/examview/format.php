@@ -184,6 +184,7 @@ class qformat_examview extends qformat_based_on_xml {
     }
 
     public function readquestion($qrec) {
+        global $OUTPUT;
 
         $type = trim($qrec['@']['type']);
         $question = $this->defaultquestion();
@@ -224,7 +225,7 @@ class qformat_examview extends qformat_based_on_xml {
                 break;
                 break;
             default:
-                print("<p>Question type ".$type." import not supported for ".$question->questiontext."<p>");
+                echo $OUTPUT->notification(get_string('unknownorunhandledtype', 'question', $type));
                 $question = null;
         }
 
@@ -291,6 +292,7 @@ class qformat_examview extends qformat_based_on_xml {
     protected function parse_es($qrec, $question) {
         $feedback = trim($this->unxmlise($qrec['answer'][0]['#']));
         $question->graderinfo =  $this->text_field($feedback);
+        $question->responsetemplate =  $this->text_field('');
         $question->feedback = $feedback;
         $question->responseformat = 'editor';
         $question->responsefieldlines = 15;

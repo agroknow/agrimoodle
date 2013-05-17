@@ -336,12 +336,25 @@ class format_legacy extends format_base {
      * @return bool whether there were any changes to the options values
      */
     public function update_course_format_options($data, $oldcourse = null) {
+        global $DB;
         if ($oldcourse !== null) {
             $data = (array)$data;
             $oldcourse = (array)$oldcourse;
-            foreach ($this->course_format_options() as $key => $unused) {
-                if (array_key_exists($key, $oldcourse) && !array_key_exists($key, $data)) {
-                    $data[$key] = $oldcourse[$key];
+            $options = $this->course_format_options();
+            foreach ($options as $key => $unused) {
+                if (!array_key_exists($key, $data)) {
+                    if (array_key_exists($key, $oldcourse)) {
+                        $data[$key] = $oldcourse[$key];
+                    } else if ($key === 'numsections') {
+                        // If previous format does not have the field 'numsections' and this one does,
+                        // and $data['numsections'] is not set fill it with the maximum section number from the DB
+                        $maxsection = $DB->get_field_sql('SELECT max(section) from {course_sections}
+                            WHERE course = ?', array($this->courseid));
+                        if ($maxsection) {
+                            // If there are no sections, or just default 0-section, 'numsections' will be set to default
+                            $data['numsections'] = $maxsection;
+                        }
+                    }
                 }
             }
         }

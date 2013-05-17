@@ -224,6 +224,9 @@ abstract class grade_export {
         foreach ($userprofilefields as $field) {
             echo '<th>' . $field->fullname . '</th>';
         }
+        if (!$this->onlyactive) {
+            echo '<th>'.get_string("suspended")."</th>";
+        }
         foreach ($this->columns as $grade_item) {
             echo '<th>'.$this->format_column_name($grade_item).'</th>';
 
@@ -282,6 +285,10 @@ abstract class grade_export {
                 $fieldvalue = grade_helper::get_user_field_value($user, $field);
                 // @see profile_field_base::display_data().
                 echo '<td>' . format_text($fieldvalue, FORMAT_MOODLE, $formatoptions) . '</td>';
+            }
+            if (!$this->onlyactive) {
+                $issuspended = ($user->suspendedenrolment) ? get_string('yes') : '';
+                echo "<td>$issuspended</td>";
             }
             echo $rowstr;
             echo "</tr>";
@@ -420,3 +427,13 @@ class grade_export_update_buffer {
     }
 }
 
+/**
+ * Verify that there is a valid set of grades to export.
+ * @param $courseid int The course being exported
+ */
+function export_verify_grades($courseid) {
+    $regraderesult = grade_regrade_final_grades($courseid);
+    if (is_array($regraderesult)) {
+        throw new moodle_exception('gradecantregrade', 'error', '', implode(', ', array_unique($regraderesult)));
+    }
+}

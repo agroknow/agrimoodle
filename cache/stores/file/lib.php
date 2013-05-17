@@ -37,7 +37,7 @@
  * @copyright  2012 Sam Hemelryk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class cachestore_file implements cache_store, cache_is_key_aware {
+class cachestore_file extends cache_store implements cache_is_key_aware, cache_is_configurable, cache_is_searchable  {
 
     /**
      * The name of the store.
@@ -46,10 +46,16 @@ class cachestore_file implements cache_store, cache_is_key_aware {
     protected $name;
 
     /**
-     * The path to use for the file storage.
+     * The path used to store files for this store and the definition it was initialised with.
      * @var string
      */
-    protected $path = null;
+    protected $path = false;
+
+    /**
+     * The path in which definition specific sub directories will be created for caching.
+     * @var string
+     */
+    protected $filestorepath = false;
 
     /**
      * Set to true when a prescan has been performed.
@@ -123,13 +129,16 @@ class cachestore_file implements cache_store, cache_is_key_aware {
             }
             if ($path !== false && !is_writable($path)) {
                 $path = false;
-                debugging('The given file cache store path is not writable. '.$path, DEBUG_DEVELOPER);
+                debugging('The file cache store path is not writable for `'.$name.'`', DEBUG_DEVELOPER);
             }
         } else {
             $path = make_cache_directory('cachestore_file/'.preg_replace('#[^a-zA-Z0-9\.\-_]+#', '', $name));
         }
         $this->isready = $path !== false;
+        $this->filestorepath = $path;
+        // This will be updated once the store has been initialised for a definition.
         $this->path = $path;
+
         // Check if we should prescan the directory.
         if (array_key_exists('prescan', $configuration)) {
             $this->prescan = (bool)$configuration['prescan'];
@@ -147,11 +156,21 @@ class cachestore_file implements cache_store, cache_is_key_aware {
     }
 
     /**
+     * Performs any necessary operation when the file store instance has been created.
+     */
+    public function instance_created() {
+        if ($this->isready && !$this->prescan) {
+            // It is supposed the store instance to expect an empty folder.
+            $this->purge_all_definitions();
+        }
+    }
+
+    /**
      * Returns true if this store instance is ready to be used.
      * @return bool
      */
     public function is_ready() {
-        return ($this->path !== null);
+        return $this->isready;
     }
 
     /**
@@ -171,8 +190,20 @@ class cachestore_file implements cache_store, cache_is_key_aware {
      */
     public static function get_supported_features(array $configuration = array()) {
         $supported = self::SUPPORTS_DATA_GUARANTEE +
-                     self::SUPPORTS_NATIVE_TTL;
+                     self::SUPPORTS_NATIVE_TTL +
+                     self::IS_SEARCHABLE;
         return $supported;
+    }
+
+    /**
+     * Returns false as this store does not support multiple identifiers.
+     * (This optional function is a performance optimisation; it must be
+     * consistent with the value from get_supported_features.)
+     *
+     * @return bool False
+     */
+    public function supports_multiple_identifiers() {
+        return false;
     }
 
     /**
@@ -205,33 +236,6 @@ class cachestore_file implements cache_store, cache_is_key_aware {
     }
 
     /**
-     * Returns true if the store instance supports multiple identifiers.
-     *
-     * @return bool
-     */
-    public function supports_multiple_indentifiers() {
-        return false;
-    }
-
-    /**
-     * Returns true if the store instance guarantees data.
-     *
-     * @return bool
-     */
-    public function supports_data_guarantee() {
-        return true;
-    }
-
-    /**
-     * Returns true if the store instance supports native ttl.
-     *
-     * @return bool
-     */
-    public function supports_native_ttl() {
-        return true;
-    }
-
-    /**
      * Initialises the cache.
      *
      * Once this has been done the cache is all set to be used.
@@ -241,7 +245,7 @@ class cachestore_file implements cache_store, cache_is_key_aware {
     public function initialise(cache_definition $definition) {
         $this->definition = $definition;
         $hash = preg_replace('#[^a-zA-Z0-9]+#', '_', $this->definition->get_id());
-        $this->path .= '/'.$hash;
+        $this->path = $this->filestorepath.'/'.$hash;
         make_writable_directory($this->path);
         if ($this->prescan && $definition->get_mode() !== self::MODE_REQUEST) {
             $this->prescan = false;
@@ -255,20 +259,25 @@ class cachestore_file implements cache_store, cache_is_key_aware {
      * Pre-scan the cache to see which keys are present.
      */
     protected function prescan_keys() {
-        foreach (glob($this->glob_keys_pattern(), GLOB_MARK | GLOB_NOSORT) as $filename) {
-            $this->keys[basename($filename)] = filemtime($filename);
+        $files = glob($this->glob_keys_pattern(), GLOB_MARK | GLOB_NOSORT);
+        if (is_array($files)) {
+            foreach ($files as $filename) {
+                $this->keys[basename($filename)] = filemtime($filename);
+            }
         }
     }
 
     /**
      * Gets a pattern suitable for use with glob to find all keys in the cache.
+     *
+     * @param string $prefix A prefix to use.
      * @return string The pattern.
      */
-    protected function glob_keys_pattern() {
+    protected function glob_keys_pattern($prefix = '') {
         if ($this->singledirectory) {
-            return $this->path . '/*.cache';
+            return $this->path . '/'.$prefix.'*.cache';
         } else {
-            return $this->path . '/*/*.cache';
+            return $this->path . '/*/'.$prefix.'*.cache';
         }
     }
 
@@ -370,9 +379,12 @@ class cachestore_file implements cache_store, cache_is_key_aware {
     public function delete($key) {
         $filename = $key.'.cache';
         $file = $this->file_path_for_key($key);
-        $result = @unlink($file);
-        unset($this->keys[$filename]);
-        return $result;
+        if (@unlink($file)) {
+            unset($this->keys[$filename]);
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -505,16 +517,37 @@ class cachestore_file implements cache_store, cache_is_key_aware {
     }
 
     /**
-     * Purges the cache deleting all items within it.
+     * Purges the cache definition deleting all the items within it.
      *
      * @return boolean True on success. False otherwise.
      */
     public function purge() {
-        foreach (glob($this->glob_keys_pattern(), GLOB_MARK | GLOB_NOSORT) as $filename) {
-            @unlink($filename);
+        if ($this->isready) {
+            $files = glob($this->glob_keys_pattern(), GLOB_MARK | GLOB_NOSORT);
+            if (is_array($files)) {
+                foreach ($files as $filename) {
+                    @unlink($filename);
+                }
+            }
+            $this->keys = array();
         }
-        $this->keys = array();
         return true;
+    }
+
+    /**
+     * Purges all the cache definitions deleting all items within them.
+     *
+     * @return boolean True on success. False otherwise.
+     */
+    protected function purge_all_definitions() {
+        // Warning: limit the deletion to what file store is actually able
+        // to create using the internal {@link purge()} providing the
+        // {@link $path} with a wildcard to perform a purge action over all the definitions.
+        $currpath = $this->path;
+        $this->path = $this->filestorepath.'/*';
+        $result = $this->purge();
+        $this->path = $currpath;
+        return $result;
     }
 
     /**
@@ -584,23 +617,14 @@ class cachestore_file implements cache_store, cache_is_key_aware {
     }
 
     /**
-     * Returns true if the user can add an instance of the store plugin.
-     *
-     * @return bool
-     */
-    public static function can_add_instance() {
-        return true;
-    }
-
-    /**
-     * Performs any necessary clean up when the store instance is being deleted.
+     * Performs any necessary clean up when the file store instance is being deleted.
      *
      * 1. Purges the cache directory.
-     * 2. Deletes the directory we created for this cache instances data.
+     * 2. Deletes the directory we created for the given definition.
      */
-    public function cleanup() {
-        $this->purge();
-        @rmdir($this->path);
+    public function instance_deleted() {
+        $this->purge_all_definitions();
+        @rmdir($this->filestorepath);
     }
 
     /**
@@ -675,5 +699,43 @@ class cachestore_file implements cache_store, cache_is_key_aware {
      */
     public function my_name() {
         return $this->name;
+    }
+
+    /**
+     * Finds all of the keys being used by this cache store instance.
+     *
+     * @return array
+     */
+    public function find_all() {
+        $this->ensure_path_exists();
+        $files = glob($this->glob_keys_pattern(), GLOB_MARK | GLOB_NOSORT);
+        $return = array();
+        if ($files === false) {
+            return $return;
+        }
+        foreach ($files as $file) {
+            $return[] = substr(basename($file), 0, -6);
+        }
+        return $return;
+    }
+
+    /**
+     * Finds all of the keys whose keys start with the given prefix.
+     *
+     * @param string $prefix
+     */
+    public function find_by_prefix($prefix) {
+        $this->ensure_path_exists();
+        $prefix = preg_replace('#(\*|\?|\[)#', '[$1]', $prefix);
+        $files = glob($this->glob_keys_pattern($prefix), GLOB_MARK | GLOB_NOSORT);
+        $return = array();
+        if ($files === false) {
+            return $return;
+        }
+        foreach ($files as $file) {
+            // Trim off ".cache" from the end.
+            $return[] = substr(basename($file), 0, -6);
+        }
+        return $return;
     }
 }

@@ -27,6 +27,7 @@ CVS
 /.buildpath
 /.cache
 phpunit.xml
+
 /0misc
 /0marinos/
 
@@ -34,5 +35,12 @@ phpunit.xml
 # sublime text project's files
 *.sublime-project
 *.sublime-workspace
-Drupal.sublime-projectcompletions
 /blocks/oerfinder/NOTES.md
+
+# Composer support - only composer.json is to be in git, the rest is installed in each checkout.
+composer.phar
+composer.lock
+/vendor/
+/behat.yml
+*/yui/build/*/*-coverage.js
+/lib/yuilib/*/build/*/*-coverage.js

@@ -80,13 +80,6 @@ function feedback_add_instance($feedback) {
     $feedback->timemodified = time();
     $feedback->id = '';
 
-    //check if openenable and/or closeenable is set and set correctly to save in db
-    if (empty($feedback->openenable)) {
-        $feedback->timeopen = 0;
-    }
-    if (empty($feedback->closeenable)) {
-        $feedback->timeclose = 0;
-    }
     if (empty($feedback->site_after_submit)) {
         $feedback->site_after_submit = '';
     }
@@ -133,13 +126,6 @@ function feedback_update_instance($feedback) {
     $feedback->timemodified = time();
     $feedback->id = $feedback->instance;
 
-    //check if openenable and/or closeenable is set and set correctly to save in db
-    if (empty($feedback->openenable)) {
-        $feedback->timeopen = 0;
-    }
-    if (empty($feedback->closeenable)) {
-        $feedback->timeclose = 0;
-    }
     if (empty($feedback->site_after_submit)) {
         $feedback->site_after_submit = '';
     }
@@ -453,13 +439,24 @@ function feedback_get_recent_mod_activity(&$activities, &$index,
         $tmpactivity->sectionnum= $cm->sectionnum;
         $tmpactivity->timestamp = $feedbackitem->timemodified;
 
+        $tmpactivity->content = new stdClass();
         $tmpactivity->content->feedbackid = $feedbackitem->id;
         $tmpactivity->content->feedbackuserid = $feedbackitem->userid;
 
-        //TODO: add all necessary user fields, this is not enough for user_picture
-        $tmpactivity->user->userid   = $feedbackitem->userid;
+        $userfields = explode(',', user_picture::fields());
+        $tmpactivity->user = new stdClass();
+        foreach ($userfields as $userfield) {
+            if ($userfield == 'id') {
+                $tmpactivity->user->{$userfield} = $feedbackitem->userid; // aliased in SQL above
+            } else {
+                if (!empty($feedbackitem->{$userfield})) {
+                    $tmpactivity->user->{$userfield} = $feedbackitem->{$userfield};
+                } else {
+                    $tmpactivity->user->{$userfield} = null;
+                }
+            }
+        }
         $tmpactivity->user->fullname = fullname($feedbackitem, $viewfullnames);
-        $tmpactivity->user->picture  = $feedbackitem->picture;
 
         $activities[$index++] = $tmpactivity;
     }
@@ -500,7 +497,7 @@ function feedback_print_recent_mod_activity($activity, $courseid, $detail, $modn
     echo '</div>';
 
     echo '<div class="user">';
-    echo "<a href=\"$CFG->wwwroot/user/view.php?id={$activity->user->userid}&amp;course=$courseid\">"
+    echo "<a href=\"$CFG->wwwroot/user/view.php?id={$activity->user->id}&amp;course=$courseid\">"
          ."{$activity->user->fullname}</a> - ".userdate($activity->timestamp);
     echo '</div>';
 
@@ -3110,4 +3107,25 @@ function feedback_init_feedback_session() {
 function feedback_page_type_list($pagetype, $parentcontext, $currentcontext) {
     $module_pagetype = array('mod-feedback-*'=>get_string('page-mod-feedback-x', 'feedback'));
     return $module_pagetype;
+}
+
+/**
+ * Move save the items of the given $feedback in the order of $itemlist.
+ * @param string $itemlist a comma separated list with item ids
+ * @param stdClass $feedback
+ * @return bool true if success
+ */
+function feedback_ajax_saveitemorder($itemlist, $feedback) {
+    global $DB;
+
+    $result = true;
+    $position = 0;
+    foreach ($itemlist as $itemid) {
+        $position++;
+        $result = $result && $DB->set_field('feedback_item',
+                                            'position',
+                                            $position,
+                                            array('id'=>$itemid, 'feedback'=>$feedback->id));
+    }
+    return $result;
 }

@@ -310,7 +310,7 @@ function mnet_encrypt_message($message, $remote_certificate) {
  * @return  string              The signature over that text
  */
 function mnet_get_keypair() {
-    global $CFG, $DB;;
+    global $CFG, $DB;
     static $keypair = null;
     if (!is_null($keypair)) return $keypair;
     if ($result = get_config('mnet', 'openssl')) {
@@ -447,6 +447,7 @@ function mnet_update_sso_access_control($username, $mnet_host_id, $accessctrl) {
                 "SSO ACL: $accessctrl user '$username' from {$mnethost->name}");
     } else {
         // insert
+        $aclrecord = new stdClass();
         $aclrecord->username = $username;
         $aclrecord->accessctrl = $accessctrl;
         $aclrecord->mnet_host_id = $mnet_host_id;

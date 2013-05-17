@@ -35,13 +35,35 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cache_config_phpunittest extends cache_config_writer {
+
     /**
      * Adds a definition to the stack
      * @param string $area
      * @param array $properties
      */
     public function phpunit_add_definition($area, array $properties) {
+        if (!array_key_exists('overrideclass', $properties)) {
+            switch ($properties['mode']) {
+                case cache_store::MODE_APPLICATION:
+                    $properties['overrideclass'] = 'cache_phpunit_application';
+                    break;
+                case cache_store::MODE_SESSION:
+                    $properties['overrideclass'] = 'cache_phpunit_session';
+                    break;
+                case cache_store::MODE_REQUEST:
+                    $properties['overrideclass'] = 'cache_phpunit_request';
+                    break;
+            }
+        }
         $this->configdefinitions[$area] = $properties;
+    }
+
+    /**
+     * Removes a definition.
+     * @param string $name
+     */
+    public function phpunit_remove_definition($name) {
+        unset($this->configdefinitions[$name]);
     }
 
     /**
@@ -49,6 +71,55 @@ class cache_config_phpunittest extends cache_config_writer {
      */
     public function phpunit_remove_stores() {
         $this->configstores = array();
+    }
+
+    /**
+     * Forcefully adds a file store.
+     *
+     * @param string $name
+     */
+    public function phpunit_add_file_store($name) {
+        $this->configstores[$name] = array(
+            'name' => $name,
+            'plugin' => 'file',
+            'configuration' => array(
+                'path' => ''
+            ),
+            'features' => 6,
+            'modes' => 3,
+            'mappingsonly' => false,
+            'class' => 'cachestore_file',
+            'default' => false,
+            'lock' => 'cachelock_file_default'
+        );
+    }
+
+    /**
+     * Forcefully injects a definition => store mapping.
+     *
+     * This function does no validation, you should only be calling if it you know
+     * exactly what to expect.
+     *
+     * @param string $definition
+     * @param string $store
+     * @param int $sort
+     */
+    public function phpunit_add_definition_mapping($definition, $store, $sort) {
+        $this->configdefinitionmappings[] = array(
+            'store' => $store,
+            'definition' => $definition,
+            'sort' => (int)$sort
+        );
+    }
+
+    /**
+     * Overrides the default site identifier used by the Cache API so that we can be sure of what it is.
+     *
+     * @return string
+     */
+    public function get_site_identifier() {
+        global $CFG;
+        return $CFG->wwwroot.'phpunit';
     }
 }
 
@@ -138,6 +209,64 @@ class cache_phpunit_dummy_datasource implements cache_data_source {
 }
 
 /**
+ * PHPUnit application cache loader.
+ *
+ * Used to expose things we could not otherwise see within an application cache.
+ *
+ * @copyright  2012 Sam Hemelryk
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class cache_phpunit_application extends cache_application {
+
+    /**
+     * Returns the class of the store immediately associated with this cache.
+     * @return string
+     */
+    public function phpunit_get_store_class() {
+        return get_class($this->get_store());
+    }
+
+}
+
+/**
+ * PHPUnit session cache loader.
+ *
+ * Used to expose things we could not otherwise see within an session cache.
+ *
+ * @copyright  2012 Sam Hemelryk
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class cache_phpunit_session extends cache_session {
+
+    /**
+     * Returns the class of the store immediately associated with this cache.
+     * @return string
+     */
+    public function phpunit_get_store_class() {
+        return get_class($this->get_store());
+    }
+}
+
+/**
+ * PHPUnit request cache loader.
+ *
+ * Used to expose things we could not otherwise see within an request cache.
+ *
+ * @copyright  2012 Sam Hemelryk
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class cache_phpunit_request extends cache_request {
+
+    /**
+     * Returns the class of the store immediately associated with this cache.
+     * @return string
+     */
+    public function phpunit_get_store_class() {
+        return get_class($this->get_store());
+    }
+}
+
+/**
  * Dummy overridden cache loader class that we can use to test overriding loader functionality.
  *
  * @copyright  2012 Sam Hemelryk
@@ -145,4 +274,21 @@ class cache_phpunit_dummy_datasource implements cache_data_source {
  */
 class cache_phpunit_dummy_overrideclass extends cache_application {
     // Satisfying the code pre-checker is just part of my day job.
+}
+
+/**
+ * Cache PHPUnit specific factory.
+ *
+ * @copyright  2012 Sam Hemelryk
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class cache_phpunit_factory extends cache_factory {
+    /**
+     * Exposes the cache_factory's disable method.
+     *
+     * Perhaps one day that method will be made public, for the time being it is protected.
+     */
+    public static function phpunit_disable() {
+        parent::disable();
+    }
 }

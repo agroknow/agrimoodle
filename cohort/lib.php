@@ -40,7 +40,6 @@ function cohort_add_cohort($cohort) {
         $cohort->idnumber = NULL;
     }
     if (!isset($cohort->description)) {
-        // sql_empty() does not belong here, this crazy Oracle hack is implemented in insert_record()!
         $cohort->description = '';
     }
     if (!isset($cohort->descriptionformat)) {
@@ -102,7 +101,7 @@ function cohort_delete_cohort($cohort) {
  * Somehow deal with cohorts when deleting course category,
  * we can not just delete them because they might be used in enrol
  * plugins or referenced in external systems.
- * @param  stdClass $category
+ * @param  stdClass|coursecat $category
  * @return void
  */
 function cohort_delete_category($category) {

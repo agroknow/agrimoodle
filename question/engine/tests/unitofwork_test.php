@@ -32,40 +32,6 @@ require_once(dirname(__FILE__) . '/helpers.php');
 
 
 /**
- * Test subclass to allow access to some protected data so that the correct
- * behaviour can be verified.
- *
- * @copyright  2012 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class testable_question_engine_unit_of_work extends question_engine_unit_of_work {
-    public function get_modified() {
-        return $this->modified;
-    }
-
-    public function get_attempts_added() {
-        return $this->attemptsadded;
-    }
-
-    public function get_attempts_modified() {
-        return $this->attemptsmodified;
-    }
-
-    public function get_steps_added() {
-        return $this->stepsadded;
-    }
-
-    public function get_steps_modified() {
-        return $this->stepsmodified;
-    }
-
-    public function get_steps_deleted() {
-        return $this->stepsdeleted;
-    }
-}
-
-
-/**
  * Unit tests for the {@link question_engine_unit_of_work} class.
  *
  * @copyright  2012 The Open University
@@ -98,7 +64,7 @@ class question_engine_unit_of_work_test extends data_loading_method_test_base {
         $this->setup_initial_test_state($this->get_test_data());
      }
 
-    public function testDown() {
+    public function tearDown() {
         question_bank::end_unit_test();
     }
 
@@ -174,7 +140,7 @@ class question_engine_unit_of_work_test extends data_loading_method_test_base {
 
     public function test_process_action() {
 
-        $this->quba->manual_grade($this->slot, 'Acutally, that is not quite right', 0.5);
+        $this->quba->manual_grade($this->slot, 'Actually, that is not quite right', 0.5, FORMAT_HTML);
 
         // Here, however, were we are adding a step to an existing qa, we do need to track that.
         $this->assertEquals(0, count($this->observer->get_attempts_added()));

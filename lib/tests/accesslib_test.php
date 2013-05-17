@@ -1222,11 +1222,13 @@ class accesslib_testcase extends advanced_testcase {
      * @return void
      */
     public function test_get_role_users() {
-        global $DB;
+        global $DB, $CFG;
+        require_once("$CFG->dirroot/group/lib.php");
 
         $this->resetAfterTest();
 
         $systemcontext = context_system::instance();
+        $studentrole = $DB->get_record('role', array('shortname'=>'student'), '*', MUST_EXIST);
         $teacherrole = $DB->get_record('role', array('shortname'=>'editingteacher'), '*', MUST_EXIST);
         $course = $this->getDataGenerator()->create_course();
         $coursecontext = context_course::instance($course->id);
@@ -1240,21 +1242,33 @@ class accesslib_testcase extends advanced_testcase {
         role_assign($teacherrole->id, $user1->id, $coursecontext->id);
         $user2 = $this->getDataGenerator()->create_user();
         role_assign($teacherrole->id, $user2->id, $systemcontext->id);
+        $user3 = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($user3->id, $course->id, $teacherrole->id);
+        $user4 = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($user4->id, $course->id, $studentrole->id);
+
+        $group = $this->getDataGenerator()->create_group(array('courseid'=>$course->id));
+        groups_add_member($group->id, $user3->id);
 
         $users = get_role_users($teacherrole->id, $coursecontext);
-        $this->assertCount(1, $users);
-        $user = reset($users);
-        $userid = key($users);
-        $this->assertEquals($userid, $user->id);
+        $this->assertEquals(array($user1->id, $user3->id), array_keys($users), '', 0, 10, true);
+        $user = $users[$user1->id];
         $this->assertEquals($teacherrole->id, $user->roleid);
         $this->assertEquals($teacherrole->name, $user->rolename);
         $this->assertEquals($teacherrole->shortname, $user->roleshortname);
         $this->assertEquals($teacherrename->name, $user->rolecoursealias);
 
         $users = get_role_users($teacherrole->id, $coursecontext, true);
+        $this->assertEquals(array($user1->id, $user2->id, $user3->id), array_keys($users), '', 0, 10, true);
+
+        $users = get_role_users($teacherrole->id, $coursecontext, false, '', null, false);
+        $this->assertEquals(array($user3->id), array_keys($users), '', 0, 10, true);
+
+        $users = get_role_users($teacherrole->id, $coursecontext, false, '', null, null);
         $this->assertCount(2, $users);
 
-        $users = get_role_users($teacherrole->id, $coursecontext, false, 'u.id, u.email, u.idnumber', 'u.idnumber', null, 1, 0, 10, 'u.deleted = 0');
+        $users = get_role_users($teacherrole->id, $coursecontext, false, 'u.id, u.email, u.idnumber', 'u.idnumber', true, $group->id, 0, 10, 'u.deleted = 0');
+        $this->assertEquals(array($user3->id), array_keys($users), '', 0, 10, true);
     }
 
     /**
@@ -1769,7 +1783,8 @@ class accesslib_testcase extends advanced_testcase {
 
         context_helper::reset_caches();
         context_helper::preload_course($SITE->id);
-        $this->assertEquals(7, context_inspection::test_context_cache_size()); // depends on number of default blocks
+        $numfrontpagemodules = $DB->count_records('course_modules', array('course' => $SITE->id));
+        $this->assertEquals(6 + $numfrontpagemodules, context_inspection::test_context_cache_size()); // depends on number of default blocks
 
         // ====== assign_capability(), unassign_capability() ====================
 
@@ -2074,7 +2089,8 @@ class accesslib_testcase extends advanced_testcase {
         load_all_capabilities();
         $context = context_course::instance($testcourses[2]);
         $page = $DB->get_record('page', array('course'=>$testcourses[2]));
-        $pagecontext = context_module::instance($page->id);
+        $pagecm = get_coursemodule_from_instance('page', $page->id);
+        $pagecontext = context_module::instance($pagecm->id);
 
         $context->mark_dirty();
         $this->assertTrue(isset($ACCESSLIB_PRIVATE->dirtycontexts[$context->path]));
@@ -2312,7 +2328,8 @@ class accesslib_testcase extends advanced_testcase {
 
         context_helper::reset_caches();
         preload_course_contexts($SITE->id);
-        $this->assertEquals(context_inspection::test_context_cache_size(), 1);
+        $this->assertEquals(1 + $DB->count_records('course_modules', array('course' => $SITE->id)),
+                context_inspection::test_context_cache_size());
 
         context_helper::reset_caches();
         list($select, $join) = context_instance_preload_sql('c.id', CONTEXT_COURSECAT, 'ctx');
@@ -2358,11 +2375,11 @@ class accesslib_testcase extends advanced_testcase {
         $url = get_context_url($coursecontext);
         $this->assertFalse($url instanceof modole_url);
 
-        $page = $DB->get_record('page', array('id'=>$testpages[7]));
-        $context = context_module::instance($page->id);
+        $pagecm = get_coursemodule_from_instance('page', $testpages[7]);
+        $context = context_module::instance($pagecm->id);
         $coursecontext = get_course_context($context);
         $this->assertEquals($coursecontext->contextlevel, CONTEXT_COURSE);
-        $this->assertEquals(get_courseid_from_context($context), $page->course);
+        $this->assertEquals(get_courseid_from_context($context), $pagecm->course);
 
         $caps = fetch_context_capabilities($systemcontext);
         $this->assertTrue(is_array($caps));

@@ -50,21 +50,15 @@ class core_enrol_external_testcase extends externallib_advanced_testcase {
         $this->assignUserCapability('moodle/user:viewdetails', $context->id, $roleid);
 
         // Enrol the users in the course.
-        // We use the manual plugin.
-        $enrol = enrol_get_plugin('manual');
-        $enrolinstances = enrol_get_instances($course->id, true);
-        foreach ($enrolinstances as $courseenrolinstance) {
-            if ($courseenrolinstance->enrol == "manual") {
-                $instance = $courseenrolinstance;
-                break;
-            }
-        }
-        $enrol->enrol_user($instance, $user1->id, $roleid);
-        $enrol->enrol_user($instance, $user2->id, $roleid);
-        $enrol->enrol_user($instance, $USER->id, $roleid);
+        $this->getDataGenerator()->enrol_user($user1->id, $course->id, $roleid, 'manual');
+        $this->getDataGenerator()->enrol_user($user2->id, $course->id, $roleid, 'manual');
+        $this->getDataGenerator()->enrol_user($USER->id, $course->id, $roleid, 'manual');
 
         // Call the external function.
         $enrolledusers = core_enrol_external::get_enrolled_users($course->id);
+
+        // We need to execute the return values cleaning process to simulate the web service server.
+        $enrolledusers = external_api::clean_returnvalue(core_enrol_external::get_enrolled_users_returns(), $enrolledusers);
 
         // Check we retrieve the good total number of enrolled users.
         $this->assertEquals(3, count($enrolledusers));
@@ -89,25 +83,20 @@ class core_enrol_external_testcase extends externallib_advanced_testcase {
 
         // Enrol $USER in the courses.
         // We use the manual plugin.
-        $enrol = enrol_get_plugin('manual');
         $roleid = null;
         foreach ($courses as $course) {
             $context = context_course::instance($course->id);
             $roleid = $this->assignUserCapability('moodle/course:viewparticipants',
                     $context->id, $roleid);
 
-            $enrolinstances = enrol_get_instances($course->id, true);
-            foreach ($enrolinstances as $courseenrolinstance) {
-                if ($courseenrolinstance->enrol == "manual") {
-                    $instance = $courseenrolinstance;
-                    break;
-                }
-            }
-            $enrol->enrol_user($instance, $USER->id, $roleid);
+            $this->getDataGenerator()->enrol_user($USER->id, $course->id, $roleid, 'manual');
         }
 
         // Call the external function.
         $enrolledincourses = core_enrol_external::get_users_courses($USER->id);
+
+        // We need to execute the return values cleaning process to simulate the web service server.
+        $enrolledincourses = external_api::clean_returnvalue(core_enrol_external::get_users_courses_returns(), $enrolledincourses);
 
         // Check we retrieve the good total number of enrolled users.
         $this->assertEquals(2, count($enrolledincourses));
@@ -155,6 +144,9 @@ class core_enrol_external_testcase extends externallib_advanced_testcase {
         ('courseid' => $course1->id, 'capabilities' => array('moodle/course:viewparticipants')));
         $options = array();
         $result = core_enrol_external::get_enrolled_users_with_capability($params, $options);
+
+        // We need to execute the return values cleaning process to simulate the web service server.
+        $result = external_api::clean_returnvalue(core_enrol_external::get_enrolled_users_with_capability_returns(), $result);
 
         // Check an array containing the expected user for the course capability is returned.
         $expecteduserlist = $result[0];

@@ -51,6 +51,14 @@ class cache_config_writer_phpunit_tests extends advanced_testcase {
     }
 
     /**
+     * Final task is to reset the cache system
+     */
+    public static function tearDownAfterClass() {
+        parent::tearDownAfterClass();
+        cache_factory::reset();
+    }
+
+    /**
      * Test getting an instance. Pretty basic.
      */
     public function test_instance() {
@@ -146,15 +154,16 @@ class cache_config_writer_phpunit_tests extends advanced_testcase {
      */
     public function test_update_definitions() {
         $config = cache_config_writer::instance();
-        $earlydefinitions = $config->get_definitions();
-        unset($config);
-        cache_factory::reset();
+        // Remove the definition.
+        $config->phpunit_remove_definition('core/string');
+        $definitions = $config->get_definitions();
+        // Check it is gone.
+        $this->assertFalse(array_key_exists('core/string', $definitions));
+        // Update definitions. This should re-add it.
         cache_config_writer::update_definitions();
-
-        $config = cache_config_writer::instance();
-        $latedefinitions = $config->get_definitions();
-
-        $this->assertSame($latedefinitions, $earlydefinitions);
+        $definitions = $config->get_definitions();
+        // Check it is back again.
+        $this->assertTrue(array_key_exists('core/string', $definitions));
     }
 
     /**
@@ -298,6 +307,14 @@ class cache_administration_helper_phpunit_tests extends advanced_testcase {
     }
 
     /**
+     * Final task is to reset the cache system
+     */
+    public static function tearDownAfterClass() {
+        parent::tearDownAfterClass();
+        cache_factory::reset();
+    }
+
+    /**
      * Test the numerous summaries the helper can produce.
      */
     public function test_get_summaries() {
@@ -421,5 +438,54 @@ class cache_administration_helper_phpunit_tests extends advanced_testcase {
         } catch (moodle_exception $e) {
             $this->assertInstanceOf('coding_exception', $e);
         }
+    }
+
+    /**
+     * Test the hash_key functionality.
+     */
+    public function test_hash_key() {
+        global $CFG;
+
+        $currentdebugging = $CFG->debug;
+
+        $CFG->debug = E_ALL;
+
+        // First with simplekeys
+        $instance = cache_config_phpunittest::instance(true);
+        $instance->phpunit_add_definition('phpunit/hashtest', array(
+            'mode' => cache_store::MODE_APPLICATION,
+            'component' => 'phpunit',
+            'area' => 'hashtest',
+            'simplekeys' => true
+        ));
+        $factory = cache_factory::instance();
+        $definition = $factory->create_definition('phpunit', 'hashtest');
+
+        $result = cache_helper::hash_key('test', $definition);
+        $this->assertEquals('test-'.$definition->generate_single_key_prefix(), $result);
+
+        try {
+            cache_helper::hash_key('test/test', $definition);
+            $this->fail('Invalid key was allowed, you should see this.');
+        } catch (coding_exception $e) {
+            $this->assertEquals('test/test', $e->debuginfo);
+        }
+
+        // Second without simple keys
+        $instance->phpunit_add_definition('phpunit/hashtest2', array(
+            'mode' => cache_store::MODE_APPLICATION,
+            'component' => 'phpunit',
+            'area' => 'hashtest2',
+            'simplekeys' => false
+        ));
+        $definition = $factory->create_definition('phpunit', 'hashtest2');
+
+        $result = cache_helper::hash_key('test', $definition);
+        $this->assertEquals(sha1($definition->generate_single_key_prefix().'-test'), $result);
+
+        $result = cache_helper::hash_key('test/test', $definition);
+        $this->assertEquals(sha1($definition->generate_single_key_prefix().'-test/test'), $result);
+
+        $CFG->debug = $currentdebugging;
     }
 }

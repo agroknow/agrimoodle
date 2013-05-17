@@ -141,12 +141,7 @@ class repository_upload extends repository {
             }
         }
 
-        // scan the files, throws exception and deletes if virus found
-        // this is tricky because clamdscan daemon might not be able to access the files
-        $permissions = fileperms($_FILES[$elname]['tmp_name']);
-        @chmod($_FILES[$elname]['tmp_name'], $CFG->filepermissions);
         self::antivir_scan_file($_FILES[$elname]['tmp_name'], $_FILES[$elname]['name'], true);
-        @chmod($_FILES[$elname]['tmp_name'], $permissions);
 
         // {@link repository::build_source_field()}
         $sourcefield = $this->get_file_source_info($_FILES[$elname]['name']);
@@ -195,13 +190,14 @@ class repository_upload extends repository {
             $record->itemid = 0;
         }
 
+        if (($maxbytes!==-1) && (filesize($_FILES[$elname]['tmp_name']) > $maxbytes)) {
+            throw new file_exception('maxbytes');
+        }
+
         if (file_is_draft_area_limit_reached($record->itemid, $areamaxbytes, filesize($_FILES[$elname]['tmp_name']))) {
             throw new file_exception('maxareabytes');
         }
 
-        if (($maxbytes!==-1) && (filesize($_FILES[$elname]['tmp_name']) > $maxbytes)) {
-            throw new file_exception('maxbytes');
-        }
         $record->contextid = $context->id;
         $record->userid    = $USER->id;
 
@@ -286,5 +282,14 @@ class repository_upload extends repository {
      */
     public function supported_returntypes() {
         return FILE_INTERNAL;
+    }
+
+    /**
+     * Is this repository accessing private data?
+     *
+     * @return bool
+     */
+    public function contains_private_data() {
+        return false;
     }
 }

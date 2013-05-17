@@ -1097,9 +1097,9 @@ function grade_regrade_final_grades($courseid, $userid=null, $updated_item=null)
                     continue; // this one is ok
                 }
                 $grade_items[$gid]->force_regrading();
-                $errors[$grade_items[$gid]->id] = 'Probably circular reference or broken calculation formula'; // TODO: localize
+                $errors[$grade_items[$gid]->id] = get_string('errorcalculationbroken', 'grades');
             }
-            break; // oki, found error
+            break; // Found error.
         }
     }
 
@@ -1190,7 +1190,7 @@ function grade_update_mod_grades($modinstance, $userid=0) {
         $updategradesfunc($modinstance, $userid);
 
     } else {
-        // mudule does not support grading??
+        // Module does not support grading?
     }
 
     return true;

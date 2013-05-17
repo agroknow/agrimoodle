@@ -129,9 +129,19 @@ class profile_field_base {
         global $DB;
 
         $errors = array();
-        /// Check for uniqueness of data if required
-        if ($this->is_unique()) {
-            $value = (is_array($usernew->{$this->inputname}) and isset($usernew->{$this->inputname}['text'])) ? $usernew->{$this->inputname}['text'] : $usernew->{$this->inputname};
+        // Get input value.
+        if (isset($usernew->{$this->inputname})) {
+            if (is_array($usernew->{$this->inputname}) && isset($usernew->{$this->inputname}['text'])) {
+                $value = $usernew->{$this->inputname}['text'];
+            } else {
+                $value = $usernew->{$this->inputname};
+            }
+        } else {
+            $value = '';
+        }
+
+        // Check for uniqueness of data if required.
+        if ($this->is_unique() && (($value !== '') || $this->is_required())) {
             $data = $DB->get_records_sql('
                     SELECT id, userid
                       FROM {user_info_data}
@@ -442,7 +452,8 @@ function profile_display_fields($userid) {
                     $newfield = 'profile_field_'.$field->datatype;
                     $formfield = new $newfield($field->id, $userid);
                     if ($formfield->is_visible() and !$formfield->is_empty()) {
-                        print_row(format_string($formfield->field->name.':'), $formfield->display_data());
+                        echo html_writer::tag('dt', format_string($formfield->field->name));
+                        echo html_writer::tag('dd', $formfield->display_data());
                     }
                 }
             }

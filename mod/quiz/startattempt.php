@@ -105,7 +105,7 @@ if ($lastattempt && ($lastattempt->state == quiz_attempt::IN_PROGRESS ||
 
 } else {
     // Get number for the next or unfinished attempt.
-    if ($lastattempt && !$lastattempt->preview && !$quizobj->is_preview_user()) {
+    if ($lastattempt) {
         $attemptnumber = $lastattempt->attempt + 1;
     } else {
         $lastattempt = false;
@@ -165,7 +165,7 @@ $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
 
 // Create the new attempt and initialize the question sessions
 $timenow = time(); // Update time now, in case the server is running really slowly.
-$attempt = quiz_create_attempt($quizobj->get_quiz(), $attemptnumber, $lastattempt, $timenow,
+$attempt = quiz_create_attempt($quizobj, $attemptnumber, $lastattempt, $timenow,
         $quizobj->is_preview_user());
 
 if (!($quizobj->get_quiz()->attemptonlast && $lastattempt)) {

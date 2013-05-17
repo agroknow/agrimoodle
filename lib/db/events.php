@@ -50,7 +50,24 @@ $handlers = array(
         'schedule'         => 'cron',
         'internal'         => 0,
     ),
-
+    'course_completed' => array (
+        'handlerfile'      => '/lib/badgeslib.php',
+        'handlerfunction'  => 'badges_award_handle_course_criteria_review',
+        'schedule'         => 'instant',
+        'internal'         => 1,
+    ),
+    'activity_completion_changed' => array (
+        'handlerfile'      => '/lib/badgeslib.php',
+        'handlerfunction'  => 'badges_award_handle_activity_criteria_review',
+        'schedule'         => 'instant',
+        'internal'         => 1,
+    ),
+    'user_updated' => array (
+        'handlerfile'      => '/lib/badgeslib.php',
+        'handlerfunction'  => 'badges_award_handle_profile_criteria_review',
+        'schedule'         => 'instant',
+        'internal'         => 1,
+    ),
 
 /* no more here please, core should not consume any events!!!!!!! */
 );
@@ -77,6 +94,7 @@ course_created - object course table record
 course_updated - object course table record
 course_content_removed - object course table record + context property
 course_deleted - object course table record + context property
+course_restored - custom object with courseid, userid and restore information
 
 user_enrolled - object record from user_enrolments table + courseid,enrol
 user_enrol_modified - object record from user_enrolments table + courseid,enrol
@@ -120,5 +138,11 @@ role_unassigned       - object role_assignments table record
 mod_deleted - int courseid, int cmid, text modulename - happens when a module is deleted
 mod_created - int courseid, int cmid, text modulename - happens when a module is created
 mod_updated - int courseid, int cmid, text modulename - happens when a module is updated
+
+=== blog events
+
+blog_entry_added - blog post object
+blog_entry_edited - blog post object
+blog_entry_deleteded - blog post object
 
 */

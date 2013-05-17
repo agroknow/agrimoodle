@@ -68,7 +68,7 @@ class navigation_node_testcase extends basic_testcase {
         $demo5->add('activity1', null, navigation_node::TYPE_ACTIVITY, null, 'activity1')->make_active();
         $hiddendemo1 = $this->node->add('hiddendemo1', $this->inactiveurl, navigation_node::TYPE_CATEGORY, null, 'hiddendemo1', new pix_icon('i/course', ''));
         $hiddendemo1->hidden = true;
-        $hiddendemo1->add('hiddendemo2', $this->inactiveurl, navigation_node::TYPE_COURSE, null, 'hiddendemo2', new pix_icon('i/course', ''))->helpbutton = 'Here is a help button';;
+        $hiddendemo1->add('hiddendemo2', $this->inactiveurl, navigation_node::TYPE_COURSE, null, 'hiddendemo2', new pix_icon('i/course', ''))->helpbutton = 'Here is a help button';
         $hiddendemo1->add('hiddendemo3', $this->inactiveurl, navigation_node::TYPE_COURSE,null, 'hiddendemo3', new pix_icon('i/course', ''))->display = false;
     }
 
@@ -76,7 +76,6 @@ class navigation_node_testcase extends basic_testcase {
         global $CFG;
         $node = new navigation_node($this->fakeproperties);
         $this->assertEquals($node->text, $this->fakeproperties['text']);
-        $this->assertEquals($node->title, $this->fakeproperties['text']);
         $this->assertTrue(strpos($this->fakeproperties['shorttext'], substr($node->shorttext,0, -3))===0);
         $this->assertEquals($node->key, $this->fakeproperties['key']);
         $this->assertEquals($node->type, $this->fakeproperties['type']);

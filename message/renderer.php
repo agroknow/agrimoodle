@@ -74,8 +74,8 @@ class core_message_renderer extends plugin_renderer_base {
             } else if ($processor->enabled) {
                 $url = new moodle_url('/admin/message.php', array('disable' => $processor->id, 'sesskey' => sesskey()));
                 $enable->text = html_writer::link($url, html_writer::empty_tag('img',
-                    array('src'   => $this->output->pix_url('i/hide'),
-                          'class' => 'icon',
+                    array('src'   => $this->output->pix_url('t/hide'),
+                          'class' => 'iconsmall',
                           'title' => get_string('outputenabled', 'message'),
                           'alt'   => get_string('outputenabled', 'message'),
                     )
@@ -84,8 +84,8 @@ class core_message_renderer extends plugin_renderer_base {
                 $name->attributes['class'] = 'dimmed_text';
                 $url = new moodle_url('/admin/message.php', array('enable' => $processor->id, 'sesskey' => sesskey()));
                 $enable->text = html_writer::link($url, html_writer::empty_tag('img',
-                    array('src'   => $this->output->pix_url('i/show'),
-                          'class' => 'icon',
+                    array('src'   => $this->output->pix_url('t/show'),
+                          'class' => 'iconsmall',
                           'title' => get_string('outputdisabled', 'message'),
                           'alt'   => get_string('outputdisabled', 'message'),
                     )
@@ -351,12 +351,15 @@ class core_message_renderer extends plugin_renderer_base {
 
         $output .= html_writer::start_tag('fieldset', array('id' => 'messageprocessor_general', 'class' => 'clearfix'));
         $output .= html_writer::nonempty_tag('legend', get_string('generalsettings','admin'), array('class' => 'ftoggler'));
+
         $output .= html_writer::start_tag('div');
-        $output .= get_string('blocknoncontacts', 'message').': ';
-        $output .= html_writer::checkbox('blocknoncontacts', 1, $preferences->blocknoncontacts, '');
+        $output .= html_writer::checkbox('blocknoncontacts', 1, $preferences->blocknoncontacts, get_string('blocknoncontacts', 'message'));
         $output .= html_writer::end_tag('div');
-        $disableallcheckbox = $this->output->help_icon('disableall', 'message') . get_string('disableall', 'message') . html_writer::checkbox('disableall', 1, $notificationsdisabled, '', array('class'=>'disableallcheckbox'));
+
+        $disableallcheckbox = html_writer::checkbox('disableall', 1, $notificationsdisabled, get_string('disableall', 'message'), array('class'=>'disableallcheckbox'));
+        $disableallcheckbox .= $this->output->help_icon('disableall', 'message');
         $output .= html_writer::nonempty_tag('div', $disableallcheckbox, array('class'=>'disableall'));
+
         $output .= html_writer::end_tag('fieldset');
         $output .= html_writer::start_tag('div', array('class' => 'mdl-align'));
         $output .= html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('updatemyprofile'), 'class' => 'form-submit'));

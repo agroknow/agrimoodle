@@ -187,6 +187,10 @@ class condition_info extends condition_info_base {
         }
         return array_key_exists($cm->id, $CONDITIONLIB_PRIVATE->usedincondition[$course->id]);
     }
+
+    protected function get_context() {
+        return context_module::instance($this->item->id);
+    }
 }
 
 
@@ -285,7 +289,7 @@ class condition_info_section extends condition_info_base {
             if (!$userid) {
                 $userid = $USER->id;
             }
-            $context = context_course::instance($this->item->course);
+            $context = $this->get_context();
 
             if ($userid != $USER->id) {
                 // We are requesting for a non-current user so check it individually
@@ -352,6 +356,10 @@ class condition_info_section extends condition_info_base {
     public static function update_section_from_form($section, $fromform, $wipefirst=true) {
         $ci = new condition_info_section($section, CONDITION_MISSING_EVERYTHING);
         parent::update_from_form($ci, $fromform, $wipefirst);
+    }
+
+    protected function get_context() {
+        return context_course::instance($this->item->course);
     }
 }
 
@@ -599,12 +607,17 @@ abstract class condition_info_base {
     }
 
     /**
-     * The user fields we can compare
+     * Returns list of user fields that can be compared.
      *
-     * @global moodle_database $DB
+     * If you specify $formatoptions, then format_string will be called on the
+     * custom field names. This is necessary for multilang support to work so
+     * you should include this parameter unless you are going to format the
+     * text later.
+     *
+     * @param array $formatoptions Passed to format_string if provided
      * @return array Associative array from user field constants to display name
      */
-    public static function get_condition_user_fields() {
+    public static function get_condition_user_fields($formatoptions = null) {
         global $DB;
 
         $userfields = array(
@@ -613,7 +626,6 @@ abstract class condition_info_base {
             'email' => get_user_field_name('email'),
             'city' => get_user_field_name('city'),
             'country' => get_user_field_name('country'),
-            'interests' => get_user_field_name('interests'),
             'url' => get_user_field_name('url'),
             'icq' => get_user_field_name('icq'),
             'skype' => get_user_field_name('skype'),
@@ -631,7 +643,11 @@ abstract class condition_info_base {
         // Go through the custom profile fields now
         if ($user_info_fields = $DB->get_records('user_info_field')) {
             foreach ($user_info_fields as $field) {
-                $userfields[$field->id] = $field->name;
+                if ($formatoptions) {
+                    $userfields[$field->id] = format_string($field->name, true, $formatoptions);
+                } else {
+                    $userfields[$field->id] = $field->name;
+                }
             }
         }
 
@@ -761,6 +777,7 @@ abstract class condition_info_base {
 
         $information = '';
 
+
         // Completion conditions
         if (count($this->item->conditionscompletion) > 0) {
             if ($this->item->course == $COURSE->id) {
@@ -776,9 +793,11 @@ abstract class condition_info_base {
                 if (empty($modinfo->cms[$cmid])) {
                     continue;
                 }
+                $information .= html_writer::start_tag('li');
                 $information .= get_string(
                         'requires_completion_' . $expectedcompletion,
                         'condition', $modinfo->cms[$cmid]->name) . ' ';
+                $information .= html_writer::end_tag('li');
             }
         }
 
@@ -797,18 +816,23 @@ abstract class condition_info_base {
                 } else {
                     $string = 'range';
                 }
+                $information .= html_writer::start_tag('li');
                 $information .= get_string('requires_grade_'.$string, 'condition', $minmax->name).' ';
+                $information .= html_writer::end_tag('li');
             }
         }
 
         // User field conditions
         if (count($this->item->conditionsfield) > 0) {
+            $context = $this->get_context();
             // Need the array of operators
             foreach ($this->item->conditionsfield as $field => $details) {
                 $a = new stdclass;
-                $a->field = $details->fieldname;
+                $a->field = format_string($details->fieldname, true, array('context' => $context));
                 $a->value = $details->value;
+                $information .= html_writer::start_tag('li');
                 $information .= get_string('requires_user_field_'.$details->operator, 'condition', $a) . ' ';
+                $information .= html_writer::end_tag('li');
             }
         }
 
@@ -859,22 +883,41 @@ abstract class condition_info_base {
 
         if ($this->item->availablefrom && $this->item->availableuntil) {
             if ($shortfrom && $shortuntil && $daybeforeuntil == $this->item->availablefrom) {
+                $information .= html_writer::start_tag('li');
                 $information .= get_string('requires_date_both_single_day', 'condition',
                         self::show_time($this->item->availablefrom, true));
+                $information .= html_writer::end_tag('li');
             } else {
+                $information .= html_writer::start_tag('li');
                 $information .= get_string('requires_date_both', 'condition', (object)array(
                          'from' => self::show_time($this->item->availablefrom, $shortfrom),
                          'until' => self::show_time($displayuntil, $shortuntil)));
+                $information .= html_writer::end_tag('li');
             }
         } else if ($this->item->availablefrom) {
+            $information .= html_writer::start_tag('li');
             $information .= get_string('requires_date', 'condition',
                 self::show_time($this->item->availablefrom, $shortfrom));
+            $information .= html_writer::end_tag('li');
         } else if ($this->item->availableuntil) {
+            $information .= html_writer::start_tag('li');
             $information .= get_string('requires_date_before', 'condition',
                 self::show_time($displayuntil, $shortuntil));
+            $information .= html_writer::end_tag('li');
         }
 
-        $information = trim($information);
+        // The information is in <li> tags, but to avoid taking up more space
+        // if there is only a single item, we strip out the list tags so that it
+        // is plain text in that case.
+        if (!empty($information)) {
+            $li = strpos($information, '<li>', 4);
+            if ($li === false) {
+                $information = preg_replace('~^<li>(.*)</li>$~', '$1', $information);
+            } else {
+                $information = html_writer::tag('ul', $information);
+            }
+            $information = trim($information);
+        }
         return $information;
     }
 
@@ -942,7 +985,7 @@ abstract class condition_info_base {
                 if (empty($modinfo->cms[$cmid])) {
                     global $PAGE;
                     if (isset($PAGE) && strpos($PAGE->pagetype, 'course-view-')===0) {
-                        debugging("Warning: activity {$this->cm->id} '{$this->cm->name}' has condition " .
+                        debugging("Warning: activity {$this->item->id} '{$this->item->name}' has condition " .
                                 "on deleted activity $cmid (to get rid of this message, edit the named activity)");
                     }
                     continue;
@@ -971,9 +1014,11 @@ abstract class condition_info_base {
                 }
                 if (!$thisisok) {
                     $available = false;
+                    $information .= html_writer::start_tag('li');
                     $information .= get_string(
                         'requires_completion_' . $expectedcompletion,
                         'condition', $modinfo->cms[$cmid]->name) . ' ';
+                    $information .= html_writer::end_tag('li');
                 }
             }
         }
@@ -999,22 +1044,27 @@ abstract class condition_info_base {
                     } else {
                         $string = 'range';
                     }
+                    $information .= html_writer::start_tag('li');
                     $information .= get_string('requires_grade_' . $string, 'condition', $minmax->name) . ' ';
+                    $information .= html_writer::end_tag('li');
                 }
             }
         }
 
         // Check if user field condition
         if (count($this->item->conditionsfield) > 0) {
+            $context = $this->get_context();
             foreach ($this->item->conditionsfield as $field => $details) {
                 $uservalue = $this->get_cached_user_profile_field($userid, $field);
                 if (!$this->is_field_condition_met($details->operator, $uservalue, $details->value)) {
                     // Set available to false
                     $available = false;
                     $a = new stdClass();
-                    $a->field = $details->fieldname;
+                    $a->field = format_string($details->fieldname, true, array('context' => $context));
                     $a->value = $details->value;
+                    $information .= html_writer::start_tag('li');
                     $information .= get_string('requires_user_field_'.$details->operator, 'condition', $a) . ' ';
+                    $information .= html_writer::end_tag('li');
                 }
             }
         }
@@ -1024,9 +1074,11 @@ abstract class condition_info_base {
             if (time() < $this->item->availablefrom) {
                 $available = false;
 
+                $information .= html_writer::start_tag('li');
                 $information .= get_string('requires_date', 'condition',
                         self::show_time($this->item->availablefrom,
                             self::is_midnight($this->item->availablefrom)));
+                $information .= html_writer::end_tag('li');
             }
         }
 
@@ -1055,7 +1107,18 @@ abstract class condition_info_base {
             $information = '';
         }
 
-        $information = trim($information);
+        // The information is in <li> tags, but to avoid taking up more space
+        // if there is only a single item, we strip out the list tags so that it
+        // is plain text in that case.
+        if (!empty($information)) {
+            $li = strpos($information, '<li>', 4);
+            if ($li === false) {
+                $information = preg_replace('~^<li>(.*)</li>$~', '$1', $information);
+            } else {
+                $information = html_writer::tag('ul', $information);
+            }
+            $information = trim($information);
+        }
         return $available;
     }
 
@@ -1252,7 +1315,7 @@ abstract class condition_info_base {
      * @param int $fieldid the user profile field id
      * @return string the user value, or false if user does not have a user field value yet
      */
-    private function get_cached_user_profile_field($userid, $fieldid) {
+    protected function get_cached_user_profile_field($userid, $fieldid) {
         global $USER, $DB, $CFG;
 
         if ($userid === 0) {
@@ -1261,8 +1324,8 @@ abstract class condition_info_base {
         }
         $iscurrentuser = $USER->id == $userid;
 
-        if (isguestuser($userid)) {
-            // Must be logged in and can't be the guest. (this should never happen anyway)
+        if (isguestuser($userid) || ($iscurrentuser && !isloggedin())) {
+            // Must be logged in and can't be the guest. (e.g. front page)
             return false;
         }
 
@@ -1398,6 +1461,13 @@ abstract class condition_info_base {
             }
         }
     }
+
+    /**
+     * Obtains context for any necessary checks.
+     *
+     * @return context Suitable context for the item
+     */
+    protected abstract function get_context();
 }
 
 condition_info::init_global_cache();

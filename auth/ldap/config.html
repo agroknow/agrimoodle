@@ -4,6 +4,9 @@
 if (!isset($config->host_url)) {
     $config->host_url = '';
 }
+if (!isset($config->start_tls)) {
+    $config->start_tls = false;
+}
 if (empty($config->ldapencoding)) {
     $config->ldapencoding = 'utf-8';
 }
@@ -103,6 +106,12 @@ if (!isset($config->ntlmsso_remoteuserformat)) {
 
 $yesno = array(get_string('no'), get_string('yes'));
 
+$disabled = '';
+if (!ldap_paged_results_supported($config->ldap_version)) {
+    $disabled = ' disabled="disabled"';
+    echo $OUTPUT->notification(get_string('pagedresultsnotsupp', 'auth_ldap'));
+}
+
 ?>
 <table cellspacing="0" cellpadding="5" border="0">
 <tr>
@@ -124,7 +133,7 @@ $yesno = array(get_string('no'), get_string('yes'));
 </tr>
 <tr valign="top" class="required">
     <td align="right">
-        <label for="menuldap_version"><?php print_string('auth_ldap_version_key', 'auth_ldap') ?></label>
+        <label for="ldap_version"><?php print_string('auth_ldap_version_key', 'auth_ldap') ?></label>
     </td>
     <td>
         <?php
@@ -137,6 +146,17 @@ $yesno = array(get_string('no'), get_string('yes'));
     </td>
     <td>
         <?php print_string('auth_ldap_version', 'auth_ldap') ?>
+    </td>
+</tr>
+<tr valign="top">
+    <td align="right">
+        <label for="start_tls"><?php print_string('start_tls_key', 'auth_ldap') ?></label>
+    </td>
+    <td>
+        <?php echo html_writer::select($yesno, 'start_tls', $config->start_tls, false); ?>
+    </td>
+    <td>
+        <?php print_string('start_tls', 'auth_ldap') ?>
     </td>
 </tr>
 <tr valign="top" class="required">
@@ -156,7 +176,6 @@ $yesno = array(get_string('no'), get_string('yes'));
         <label for="pagesize"><?php print_string('pagesize_key', 'auth_ldap') ?></label>
     </td>
     <td>
-        <?php $disabled = (!ldap_paged_results_supported($config->ldap_version)) ? ' disabled="disabled"' : '' ; ?>
         <input id="pagesize" name="pagesize" type="text" value="<?php echo $config->pagesize ?>" <?php echo $disabled ?>/>
         <?php
             if (isset($err['pagesize'])) { echo $OUTPUT->error_text($err['pagesize']); }

@@ -162,17 +162,17 @@ function lti_view($instance) {
 
     if (empty($key) || empty($secret)) {
         $returnurlparams['unsigned'] = '1';
-
-        //Add the return URL. We send the launch container along to help us avoid frames-within-frames when the user returns
-        $url = new moodle_url('/mod/lti/return.php', $returnurlparams);
-        $returnurl = $url->out(false);
-
-        if ($typeconfig['forcessl'] == '1') {
-            $returnurl = lti_ensure_url_is_https($returnurl);
-        }
-
-        $requestparams['launch_presentation_return_url'] = $returnurl;
     }
+
+    // Add the return URL. We send the launch container along to help us avoid frames-within-frames when the user returns.
+    $url = new moodle_url('/mod/lti/return.php', $returnurlparams);
+    $returnurl = $url->out(false);
+
+    if ($typeconfig['forcessl'] == '1') {
+        $returnurl = lti_ensure_url_is_https($returnurl);
+    }
+
+    $requestparams['launch_presentation_return_url'] = $returnurl;
 
     if (!empty($key) && !empty($secret)) {
         $parms = lti_sign_parameters($requestparams, $endpoint, "POST", $key, $secret);
@@ -228,11 +228,6 @@ function lti_build_request($instance, $typeconfig, $course) {
 
     $role = lti_get_ims_role($USER, $instance->cmid, $instance->course);
 
-    $locale = $course->lang;
-    if ( strlen($locale) < 1 ) {
-         $locale = $CFG->lang;
-    }
-
     $requestparams = array(
         'resource_link_id' => $instance->id,
         'resource_link_title' => $instance->name,
@@ -242,7 +237,7 @@ function lti_build_request($instance, $typeconfig, $course) {
         'context_id' => $course->id,
         'context_label' => $course->shortname,
         'context_title' => $course->fullname,
-        'launch_presentation_locale' => $locale,
+        'launch_presentation_locale' => current_language()
     );
 
     $placementsecret = $instance->servicesalt;
@@ -290,7 +285,7 @@ function lti_build_request($instance, $typeconfig, $course) {
     if ($customstr) {
         $custom = lti_split_custom_parameters($customstr);
     }
-    if (!isset($typeconfig['allowinstructorcustom']) || $typeconfig['allowinstructorcustom'] == LTI_SETTING_NEVER) {
+    if (isset($typeconfig['allowinstructorcustom']) && $typeconfig['allowinstructorcustom'] == LTI_SETTING_NEVER) {
         $requestparams = array_merge($custom, $requestparams);
     } else {
         if ($instructorcustomstr) {
@@ -325,7 +320,7 @@ function lti_build_request($instance, $typeconfig, $course) {
 }
 
 function lti_get_tool_table($tools, $id) {
-    global $CFG, $USER;
+    global $CFG, $OUTPUT, $USER;
     $html = '';
 
     $typename = get_string('typename', 'lti');
@@ -357,11 +352,16 @@ function lti_get_tool_table($tools, $id) {
             $update = get_string('update', 'lti');
             $delete = get_string('delete', 'lti');
 
-            $accepthtml = "
-                <a class=\"editing_accept\" href=\"{$CFG->wwwroot}/mod/lti/typessettings.php?action=accept&amp;id={$type->id}&amp;sesskey={$USER->sesskey}&amp;tab={$id}\" title=\"{$accept}\">
-                    <img class=\"iconsmall\" alt=\"{$accept}\" src=\"{$CFG->wwwroot}/pix/t/clear.gif\"/>
-                </a>
-            ";
+            $baseurl = new moodle_url('/mod/lti/typessettings.php', array(
+                    'action' => 'accept',
+                    'id' => $type->id,
+                    'sesskey' => sesskey(),
+                    'tab' => $id
+                ));
+
+            $accepthtml = $OUTPUT->action_icon($baseurl,
+                    new pix_icon('t/check', $accept, '', array('class' => 'iconsmall')), null,
+                    array('title' => $accept, 'class' => 'editing_accept'));
 
             $deleteaction = 'delete';
 
@@ -374,6 +374,17 @@ function lti_get_tool_table($tools, $id) {
                 $delete = get_string('reject', 'lti');
             }
 
+            $updateurl = clone($baseurl);
+            $updateurl->param('action', 'update');
+            $updatehtml = $OUTPUT->action_icon($updateurl,
+                    new pix_icon('t/edit', $accept, '', array('class' => 'iconsmall')), null,
+                    array('title' => $update, 'class' => 'editing_update'));
+
+            $deleteurl = clone($baseurl);
+            $deleteurl->param('action', $deleteaction);
+            $deletehtml = $OUTPUT->action_icon($deleteurl,
+                    new pix_icon('t/delete', $accept, '', array('class' => 'iconsmall')), null,
+                    array('title' => $delete, 'class' => 'editing_delete'));
             $html .= "
             <tr>
                 <td>
@@ -386,13 +397,7 @@ function lti_get_tool_table($tools, $id) {
                     {$date}
                 </td>
                 <td align=\"center\">
-                    {$accepthtml}
-                    <a class=\"editing_update\" href=\"{$CFG->wwwroot}/mod/lti/typessettings.php?action=update&amp;id={$type->id}&amp;sesskey={$USER->sesskey}&amp;tab={$id}\" title=\"{$update}\">
-                        <img class=\"iconsmall\" alt=\"{$update}\" src=\"{$CFG->wwwroot}/pix/t/edit.gif\"/>
-                    </a>
-                    <a class=\"editing_delete\" href=\"{$CFG->wwwroot}/mod/lti/typessettings.php?action={$deleteaction}&amp;id={$type->id}&amp;sesskey={$USER->sesskey}&amp;tab={$id}\" title=\"{$delete}\">
-                        <img class=\"iconsmall\" alt=\"{$delete}\" src=\"{$CFG->wwwroot}/pix/t/delete.gif\"/>
-                    </a>
+                    {$accepthtml}{$updatehtml}{$deletehtml}
                 </td>
             </tr>
             ";
@@ -566,6 +571,23 @@ function lti_filter_get_types($course) {
     }
 
     return $DB->get_records('lti_types', $filter);
+}
+
+/**
+ * Given an array of tools, filter them based on their state
+ *
+ * @param array $tools An array of lti_types records
+ * @param int $state One of the LTI_TOOL_STATE_* constants
+ * @return array
+ */
+function lti_filter_tool_types(array $tools, $state) {
+    $return = array();
+    foreach ($tools as $key => $tool) {
+        if ($tool->state == $state) {
+            $return[$key] = $tool;
+        }
+    }
+    return $return;
 }
 
 function lti_get_types_for_add_instance() {

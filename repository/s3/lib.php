@@ -47,6 +47,7 @@ class repository_s3 extends repository {
         $this->access_key = get_config('s3', 'access_key');
         $this->secret_key = get_config('s3', 'secret_key');
         $this->s = new S3($this->access_key, $this->secret_key);
+        $this->s->setExceptions(true);
     }
 
     /**
@@ -75,7 +76,7 @@ class repository_s3 extends repository {
     public function get_listing($path = '', $page = '') {
         global $CFG, $OUTPUT;
         if (empty($this->access_key)) {
-            die(json_encode(array('e'=>get_string('needaccesskey', 'repository_s3'))));
+            throw new moodle_exception('needaccesskey', 'repository_s3');
         }
 
         $list = array();
@@ -97,7 +98,11 @@ class repository_s3 extends repository {
         $tree = array();
 
         if (empty($path)) {
-            $buckets = $this->s->listBuckets();
+            try {
+                $buckets = $this->s->listBuckets();
+            } catch (S3Exception $e) {
+                throw new moodle_exception('errorwhilecommunicatingwith', 'repository', '', $this->get_name());
+            }
             foreach ($buckets as $bucket) {
                 $folder = array(
                     'title' => $bucket,
@@ -112,7 +117,11 @@ class repository_s3 extends repository {
             $folders = array();
             list($bucket, $uri) = $this->explode_path($path);
 
-            $contents = $this->s->getBucket($bucket, $uri, null, null, '/', true);
+            try {
+                $contents = $this->s->getBucket($bucket, $uri, null, null, '/', true);
+            } catch (S3Exception $e) {
+                throw new moodle_exception('errorwhilecommunicatingwith', 'repository', '', $this->get_name());
+            }
             foreach ($contents as $object) {
 
                 // If object has a prefix, it is a 'CommonPrefix', which we consider a folder
@@ -183,7 +192,11 @@ class repository_s3 extends repository {
     public function get_file($filepath, $file = '') {
         list($bucket, $uri) = $this->explode_path($filepath);
         $path = $this->prepare_file($file);
-        $this->s->getObject($bucket, $uri, $path);
+        try {
+            $this->s->getObject($bucket, $uri, $path);
+        } catch (S3Exception $e) {
+            throw new moodle_exception('errorwhilecommunicatingwith', 'repository', '', $this->get_name());
+        }
         return array('path' => $path);
     }
 
@@ -223,7 +236,9 @@ class repository_s3 extends repository {
         parent::type_config_form($mform);
         $strrequired = get_string('required');
         $mform->addElement('text', 'access_key', get_string('access_key', 'repository_s3'));
+        $mform->setType('access_key', PARAM_RAW_TRIMMED);
         $mform->addElement('text', 'secret_key', get_string('secret_key', 'repository_s3'));
+        $mform->setType('secret_key', PARAM_RAW_TRIMMED);
         $mform->addRule('access_key', $strrequired, 'required', null, 'client');
         $mform->addRule('secret_key', $strrequired, 'required', null, 'client');
     }
@@ -235,5 +250,14 @@ class repository_s3 extends repository {
      */
     public function supported_returntypes() {
         return FILE_INTERNAL;
+    }
+
+    /**
+     * Is this repository accessing private data?
+     *
+     * @return bool
+     */
+    public function contains_private_data() {
+        return false;
     }
 }

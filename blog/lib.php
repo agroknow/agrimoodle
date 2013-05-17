@@ -65,35 +65,36 @@ function blog_user_can_view_user_entry($targetuserid, $blogentry=null) {
     global $CFG, $USER, $DB;
 
     if (empty($CFG->enableblogs)) {
-        return false; // blog system disabled
+        return false; // Blog system disabled.
     }
 
     if (isloggedin() && $USER->id == $targetuserid) {
-        return true; // can view own entries in any case
+        return true; // Can view own entries in any case.
     }
 
     $sitecontext = context_system::instance();
     if (has_capability('moodle/blog:manageentries', $sitecontext)) {
-        return true; // can manage all entries
+        return true; // Can manage all entries.
     }
 
-    // coming for 1 entry, make sure it's not a draft
+    // If blog is in draft state, then make sure user have proper capability.
     if ($blogentry && $blogentry->publishstate == 'draft' && !has_capability('moodle/blog:viewdrafts', $sitecontext)) {
-        return false;  // can not view draft of others
+        return false;  // Can not view draft of others.
     }
 
-    // coming for 0 entry, make sure user is logged in, if not a public blog
+    // If blog entry is not public, make sure user is logged in.
     if ($blogentry && $blogentry->publishstate != 'public' && !isloggedin()) {
         return false;
     }
 
+    // If blogentry is not passed or all above checks pass, then check capability based on system config.
     switch ($CFG->bloglevel) {
         case BLOG_GLOBAL_LEVEL:
             return true;
         break;
 
         case BLOG_SITE_LEVEL:
-            if (isloggedin()) { // not logged in viewers forbidden
+            if (isloggedin()) { // Not logged in viewers forbidden.
                 return true;
             }
             return false;
@@ -101,6 +102,7 @@ function blog_user_can_view_user_entry($targetuserid, $blogentry=null) {
 
         case BLOG_USER_LEVEL:
         default:
+            // If user is viewing other user blog, then user should have user:readuserblogs capability.
             $personalcontext = context_user::instance($targetuserid);
             return has_capability('moodle/user:readuserblogs', $personalcontext);
         break;
@@ -147,8 +149,9 @@ function blog_sync_external_entries($externalblog) {
     global $CFG, $DB;
     require_once($CFG->libdir . '/simplepie/moodle_simplepie.php');
 
-    $rssfile = new moodle_simplepie_file($externalblog->url);
-    $filetest = new SimplePie_Locator($rssfile);
+    $rss = new moodle_simplepie();
+    $rssfile = $rss->registry->create('File', array($externalblog->url));
+    $filetest = $rss->registry->create('Locator', array($rssfile));
 
     if (!$filetest->is_feed($rssfile)) {
         $externalblog->failedlastsync = 1;
@@ -159,7 +162,8 @@ function blog_sync_external_entries($externalblog) {
         $DB->update_record('blog_external', $externalblog);
     }
 
-    $rss = new moodle_simplepie($externalblog->url);
+    $rss->set_feed_url($externalblog->url);
+    $rss->init();
 
     if (empty($rss->data)) {
         return null;
@@ -290,57 +294,6 @@ function blog_delete_external_entries($externalblog) {
     $DB->delete_records_select('post',
                                "module='blog_external' AND " . $DB->sql_compare_text('content') . " = ?",
                                array($externalblog->id));
-}
-
-/**
- * Returns a URL based on the context of the current page.
- * This URL points to blog/index.php and includes filter parameters appropriate for the current page.
- *
- * @param stdclass $context
- * @return string
- */
-function blog_get_context_url($context=null) {
-    global $CFG;
-
-    $viewblogentriesurl = new moodle_url('/blog/index.php');
-
-    if (empty($context)) {
-        global $PAGE;
-        $context = $PAGE->context;
-    }
-
-    // Change contextlevel to SYSTEM if viewing the site course
-    if ($context->contextlevel == CONTEXT_COURSE && $context->instanceid == SITEID) {
-        $context = context_system::instance();
-    }
-
-    $filterparam = '';
-    $strlevel = '';
-
-    switch ($context->contextlevel) {
-        case CONTEXT_SYSTEM:
-        case CONTEXT_BLOCK:
-        case CONTEXT_COURSECAT:
-            break;
-        case CONTEXT_COURSE:
-            $filterparam = 'courseid';
-            $strlevel = get_string('course');
-            break;
-        case CONTEXT_MODULE:
-            $filterparam = 'modid';
-            $strlevel = print_context_name($context);
-            break;
-        case CONTEXT_USER:
-            $filterparam = 'userid';
-            $strlevel = get_string('user');
-            break;
-    }
-
-    if (!empty($filterparam)) {
-        $viewblogentriesurl->param($filterparam, $context->instanceid);
-    }
-
-    return $viewblogentriesurl;
 }
 
 /**
@@ -510,10 +463,6 @@ function blog_get_options_for_course(stdClass $course, stdClass $user=null) {
 
     // Check that the user can associate with the course
     $sitecontext = context_system::instance();
-    $coursecontext = context_course::instance($course->id);
-    if (!has_capability('moodle/blog:associatecourse', $coursecontext)) {
-        return $options;
-    }
     // Generate the cache key
     $key = $course->id.':';
     if (!empty($user)) {
@@ -526,36 +475,35 @@ function blog_get_options_for_course(stdClass $course, stdClass $user=null) {
         return $courseoptions[$key];
     }
 
-    $canparticipate = (is_enrolled($coursecontext) or is_viewing($coursecontext));
 
-    if (has_capability('moodle/blog:view', $coursecontext)) {
+    if (has_capability('moodle/blog:view', $sitecontext)) {
         // We can view!
         if ($CFG->bloglevel >= BLOG_SITE_LEVEL) {
             // View entries about this course
             $options['courseview'] = array(
                 'string' => get_string('viewcourseblogs', 'blog'),
-                'link' => new moodle_url('/blog/index.php', array('courseid'=>$course->id))
+                'link' => new moodle_url('/blog/index.php', array('courseid' => $course->id))
             );
         }
         // View MY entries about this course
         $options['courseviewmine'] = array(
             'string' => get_string('viewmyentriesaboutcourse', 'blog'),
-            'link' => new moodle_url('/blog/index.php', array('courseid'=>$course->id, 'userid'=>$USER->id))
+            'link' => new moodle_url('/blog/index.php', array('courseid' => $course->id, 'userid' => $USER->id))
         );
         if (!empty($user) && ($CFG->bloglevel >= BLOG_SITE_LEVEL)) {
             // View the provided users entries about this course
             $options['courseviewuser'] = array(
                 'string' => get_string('viewentriesbyuseraboutcourse', 'blog', fullname($user)),
-                'link' => new moodle_url('/blog/index.php', array('courseid'=>$course->id, 'userid'=>$user->id))
+                'link' => new moodle_url('/blog/index.php', array('courseid' => $course->id, 'userid' => $user->id))
             );
         }
     }
 
-    if (has_capability('moodle/blog:create', $sitecontext) and $canparticipate) {
+    if (has_capability('moodle/blog:create', $sitecontext)) {
         // We can blog about this course
         $options['courseadd'] = array(
             'string' => get_string('blogaboutthiscourse', 'blog'),
-            'link' => new moodle_url('/blog/edit.php', array('action'=>'add', 'courseid'=>$course->id))
+            'link' => new moodle_url('/blog/edit.php', array('action' => 'add', 'courseid' => $course->id))
         );
     }
 
@@ -585,12 +533,7 @@ function blog_get_options_for_module($module, $user=null) {
         return $options;
     }
 
-    // Check the user can associate with the module
-    $modcontext = context_module::instance($module->id);
     $sitecontext = context_system::instance();
-    if (!has_capability('moodle/blog:associatemodule', $modcontext)) {
-        return $options;
-    }
 
     // Generate the cache key
     $key = $module->id.':';
@@ -601,12 +544,11 @@ function blog_get_options_for_module($module, $user=null) {
     }
     if (array_key_exists($key, $moduleoptions)) {
         // Serve from the cache so we don't have to regenerate
-        return $moduleoptions[$module->id];
+        return $moduleoptions[$key];
     }
 
-    $canparticipate = (is_enrolled($modcontext) or is_viewing($modcontext));
 
-    if (has_capability('moodle/blog:view', $modcontext)) {
+    if (has_capability('moodle/blog:view', $sitecontext)) {
         // Save correct module name for later usage.
         $modulename = get_string('modulename', $module->modname);
 
@@ -637,7 +579,7 @@ function blog_get_options_for_module($module, $user=null) {
         }
     }
 
-    if (has_capability('moodle/blog:create', $sitecontext) and $canparticipate) {
+    if (has_capability('moodle/blog:create', $sitecontext)) {
         // The user can blog about this module
         $options['moduleadd'] = array(
             'string' => get_string('blogaboutthismodule', 'blog', $modulename),
@@ -696,23 +638,6 @@ function blog_get_headers($courseid=null, $groupid=null, $userid=null, $tagid=nu
     $headers = array('title' => '', 'heading' => '', 'cm' => null, 'filters' => array());
 
     $blogurl = new moodle_url('/blog/index.php');
-
-    // If the title is not yet set, it's likely that the context isn't set either, so skip this part
-    $pagetitle = $PAGE->title;
-    if (!empty($pagetitle)) {
-        $contexturl = blog_get_context_url();
-
-        // Look at the context URL, it may have additional params that are not in the current URL
-        if (!$blogurl->compare($contexturl)) {
-            $blogurl = $contexturl;
-            if (empty($courseid)) {
-                $courseid = $blogurl->param('courseid');
-            }
-            if (empty($modid)) {
-                $modid = $blogurl->param('modid');
-            }
-        }
-    }
 
     $headers['stradd'] = get_string('addnewentry', 'blog');
     $headers['strview'] = null;
@@ -1000,6 +925,8 @@ function blog_get_associated_count($courseid, $cmid=null) {
  * may have switch to turn on/off comments option, this callback will
  * affect UI display, not like pluginname_comment_validate only throw
  * exceptions.
+ * blog_comment_validate will be called before viewing/adding/deleting
+ * comment, so don't repeat checks.
  * Capability check has been done in comment->check_permissions(), we
  * don't need to do it again here.
  *
@@ -1016,7 +943,17 @@ function blog_get_associated_count($courseid, $cmid=null) {
  * @return array
  */
 function blog_comment_permissions($comment_param) {
-    return array('post'=>true, 'view'=>true);
+    global $DB;
+
+    // If blog is public and current user is guest, then don't let him post comments.
+    $blogentry = $DB->get_record('post', array('id' => $comment_param->itemid), 'publishstate', MUST_EXIST);
+
+    if ($blogentry->publishstate != 'public') {
+        if (!isloggedin() || isguestuser()) {
+            return array('post' => false, 'view' => true);
+        }
+    }
+    return array('post' => true, 'view' => true);
 }
 
 /**
@@ -1035,16 +972,21 @@ function blog_comment_permissions($comment_param) {
  * @return boolean
  */
 function blog_comment_validate($comment_param) {
-    global $DB;
-    // validate comment itemid
-    if (!$entry = $DB->get_record('post', array('id'=>$comment_param->itemid))) {
-        throw new comment_exception('invalidcommentitemid');
+    global $CFG, $DB, $USER;
+
+    // Check if blogs are enabled user can comment.
+    if (empty($CFG->enableblogs) || empty($CFG->blogusecomments)) {
+        throw new comment_exception('nopermissiontocomment');
     }
-    // validate comment area
+
+    // Validate comment area.
     if ($comment_param->commentarea != 'format_blog') {
         throw new comment_exception('invalidcommentarea');
     }
-    // validation for comment deletion
+
+    $blogentry = $DB->get_record('post', array('id' => $comment_param->itemid), '*', MUST_EXIST);
+
+    // Validation for comment deletion.
     if (!empty($comment_param->commentid)) {
         if ($record = $DB->get_record('comments', array('id'=>$comment_param->commentid))) {
             if ($record->commentarea != 'format_blog') {
@@ -1060,7 +1002,11 @@ function blog_comment_validate($comment_param) {
             throw new comment_exception('invalidcommentid');
         }
     }
-    return true;
+
+    // Validate if user has blog view permission.
+    $sitecontext = context_system::instance();
+    return has_capability('moodle/blog:view', $sitecontext) &&
+            blog_user_can_view_user_entry($blogentry->userid, $blogentry);
 }
 
 /**

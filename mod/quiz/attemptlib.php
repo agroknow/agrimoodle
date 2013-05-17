@@ -1002,12 +1002,13 @@ class quiz_attempt {
      * @return int|false the number of seconds remaining for this attempt.
      *      False if there is no limit.
      */
-    public function get_time_left($timenow) {
+    public function get_time_left_display($timenow) {
         if ($this->attempt->state != self::IN_PROGRESS) {
             return false;
         }
-        return $this->get_access_manager($timenow)->get_time_left($this->attempt, $timenow);
+        return $this->get_access_manager($timenow)->get_time_left_display($this->attempt, $timenow);
     }
+
 
     /**
      * @return int the time when this attempt was submitted. 0 if it has not been
@@ -1191,7 +1192,7 @@ class quiz_attempt {
      */
     public function render_question_at_step($slot, $seq, $reviewing, $thispageurl = '') {
         return $this->quba->render_question_at_step($slot, $seq,
-                $this->get_display_options($reviewing),
+                $this->get_display_options_with_edit_link($reviewing, $slot, $thispageurl),
                 $this->get_question_number($slot));
     }
 
@@ -1269,30 +1270,39 @@ class quiz_attempt {
 
     /**
      * Check this attempt, to see if there are any state transitions that should
-     * happen automatically.
+     * happen automatically.  This function will update the attempt checkstatetime.
      * @param int $timestamp the timestamp that should be stored as the modifed
      * @param bool $studentisonline is the student currently interacting with Moodle?
      */
     public function handle_if_time_expired($timestamp, $studentisonline) {
         global $DB;
 
-        $timeleft = $this->get_access_manager($timestamp)->get_time_left($this->attempt, $timestamp);
+        $timeclose = $this->get_access_manager($timestamp)->get_end_time($this->attempt);
 
-        if ($timeleft === false || $timeleft > 0) {
+        if ($timeclose === false || $this->is_preview()) {
+            $this->update_timecheckstate(null);
+            return; // No time limit
+        }
+        if ($timestamp < $timeclose) {
+            $this->update_timecheckstate($timeclose);
             return; // Time has not yet expired.
         }
 
         // If the attempt is already overdue, look to see if it should be abandoned ...
         if ($this->attempt->state == self::OVERDUE) {
-            $timeoverdue = -$timeleft;
-            if ($timeoverdue > $this->quizobj->get_quiz()->graceperiod) {
+            $timeoverdue = $timestamp - $timeclose;
+            $graceperiod = $this->quizobj->get_quiz()->graceperiod;
+            if ($timeoverdue >= $graceperiod) {
                 $this->process_abandon($timestamp, $studentisonline);
+            } else {
+                // Overdue time has not yet expired
+                $this->update_timecheckstate($timeclose + $graceperiod);
             }
-
             return; // ... and we are done.
         }
 
         if ($this->attempt->state != self::IN_PROGRESS) {
+            $this->update_timecheckstate(null);
             return; // Attempt is already in a final state.
         }
 
@@ -1311,6 +1321,10 @@ class quiz_attempt {
                 $this->process_abandon($timestamp, $studentisonline);
                 return;
         }
+
+        // This is an overdue attempt with no overdue handling defined, so just abandon.
+        $this->process_abandon($timestamp, $studentisonline);
+        return;
     }
 
     /**
@@ -1345,6 +1359,23 @@ class quiz_attempt {
     }
 
     /**
+     * Process all the autosaved data that was part of the current request.
+     *
+     * @param int $timestamp the timestamp that should be stored as the modifed
+     * time in the database for these actions. If null, will use the current time.
+     */
+    public function process_auto_save($timestamp) {
+        global $DB;
+
+        $transaction = $DB->start_delegated_transaction();
+
+        $this->quba->process_all_autosaves($timestamp);
+        question_engine::save_questions_usage_by_activity($this->quba);
+
+        $transaction->allow_commit();
+    }
+
+    /**
      * Update the flagged state for all question_attempts in this usage, if their
      * flagged state was changed in the request.
      */
@@ -1373,6 +1404,7 @@ class quiz_attempt {
         $this->attempt->timefinish = $timestamp;
         $this->attempt->sumgrades = $this->quba->get_total_mark();
         $this->attempt->state = self::FINISHED;
+        $this->attempt->timecheckstate = null;
         $DB->update_record('quiz_attempts', $this->attempt);
 
         if (!$this->is_preview()) {
@@ -1389,6 +1421,18 @@ class quiz_attempt {
     }
 
     /**
+     * Update this attempt timecheckstate if necessary.
+     * @param int|null the timecheckstate
+     */
+    public function update_timecheckstate($time) {
+        global $DB;
+        if ($this->attempt->timecheckstate !== $time) {
+            $this->attempt->timecheckstate = $time;
+            $DB->set_field('quiz_attempts', 'timecheckstate', $time, array('id'=>$this->attempt->id));
+        }
+    }
+
+    /**
      * Mark this attempt as now overdue.
      * @param int $timestamp the time to deem as now.
      * @param bool $studentisonline is the student currently interacting with Moodle?
@@ -1399,6 +1443,9 @@ class quiz_attempt {
         $transaction = $DB->start_delegated_transaction();
         $this->attempt->timemodified = $timestamp;
         $this->attempt->state = self::OVERDUE;
+        // If we knew the attempt close time, we could compute when the graceperiod ends.
+        // Instead we'll just fix it up through cron.
+        $this->attempt->timecheckstate = $timestamp;
         $DB->update_record('quiz_attempts', $this->attempt);
 
         $this->fire_state_transition_event('quiz_attempt_overdue', $timestamp);
@@ -1417,6 +1464,7 @@ class quiz_attempt {
         $transaction = $DB->start_delegated_transaction();
         $this->attempt->timemodified = $timestamp;
         $this->attempt->state = self::ABANDONED;
+        $this->attempt->timecheckstate = null;
         $DB->update_record('quiz_attempts', $this->attempt);
 
         $this->fire_state_transition_event('quiz_attempt_abandoned', $timestamp);

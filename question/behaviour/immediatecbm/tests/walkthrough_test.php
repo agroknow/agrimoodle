@@ -60,7 +60,7 @@ class qbehaviour_immediatecbm_walkthrough_test extends qbehaviour_walkthrough_te
                 $this->get_does_not_contain_feedback_expectation());
         $this->assertEquals('A [' . question_cbm::get_string(question_cbm::HIGH) . ']',
                 $this->quba->get_right_answer_summary($this->slot));
-        $this->assertRegExp('/' . preg_quote($mc->questiontext) . '/',
+        $this->assertRegExp('/' . preg_quote($mc->questiontext, '/') . '/',
                 $this->quba->get_question_summary($this->slot));
         $this->assertNull($this->quba->get_response_summary($this->slot));
 
@@ -109,14 +109,14 @@ class qbehaviour_immediatecbm_walkthrough_test extends qbehaviour_walkthrough_te
                 $this->get_contains_correct_expectation());
 
         // Process a manual comment.
-        $this->manual_grade('Not good enough!', 0.5);
+        $this->manual_grade('Not good enough!', 0.5, FORMAT_HTML);
 
         // Verify.
         $this->check_current_state(question_state::$mangrpartial);
         $this->check_current_mark(0.5);
         $this->check_current_output(
                 $this->get_contains_partcorrect_expectation(),
-                new question_pattern_expectation('/' . preg_quote('Not good enough!') . '/'));
+                new question_pattern_expectation('/' . preg_quote('Not good enough!', '/') . '/'));
 
         // Now change the correct answer to the question, and regrade.
         $mc->answers[13]->fraction = -0.33333333;
@@ -176,14 +176,14 @@ class qbehaviour_immediatecbm_walkthrough_test extends qbehaviour_walkthrough_te
                 $this->get_contains_mc_radio_expectation(2, false, false));
 
         // Process a manual comment.
-        $this->manual_grade('Not good enough!', 0.5);
+        $this->manual_grade('Not good enough!', 0.5, FORMAT_HTML);
 
         // Verify.
         $this->check_current_state(question_state::$mangrpartial);
         $this->check_current_mark(0.5);
         $this->check_current_output(
                 $this->get_contains_partcorrect_expectation(),
-                new question_pattern_expectation('/' . preg_quote('Not good enough!') . '/'));
+                new question_pattern_expectation('/' . preg_quote('Not good enough!', '/') . '/'));
     }
 
     public function test_immediatecbm_feedback_shortanswer_try_to_submit_no_certainty() {

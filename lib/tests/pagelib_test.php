@@ -187,7 +187,10 @@ class moodle_page_test extends advanced_testcase {
     }
 
     public function test_pagetype_defaults_to_script() {
+        global $SCRIPT;
         // Exercise SUT and validate
+        $SCRIPT = '/index.php';
+        $this->testpage->initialise_default_pagetype();
         $this->assertEquals('site-index', $this->testpage->pagetype);
     }
 
@@ -377,26 +380,31 @@ class moodle_page_categories_test extends advanced_testcase {
     }
 
     public function test_set_category_top_level() {
+        global $DB;
         // Setup fixture
         $cat = $this->getDataGenerator()->create_category();
+        $catdbrecord = $DB->get_record('course_categories', array('id' => $cat->id));
         // Exercise SUT
         $this->testpage->set_category_by_id($cat->id);
         // Validate
-        $this->assertEquals($cat, $this->testpage->category);
+        $this->assertEquals($catdbrecord, $this->testpage->category);
         $this->assertSame(context_coursecat::instance($cat->id), $this->testpage->context);
     }
 
     public function test_set_nested_categories() {
+        global $DB;
         // Setup fixture
         $topcat = $this->getDataGenerator()->create_category();
+        $topcatdbrecord = $DB->get_record('course_categories', array('id' => $topcat->id));
         $subcat = $this->getDataGenerator()->create_category(array('parent'=>$topcat->id));
+        $subcatdbrecord = $DB->get_record('course_categories', array('id' => $subcat->id));
         // Exercise SUT
         $this->testpage->set_category_by_id($subcat->id);
         // Validate
         $categories = $this->testpage->categories;
         $this->assertEquals(2, count($categories));
-        $this->assertEquals($topcat, array_pop($categories));
-        $this->assertEquals($subcat, array_pop($categories));
+        $this->assertEquals($topcatdbrecord, array_pop($categories));
+        $this->assertEquals($subcatdbrecord, array_pop($categories));
     }
 }
 

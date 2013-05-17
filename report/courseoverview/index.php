@@ -33,7 +33,7 @@ $numcourses = optional_param('numcourses', 20, PARAM_INT);
 
 if (empty($CFG->enablestats)) {
     if (has_capability('moodle/site:config', context_system::instance())) {
-        redirect("$CFG->wwwroot/$CFG->admin/settings.php?section=stats", get_string('mustenablestats', 'admin'), 3);
+        redirect("$CFG->wwwroot/$CFG->admin/search.php?query=enablestats", get_string('mustenablestats', 'admin'), 3);
     } else {
         print_error('statsdisable');
     }
@@ -113,11 +113,7 @@ if (!empty($report) && !empty($time)) {
         echo '</td></tr></table>';
 
     } else {
-        if (empty($CFG->gdversion)) {
-            echo '<div class="graph">(' . get_string("gdneed") .')</div>';
-        } else {
-            echo '<div class="graph"><img alt="'.get_string('courseoverviewgraph').'" src="'.$CFG->wwwroot.'/report/courseoverview/reportsgraph.php?time='.$time.'&report='.$report.'&numcourses='.$numcourses.'" /></div>';
-        }
+        echo '<div class="graph"><img alt="'.get_string('courseoverviewgraph').'" src="'.$CFG->wwwroot.'/report/courseoverview/reportsgraph.php?time='.$time.'&report='.$report.'&numcourses='.$numcourses.'" /></div>';
 
         $table = new html_table();
         $table->align = array('left','center','center','center');

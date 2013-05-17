@@ -279,10 +279,10 @@ class core_admin_renderer extends plugin_renderer_base {
             $output .= $this->output->container(get_string('updatepluginconfirmexternal', 'core_plugin', $repotype), 'updatepluginconfirmexternal');
         }
 
-        $widget = $deployer->make_execution_widget($data['updateinfo']);
+        $widget = $deployer->make_execution_widget($data['updateinfo'], $data['returnurl']);
         $output .= $this->output->render($widget);
 
-        $output .= $this->output->single_button($data['returnurl'], get_string('cancel', 'core'), 'get');
+        $output .= $this->output->single_button($data['callerurl'], get_string('cancel', 'core'), 'get');
 
         $output .= $this->container_end();
         $output .= $this->footer();
@@ -367,6 +367,88 @@ class core_admin_renderer extends plugin_renderer_base {
 
         $output .= $this->box($this->plugins_control_panel($pluginman, $options), 'generalbox');
         $output .= $this->footer();
+
+        return $output;
+    }
+
+    /**
+     * Display a page to confirm the plugin uninstallation.
+     *
+     * @param plugin_manager $pluginman
+     * @param plugin_info $pluginfo
+     * @param moodle_url $continueurl URL to continue after confirmation
+     * @return string
+     */
+    public function plugin_uninstall_confirm_page(plugin_manager $pluginman, plugininfo_base $pluginfo, moodle_url $continueurl) {
+        $output = '';
+
+        $pluginname = $pluginman->plugin_name($pluginfo->component);
+
+        $output .= $this->output->header();
+        $output .= $this->output->heading(get_string('uninstalling', 'core_plugin', array('name' => $pluginname)));
+        $output .= $this->output->confirm(get_string('uninstallconfirm', 'core_plugin', array('name' => $pluginname)),
+            $continueurl, $this->page->url);
+        $output .= $this->output->footer();
+
+        return $output;
+    }
+
+    /**
+     * Display a page with results of plugin uninstallation and offer removal of plugin files.
+     *
+     * @param plugin_manager $pluginman
+     * @param plugin_info $pluginfo
+     * @param progress_trace_buffer $progress
+     * @param moodle_url $continueurl URL to continue to remove the plugin folder
+     * @return string
+     */
+    public function plugin_uninstall_results_removable_page(plugin_manager $pluginman, plugininfo_base $pluginfo,
+                                                            progress_trace_buffer $progress, moodle_url $continueurl) {
+        $output = '';
+
+        $pluginname = $pluginman->plugin_name($pluginfo->component);
+
+        $output .= $this->output->header();
+        $output .= $this->output->heading(get_string('uninstalling', 'core_plugin', array('name' => $pluginname)));
+
+        $output .= $this->output->box($progress->get_buffer(), 'generalbox uninstallresultmessage');
+
+        $confirm = $this->output->container(get_string('uninstalldeleteconfirm', 'core_plugin',
+            array('name' => $pluginname, 'rootdir' => $pluginfo->rootdir)), 'uninstalldeleteconfirm');
+
+        if ($repotype = $pluginman->plugin_external_source($pluginfo->component)) {
+            $confirm .= $this->output->container(get_string('uninstalldeleteconfirmexternal', 'core_plugin', $repotype),
+                'uninstalldeleteconfirmexternal');
+        }
+
+        $output .= $this->output->confirm($confirm, $continueurl, $this->page->url);
+        $output .= $this->output->footer();
+
+        return $output;
+    }
+
+    /**
+     * Display a page with results of plugin uninstallation and inform about the need to remove plugin files manually.
+     *
+     * @param plugin_manager $pluginman
+     * @param plugin_info $pluginfo
+     * @param progress_trace_buffer $progress
+     * @return string
+     */
+    public function plugin_uninstall_results_page(plugin_manager $pluginman, plugininfo_base $pluginfo, progress_trace_buffer $progress) {
+        $output = '';
+
+        $pluginname = $pluginman->plugin_name($pluginfo->component);
+
+        $output .= $this->output->header();
+        $output .= $this->output->heading(get_string('uninstalling', 'core_plugin', array('name' => $pluginname)));
+
+        $output .= $this->output->box($progress->get_buffer(), 'generalbox uninstallresultmessage');
+
+        $output .= $this->output->box(get_string('uninstalldelete', 'core_plugin',
+            array('name' => $pluginname, 'rootdir' => $pluginfo->rootdir)), 'generalbox uninstalldelete');
+        $output .= $this->output->continue_button($this->page->url);
+        $output .= $this->output->footer();
 
         return $output;
     }
@@ -599,7 +681,8 @@ class core_admin_renderer extends plugin_renderer_base {
         }
 
         $updateinfo .= $this->container_start('checkforupdates');
-        $updateinfo .= $this->single_button(new moodle_url($this->page->url, array('fetchupdates' => 1)), get_string('checkforupdates', 'core_plugin'));
+        $fetchurl = new moodle_url('/admin/index.php', array('fetchupdates' => 1, 'sesskey' => sesskey(), 'cache' => 1));
+        $updateinfo .= $this->single_button($fetchurl, get_string('checkforupdates', 'core_plugin'));
         if ($fetch) {
             $updateinfo .= $this->container(get_string('checkforupdateslast', 'core_plugin',
                 userdate($fetch, get_string('strftimedatetime', 'core_langconfig'))));
@@ -691,7 +774,7 @@ class core_admin_renderer extends plugin_renderer_base {
     function upgrade_reload($url) {
         return html_writer::empty_tag('br') .
                 html_writer::tag('div',
-                    html_writer::link($url, $this->pix_icon('i/reload', '') .
+                    html_writer::link($url, $this->pix_icon('i/reload', '', '', array('class' => 'icon icon-pre')) .
                             get_string('reload'), array('title' => get_string('reload'))),
                 array('class' => 'continuebutton')) . html_writer::empty_tag('br');
     }
@@ -814,7 +897,7 @@ class core_admin_renderer extends plugin_renderer_base {
                         continue;
                     }
 
-                } else if ($isstandard and $statusisboring and $dependenciesok and empty($availableupdates)) {
+                } else if ($statusisboring and $dependenciesok and empty($availableupdates)) {
                     // no change is going to happen to the plugin - display it only
                     // if the user wants to see the full list
                     if (empty($options['full'])) {
@@ -1065,22 +1148,23 @@ class core_admin_renderer extends plugin_renderer_base {
             get_string('actions', 'core_plugin'),
             get_string('notes','core_plugin'),
         );
+        $table->headspan = array(1, 1, 1, 1, 2, 1);
         $table->colclasses = array(
-            'pluginname', 'source', 'version', 'availability', 'actions', 'notes'
+            'pluginname', 'source', 'version', 'availability', 'settings', 'uninstall', 'notes'
         );
 
         foreach ($plugininfo as $type => $plugins) {
 
             $header = new html_table_cell($pluginman->plugintype_name_plural($type));
             $header->header = true;
-            $header->colspan = count($table->head);
+            $header->colspan = array_sum($table->headspan);
             $header = new html_table_row(array($header));
             $header->attributes['class'] = 'plugintypeheader type-' . $type;
             $table->data[] = $header;
 
             if (empty($plugins)) {
                 $msg = new html_table_cell(get_string('noneinstalled', 'core_plugin'));
-                $msg->colspan = count($table->head);
+                $msg->colspan = array_sum($table->headspan);
                 $row = new html_table_row(array($msg));
                 $row->attributes['class'] .= 'msg msg-noneinstalled';
                 $table->data[] = $row;
@@ -1092,17 +1176,20 @@ class core_admin_renderer extends plugin_renderer_base {
                 $row->attributes['class'] = 'type-' . $plugin->type . ' name-' . $plugin->type . '_' . $plugin->name;
 
                 if ($this->page->theme->resolve_image_location('icon', $plugin->type . '_' . $plugin->name)) {
-                    $icon = $this->output->pix_icon('icon', '', $plugin->type . '_' . $plugin->name, array('class' => 'smallicon pluginicon'));
+                    $icon = $this->output->pix_icon('icon', '', $plugin->type . '_' . $plugin->name, array('class' => 'icon pluginicon'));
                 } else {
-                    $icon = $this->output->pix_icon('spacer', '', 'moodle', array('class' => 'smallicon pluginicon noicon'));
+                    $icon = $this->output->pix_icon('spacer', '', 'moodle', array('class' => 'icon pluginicon noicon'));
                 }
-                if ($plugin->get_status() === plugin_manager::PLUGIN_STATUS_MISSING) {
-                    $msg = html_writer::tag('span', get_string('status_missing', 'core_plugin'), array('class' => 'notifyproblem'));
-                    $row->attributes['class'] .= ' missingfromdisk';
+                $status = $plugin->get_status();
+                $row->attributes['class'] .= ' status-'.$status;
+                if ($status === plugin_manager::PLUGIN_STATUS_MISSING) {
+                    $msg = html_writer::tag('span', get_string('status_missing', 'core_plugin'), array('class' => 'statusmsg'));
+                } else if ($status === plugin_manager::PLUGIN_STATUS_NEW) {
+                    $msg = html_writer::tag('span', get_string('status_new', 'core_plugin'), array('class' => 'statusmsg'));
                 } else {
                     $msg = '';
                 }
-                $pluginname  = html_writer::tag('div', $icon . ' ' . $plugin->displayname . ' ' . $msg, array('class' => 'displayname')).
+                $pluginname  = html_writer::tag('div', $icon . '' . $plugin->displayname . ' ' . $msg, array('class' => 'displayname')).
                                html_writer::tag('div', $plugin->component, array('class' => 'componentname'));
                 $pluginname  = new html_table_cell($pluginname);
 
@@ -1127,19 +1214,21 @@ class core_admin_renderer extends plugin_renderer_base {
                     $availability = new html_table_cell(get_string('plugindisabled', 'core_plugin'));
                 }
 
-                $actions = array();
-
                 $settingsurl = $plugin->get_settings_url();
                 if (!is_null($settingsurl)) {
-                    $actions[] = html_writer::link($settingsurl, get_string('settings', 'core_plugin'), array('class' => 'settings'));
+                    $settings = html_writer::link($settingsurl, get_string('settings', 'core_plugin'), array('class' => 'settings'));
+                } else {
+                    $settings = '';
                 }
+                $settings = new html_table_cell($settings);
 
-                $uninstallurl = $plugin->get_uninstall_url();
-                if (!is_null($uninstallurl)) {
-                    $actions[] = html_writer::link($uninstallurl, get_string('uninstall', 'core_plugin'), array('class' => 'uninstall'));
+                if ($pluginman->can_uninstall_plugin($plugin->component)) {
+                    $uninstallurl = $plugin->get_uninstall_url();
+                    $uninstall = html_writer::link($uninstallurl, get_string('uninstall', 'core_plugin'));
+                } else {
+                    $uninstall = '';
                 }
-
-                $actions = new html_table_cell(implode(html_writer::tag('span', ' ', array('class' => 'separator')), $actions));
+                $uninstall = new html_table_cell($uninstall);
 
                 $requriedby = $pluginman->other_plugins_that_require($plugin->component);
                 if ($requriedby) {
@@ -1159,7 +1248,7 @@ class core_admin_renderer extends plugin_renderer_base {
                 $notes = new html_table_cell($requiredby.$updateinfo);
 
                 $row->cells = array(
-                    $pluginname, $source, $version, $availability, $actions, $notes
+                    $pluginname, $source, $version, $availability, $settings, $uninstall, $notes
                 );
                 $table->data[] = $row;
             }
@@ -1211,8 +1300,13 @@ class core_admin_renderer extends plugin_renderer_base {
             if (empty($impediments)) {
                 $widget = $deployer->make_confirm_widget($updateinfo);
                 $box .= $this->output->render($widget);
-            } else if (isset($impediments['notwritable'])) {
-                $box .= $this->output->help_icon('notwritable', 'core_plugin', get_string('notwritable', 'core_plugin'));
+            } else {
+                if (isset($impediments['notwritable'])) {
+                    $box .= $this->output->help_icon('notwritable', 'core_plugin', get_string('notwritable', 'core_plugin'));
+                }
+                if (isset($impediments['notdownloadable'])) {
+                    $box .= $this->output->help_icon('notdownloadable', 'core_plugin', get_string('notdownloadable', 'core_plugin'));
+                }
             }
         }
 
@@ -1240,10 +1334,9 @@ class core_admin_renderer extends plugin_renderer_base {
             get_string('report'),
             get_string('status'),
         );
-        $servertable->align = array('center', 'center', 'left', 'center');
-        $servertable->wrap  = array('nowrap', '', '', 'nowrap');
-        $servertable->size  = array('10', 10, '100%', '10');
-        $servertable->attributes['class'] = 'environmenttable generaltable';
+        $servertable->colclasses = array('centeralign name', 'centeralign status', 'leftalign report', 'centeralign info');
+        $servertable->attributes['class'] = 'admintable environmenttable generaltable';
+        $servertable->id = 'serverstatus';
 
         $serverdata = array('ok'=>array(), 'warn'=>array(), 'error'=>array());
 
@@ -1253,10 +1346,9 @@ class core_admin_renderer extends plugin_renderer_base {
             get_string('report'),
             get_string('status'),
         );
-        $othertable->align = array('center', 'left', 'center');
-        $othertable->wrap  = array('', '', 'nowrap');
-        $othertable->size  = array(10, '100%', '10');
-        $othertable->attributes['class'] = 'environmenttable generaltable';
+        $othertable->colclasses = array('aligncenter info', 'alignleft report', 'aligncenter status');
+        $othertable->attributes['class'] = 'admintable environmenttable generaltable';
+        $othertable->id = 'otherserverstatus';
 
         $otherdata = array('ok'=>array(), 'warn'=>array(), 'error'=>array());
 

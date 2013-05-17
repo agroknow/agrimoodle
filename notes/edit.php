@@ -70,9 +70,13 @@ if ($noteform->is_cancelled()) {
 
 /// if data was submitted and validated, then save it to database
 if ($note = $noteform->get_data()){
-    if (note_save($note)) {
-        add_to_log($note->courseid, 'notes', 'update', 'index.php?course='.$note->courseid.'&amp;user='.$note->userid . '#note-' . $note->id, 'update note');
+    if ($noteid) {
+        // A noteid has been used, we don't allow editing of course or user so
+        // lets unset them to be sure we never change that by accident.
+        unset($note->courseid);
+        unset($note->userid);
     }
+    note_save($note);
     // redirect to notes list that contains this note
     redirect($CFG->wwwroot . '/notes/index.php?course=' . $note->courseid . '&amp;user=' . $note->userid);
 }
