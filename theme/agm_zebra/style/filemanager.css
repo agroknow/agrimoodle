@@ -1,0 +1,38 @@
+/*
+  This file is part of Moodle - http://moodle.org/
+  Moodle is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Moodle is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  You should have received a copy of the GNU General Public License
+  along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+/**
+ * zebra theme filemanager css file
+ *
+ * @package    theme_zebra
+ * @copyright  2011 Danny Wahl
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+.filemanager, .file-picker {
+    color: [[setting:fontcolor]];
+}
+
+.filemanager .fp-navbar {
+    border-color: [[setting:bodybgcolor]];
+}
+
+#dndupload-status {
+    width: 100%;
+    border: 0 none;
+    border-bottom: 1px solid [[setting:bodybgcolor]];
+    padding: 4px;
+    background: [[setting:contentbgcolor]];
+}

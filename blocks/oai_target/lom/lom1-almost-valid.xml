@@ -1,0 +1,98 @@
+<lom xmlns="http://ltsc.ieee.org/xsd/LOM" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://ltsc.ieee.org/xsd/LOM        http://ltsc.ieee.org/xsd/lomv1.0/lomLoose.xsd">
+  <general>
+    <identifier>
+      <catalog>URI</catalog>
+      <entry>http://localhost/dev/agrimoodle/course/view.php?id=2</entry>
+    </identifier>
+    <title>
+      <string language="el">Διαχείριση Site</string>
+    </title>
+    <language>el</language>
+    <description>
+      <string language="en">Για τη διαχείριση ενός Site Moodle</string>
+    </description>
+    <keyword>
+      <string language="en" />
+    </keyword>
+    <coverage />
+    <structure>
+      <source>LOMv1.0</source>
+      <value />
+    </structure>
+  </general>
+  <lifeCycle>
+    <status>
+      <source>LOMv1.0</source>
+      <value />
+    </status>
+    <contribute>
+      <role>
+        <source>LOMv1.0</source>
+        <value>content_provider</value>
+      </role>
+      <entity><![CDATA[BEGIN:VCARD VERSION:3.0 ORG:Agro-Know Technologies EMAIL;TYPE=PREF,INTERNET:info@agroknow.gr FN:Forest Gump N:Gump END:VCARD]]></entity>
+    </contribute>
+  </lifeCycle>
+  <metaMetadata>
+    <identifier>
+      <catalog>localhost_course</catalog>
+      <entry>course_2</entry>
+    </identifier>
+    <contribute>
+      <role>
+        <source>LOMv1.0</source>
+        <value>creator</value>
+      </role>
+      <entity><![CDATA[BEGIN:VCARD 4
+      FN:Web Master 
+      ORG: 
+      EMAIL;TYPE=INTERNET:webmaster@agrimoodle.org
+      N:Master;Web VERSION:3.0 
+      END:VCARD]]></entity>
+    </contribute>
+    <metadataSchema>OE AP v3.0</metadataSchema>
+    <language>en</language>
+  </metaMetadata>
+  <technical>
+    <location>http://localhost/dev/agrimoodle/course/view.php?id=2</location>
+  </technical>
+  <educational>
+    <learningResourceType />
+    <interactivityLevel>
+      <source>LREv3.0</source>
+      <value />
+    </interactivityLevel>
+    <semanticDensity>
+      <source>LREv3.0</source>
+      <value />
+    </semanticDensity>
+    <intendedEndUserRole />
+    <context />
+    <difficulty>
+      <source>LREv3.0</source>
+      <value />
+    </difficulty>
+    <description>
+      <string language="en" />
+    </description>
+  </educational>
+  <rights>
+    <cost>
+      <source>LOMv1.0</source>
+      <value />
+    </cost>
+    <copyrightAndOtherRestrictions>
+      <source>LOMv1.0</source>
+      <value>by_nc_nd</value>
+    </copyrightAndOtherRestrictions>
+    <description>
+      <string />
+    </description>
+  </rights>
+  <classification>
+    <purpose>
+      <value />
+    </purpose>
+  </classification>
+</lom>
+

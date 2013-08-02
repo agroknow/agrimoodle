@@ -33,22 +33,6 @@
  */
 function agm_zebra_process_css($css, $theme) {
 
-    //Get the path to the logo url from settings
-    if (!empty($theme->settings->logourl)) {
-        $logourl = $theme->settings->logourl;
-    } else {
-        $logourl = null;
-    }
-    $css = agm_zebra_set_logourl($css, $logourl);
-
-    //Get the minimum header height from settings
-    if (!empty($theme->settings->logourlheight)) {
-        $logourlheight = $theme->settings->logourlheight;
-    } else {
-        $logourlheight = null;
-    }
-    $css = agm_zebra_set_logourlheight($css, $logourlheight);
-
     //Get the path to the background url from settings
     if (!empty($theme->settings->backgroundurl)) {
         $backgroundurl = $theme->settings->backgroundurl;
@@ -298,56 +282,7 @@ function agm_zebra_process_css($css, $theme) {
 };
 
 /**
- * Sets the logo url for the header
- *
- * @param string $css
- * @param mixed $logourl
- * @return string
- */
-function agm_zebra_set_logourl($css, $logourl) {
-    global $OUTPUT;
-    $tag = '[[setting:logourl]]';
-    if (is_null($logourl)) {
-        $replacement = $OUTPUT->pix_url('logo/logo', 'theme'); //Default image
-    }
-    else {
-       $protocol = '://';
-        $ntp = strpos($logourl, $protocol); // Check to see if a networking protocol is used
-        if($ntp === false) { // No networking protocol used
-            $relative = '/';
-            $rel = strpos($logourl, $relative); // Check to see if a relative path is used
-            if($rel !== 0) { // Doesn't start with a slash
-                $replacement = $OUTPUT->pix_url("$logourl", 'theme'); // Using Moodle output
-            } else {
-                $replacement = $logourl;
-            }
-        } else {
-            $replacement = $logourl;
-        }
-    }
-    $css = str_replace($tag, $replacement, $css);
-    return $css;
-}
 
-/**
- * Sets the minimum height for the header
- *
- * @param string $css
- * @param mixed $logourlheight
- * @return string
- */
-function agm_zebra_set_logourlheight($css, $logourlheight) {
-    $tag = '[[setting:logourlheight]]';
-    if (is_null($logourlheight)) {
-        $replacement = "100px"; //Default height
-    } else {
-        $replacement = $logourlheight; //Height from Settings Page
-    }
-    $css = str_replace($tag, $replacement, $css);
-    return $css;
-}
-
-/**
  * Sets the body background image url
  *
  * @param string $css
@@ -952,81 +887,18 @@ function agm_zebra_set_doublecolwidth($css, $colwidth) {
  * @return string
  */
 function agm_zebra_set_useautohide($css, $useautohide, $hovercolor) {
+	global $CFG;
+	if (!empty($CFG->themedir)) {
+		$autohide = $CFG->themedir . '/' . current_theme() . '/style/autohide.css'; //Pull the full path for autohide css
+	} else {
+		$autohide = $CFG->dirroot . '/theme/' . current_theme() . '/style/autohide.css'; //MDL-36065
+	}
     $tag = '[[setting:useautohide]]';
     if ($useautohide) { //Setting is "YES"
         if (is_null($hovercolor)) { //Get the value from the settings page
             $hovercolor = '#91979F';
         }
-        $rules = '
-            .editing h3.sectionname {
-                margin: 0; /* Swap the margin for padding for the hover rules below */
-                padding: 1em 0;
-            }
-
-            .editing .block_site_main_menu .urlselect select {
-                max-width: 86%; /* Keep the "Add Resources and Add Activity" Dropdowns in the block */
-            }
-
-            .editing .block .title .commands, /* Block Title Controls */
-            .editing .block .content li .commands, /* Command in block content */
-            .editing .block .editbutton,
-            .editing .block .section_add_menus, /* Add Resource/Activity dropdowns in blocks */
-            .editing .section .left a, /* Move Controls */
-            .editing .section .right a, /* Right Side Visibility Controls */
-            .editing .section .right div,
-            .editing .section .summary a[title~="Edit"], /* Edit Section Summary */
-            .editing .section .section_add_menus, /* Add Resource/Activity dropdowns */
-            .editing .section .activity .commands, /* Individual activity and resource controls */
-            .editing .sitetopic > .no-overflow + a,
-            .editing .sitetopic .section_add_menus /* Front Page Site Topic Add resource/activity dropdowns */ {
-                visibility: hidden;
-                filter: alpha(opacity=0);
-                opacity: 0;
-                -webkit-transition: opacity 0.5s linear 0s;
-                -moz-transition: opacity 0.5s linear 0s;
-                -ms-transition: opacity 0.5s linear 0s;
-                -o-transition: opacity 0.5s linear 0s;
-                transition: opacity 0.5s linear 0s; /* half-second fade in */
-            }
-
-            .editing .block:hover .title .commands,
-            .editing .block .content li:hover .commands,
-            .editing .block:hover .editbutton,
-            .editing .block:hover .section_add_menus,
-            .editing .section:hover .left a,
-            .editing .section:hover .right a,
-            .editing .section:hover .right div,
-            .editing .section .summary:hover a,
-            .editing .section .sectionname:hover + .summary a,
-            .editing .section:hover .section_add_menus,
-            .editing .section .activity:hover .commands,
-            .editing .sitetopic:hover > .no-overflow + a,
-            .editing .sitetopic:hover .section_add_menus {
-                visibility: visible;
-                filter: none;
-                opacity: 1;
-            }
-
-            .editing .block_site_main_menu .content .r0, /* Site Main Menu Resources/Activities */
-            .editing .block_site_main_menu .content .r1,
-            .editing .block_course_summary .no-overflow,
-            .editing .section .activity,
-            .editing .section .summary,
-            .editing .sitetopic > .no-overflow {
-                padding: 4px!important; /* Add some padding for the hover rules below, !important is necessary to override a rule from "Base" */
-                border: 1px dashed transparent; /* Transparent border to prevent items from moving when showing border */
-            }
-
-            .editing.can_edit .block_site_main_menu .content .r0:hover,
-            .editing.can_edit .block_site_main_menu .content .r1:hover,
-            .editing.can_edit .block_course_summary .no-overflow:hover,
-            .editing .section .activity:hover,
-            .editing .section .summary:hover,
-            .editing .section .sectionname:hover + .summary,
-            .editing.can_edit .sitetopic > .no-overflow:hover {
-                border-color: ' . $hovercolor . '; /* Change the border color around individual activities/resource/summaries */
-            }
-        ';
+        $rules = file_get_contents($autohide);
         $replacement = $rules;
     } else { //Setting is "NO"
         $replacement = null; //NULL so we don't actually output anything to the stylesheet

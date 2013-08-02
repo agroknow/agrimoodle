@@ -31,22 +31,29 @@ require_once('header.php'); ?>
         <div id="page-inner-wrapper">
             <div id="page-header-wrapper">
                 <div id="page-header" class="clearfix">
-                    <h1 class="headermain"><?php echo $headeralt; ?></h1>
+                    <div class="headermain">
+                    	<?php if($haslogo) {
+                    	    echo $logo;
+                    	}
+                    	if (!$simplelogin) { ?>
+                    		<h1 class="header"><?php echo $headeralt; ?></h1>
+                    	<?php } ?>
+                    </div>
+                    <?php if (!$simplelogin) { ?>
                     <div id="profileblock">
-			<?php if ($haslogininfo) {
-			    if (isloggedin()) {
-				if ($showuserpic) {
+							<?php if (($haslogininfo) && (isloggedin()) && ($showuserpic)) {
 				    echo html_writer::tag('div', $OUTPUT->user_picture($USER, array('size'=>80)), array('id'=>'user-pic'));
 
-				}
-			    }
-                            echo $OUTPUT->login_info();
-			}
+							} ?>
+							<div id="user-info">
+								<?php echo $OUTPUT->login_info();
 			if ($haslangmenu) {
 			    echo $OUTPUT->lang_menu();
 			}
 			echo $PAGE->headingmenu; ?>
                     </div>
+	                    </div>
+                    <?php } ?>
                 </div>
                 <div id="page-border-wrapper">
                     <?php if ($hascustommenu) { ?>
@@ -77,7 +84,12 @@ require_once('header.php'); ?>
                                     <div id="region-main-wrap">
                                         <div id="region-main">
                                             <div class="region-content">
-                                                <?php echo $OUTPUT->main_content(); ?>
+                                            	<?php if (!empty($courseheader)) { 
+                                            		echo '<div id="course-header">' . $courseheader . '</div>';
+                                            	}
+                                            	echo $coursecontentheader;
+                                                echo $maincontent;
+                                                echo $coursecontentfooter; ?>
                                             </div>
                                         </div>
                                     </div>

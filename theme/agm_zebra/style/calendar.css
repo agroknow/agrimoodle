@@ -67,6 +67,13 @@
 	border: 2px solid [[setting:caluser]];
 }
 
+.path-calendar .maincalendar .eventlist .event .calendar_event_course:empty,
+.path-calendar .maincalendar .eventlist .event .calendar_event_global:empty,
+.path-calendar .maincalendar .eventlist .event .calendar_event_group:empty,
+.path-calendar .maincalendar .eventlist .event .calendar_event_user:empty {
+    border: 0 none;
+}
+
 .block .minicalendar {
 	margin: 4px 0 0 0;
 }

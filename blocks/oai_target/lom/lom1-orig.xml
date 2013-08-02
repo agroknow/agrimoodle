@@ -1,0 +1,101 @@
+<lom
+       xmlns="http://ltsc.ieee.org/xsd/LOM"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://ltsc.ieee.org/xsd/LOM
+       http://ltsc.ieee.org/xsd/lomv1.0/lomLoose.xsd">
+          <general>
+           <identifier>
+              <catalog>URI</catalog>
+              <entry>http://localhost/dev/agrimoodle/course/view.php?id=2</entry>
+            </identifier>            <title>
+<string language="el">Διαχείριση Site</string>
+            </title>
+<language>el</language>
+<description>
+<string language="en">Για τη διαχείριση ενός Site Moodle</string>
+</description>
+<keyword>
+<string language="en"></string>
+</keyword>
+<coverage></coverage>
+<structure>
+<source>LOMv1.0</source>
+<value></value>
+</structure>
+</general>
+<lifeCycle>
+<status>
+<source>LOMv1.0</source>
+<value></value>
+</status>
+<contribute>
+<role>
+<source>LOMv1.0</source>
+<value>content_provider</value>
+</role>
+<entity><![CDATA[BEGIN:VCARD FN:  ORG:Agro-Know Technologies EMAIL;TYPE=INTERNET: N:; VERSION:3.0 END:VCARD]]></entity>
+</contribute>
+</lifeCycle>
+<metaMetadata>
+<identifier>
+<catalog>_course</catalog>
+<entry>course_2</entry>
+</identifier>
+<contribute>
+<role>
+<source>LOMv1.0</source>
+<value>creator</value>
+</role>
+<entity><![CDATA[BEGIN:VCARD FN:Web Master ORG: EMAIL;TYPE=INTERNET:webmaster@agrimoodle.org N:Master;Web VERSION:3.0 END:VCARD]]></entity>
+<date>
+<dateTime>2012-09-27T00:00:00.00Z</dateTime>
+</date>
+</contribute>
+<metadataSchema>OE AP v3.0</metadataSchema>
+<language>en</language>
+</metaMetadata>
+    <technical>
+        <location>    http://localhost/dev/agrimoodle/course/view.php?id=2</location>
+      <format></format>
+      </technical><educational>
+<learningResourceType></learningResourceType>
+<interactivityLevel>
+<source>LREv3.0</source>
+<value></value>
+</interactivityLevel>
+<semanticDensity>
+<source>LREv3.0</source>
+<value></value>
+</semanticDensity>
+<intendedEndUserRole></intendedEndUserRole>
+<context></context>
+<typicalAgeRange></typicalAgeRange>
+<difficulty>
+<source>LREv3.0</source>
+<value></value>
+</difficulty>
+<typicalLearningTime>
+<description></description>
+</typicalLearningTime>
+<description>
+<string language="en"></string>
+</description>
+</educational>
+<rights>
+<cost>
+<source>LOMv1.0</source>
+<value></value>
+</cost>
+<copyrightAndOtherRestrictions>
+<source>LOMv1.0</source>
+<value>by_nc_nd</value>
+</copyrightAndOtherRestrictions>
+<description>
+<string></string>
+</description>
+</rights>
+<classification>
+<purpose>
+<value></value>
+</purpose>
+</classification></lom>

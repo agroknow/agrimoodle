@@ -24,39 +24,6 @@
  */
 
 
-/* Profile Block */
-
-.headermain {
-	position: absolute;
-	bottom: 0;
-	float: none;
-}
-
-#profileblock {
-    position: absolute;
-    bottom: 0;
-    margin-bottom: 7px;
-    text-align: right;
-    width: 100%;
-}
-
-#user-pic {
-    float: right;
-    margin-left: 10px;
-}
-
-#user-pic .userpicture {
-    width: 80px;
-    height: 80px;
-}
-
-#user-pic .defaultuserpic {
-    background-color: [[setting:linkcolor]];
-}
-
-.langmenu {
-	margin-top: 5px;
-}
 
 /* Branding */
 
@@ -68,9 +35,16 @@
 	padding: 0 10px;
 }
 
+/* Add some padding to some areas */
+.editing .block_site_main_menu .content .r0, /* Site Main Menu Resources/Activities */
+.editing .block_site_main_menu .content .r1,
+.editing .block_course_summary .no-overflow,
+.editing .sitetopic > .no-overflow {
+    padding: 4px!important; /* !important is necessary to override a rule from "Base" */
+}
 /**
  * autohide CSS
- * This adds the special autohide css in lib.php if the setting is enabled.
+ * This adds the special autohide css in autohide.css if the setting is enabled.
  */
 
 [[setting:useautohide]]

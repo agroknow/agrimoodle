@@ -1,0 +1,76 @@
+/*
+  This file is part of Moodle - http://moodle.org/
+  Moodle is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Moodle is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  You should have received a copy of the GNU General Public License
+  along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+/**
+ * zebra theme autohide css file
+ *
+ * @package    theme_zebra
+ * @copyright  2011 Danny Wahl
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+.editing h3.sectionname {
+    margin: 0; /* Swap the margin for padding for the hover rules below */
+    padding: 1em 0;
+}
+
+.editing .block_site_main_menu .urlselect select {
+    max-width: 86%; /* Keep the "Add Resources and Add Activity" Dropdowns in the block */
+}
+
+.section_add_menus, /* Add Resource/Activity dropdowns (2.2) */
+.addresourcemodchooser, /* Add Resource/Activity Link (2.3) */
+.editing .block .title .commands .icon, /* Block Title Controls */
+.editing .block .content li .commands a, /* Command in block content (add resources/activities in Main menu) */
+.editing .block .editbutton a, /* Edit button in custom HTML blocks */
+.editing .section .side > *:not(br), /* Section controls (can't use 'a' b/c ajax uses 'span') */
+.editing .section .summary > a, /* Gross - section summaries may contain links */
+.editing .sitetopic > a {
+    filter: alpha(opacity=0);
+    opacity: 0;
+    -webkit-transition: opacity 0.5s linear 0s;
+    -moz-transition: opacity 0.5s linear 0s;
+    -ms-transition: opacity 0.5s linear 0s;
+    -o-transition: opacity 0.5s linear 0s;
+    transition: opacity 0.5s linear 0s; /* half-second fade in */
+}
+
+.editing .section:hover .section_add_menus,
+.editing .block:hover .section_add_menus,
+.editing .sitetopic:hover .section_add_menus,
+.editing .block:hover .addresourcemodchooser,
+.editing .section:hover .addresourcemodchooser,
+.editing .sitetopic:hover .addresourcemodchooser,
+.editing .block:hover .title .commands .icon,
+.editing .block .title .commands .icon:active,
+.editing .block .title .commands .icon:focus,
+.editing .block .content li:hover .commands a,
+.editing .block .content li .commands a:active,
+.editing .block .content li .commands a:focus,
+.editing .block:hover .editbutton a,
+.editing .block .editbutton a:active,
+.editing .block .editbutton a:focus,
+.editing .section:hover .side > *:not(br),
+.editing .section .side > *:active,
+.editing .section .side > *:focus,
+.editing .section:hover .summary > a,
+.editing .section .summary > a:active,
+.editing .section .summary > a:focus,
+.editing .sitetopic:hover > a,
+.editing .sitetopic > a:active,
+.editing .sitetopic > a:focus {
+    filter: none;
+    opacity: 1;
+}

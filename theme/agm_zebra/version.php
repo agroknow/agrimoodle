@@ -22,13 +22,16 @@
  * @package    theme_agm_zebra
  * @copyright  2012 Agro-Know Technologies
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * 
+ * Adopted by theme_zebra
+ * @copyright  2012 Danny Wahl
  */
 
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2012120704;
+$plugin->version   = 2013131401;
 $plugin->component = 'theme_agm_zebra';
 $plugin->requires  = 2011120100;
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release = '2.2.10 (Build: 2012051100)';
+$plugin->release = '2.4.2 (Build: 2013131401)';

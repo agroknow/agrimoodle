@@ -36,6 +36,16 @@ $showsidepre = ($hassidepre && !$PAGE->blocks->region_completely_docked('side-pr
 $showsidepost = ($hassidepost && !$PAGE->blocks->region_completely_docked('side-post', $OUTPUT));
 $custommenu = $OUTPUT->custom_menu();
 $hascustommenu = (empty($PAGE->layout_options['nocustommenu']) && !empty($custommenu) && !$simplelogin); //Check if this page-layout has a custommenu and if it has content
+$courseheader = $coursecontentheader = $coursecontentfooter = $coursefooter = '';
+if (empty($PAGE->layout_options['nocourseheaderfooter'])) {  //Check if we're displaying course specific headers and footers
+    $courseheader = method_exists($OUTPUT, "course_header") ? $OUTPUT->course_header() : NULL; //Course header - Backward compatible for <2.4
+    $coursecontentheader = method_exists($OUTPUT, "course_content_header") ? $OUTPUT->course_content_header() : NULL; //Course content header - Backward compatible for <2.4
+    if (empty($PAGE->layout_options['nocoursefooter'])) { //Chekc if we're displaying course footers
+        $coursefooter = method_exists($OUTPUT, "course_footer") ? $OUTPUT->course_footer() : NULL; //Course footer - Backward compatible for <2.4
+    	$coursecontentfooter = method_exists($OUTPUT, "course_content_footer") ? $OUTPUT->course_content_footer() : NULL; //Course Content Footer - Backward compatible for <2.4
+    }
+}
+$maincontent = method_exists($OUTPUT, "main_content") ? $OUTPUT->main_content() : core_renderer::MAIN_CONTENT_TOKEN; // Main Content - Backward compatible for <2.2
 $bodyclasses = array();
 if ($showsidepre && !$showsidepost) {
     $bodyclasses[] = 'side-pre-only';
@@ -45,9 +55,7 @@ if ($showsidepre && !$showsidepost) {
     $bodyclasses[] = 'content-only';
 }
 $canedit = has_capability('moodle/block:edit', $this->page->context); //See if the user is able to edit here
-// print_object($USER);
-if ($canedit && !empty($USER->editing)) { //If they can edit and they are editing add a class
-//if ($canedit) { //If they can edit and they are editing add a class
+if ($canedit && isset($USER->editing)) { //If they can edit and they are editing add a class
     $bodyclasses[] = 'can_edit'; //Add a .can_edit class to editing mode
 }
 if ($simplelogin) {
@@ -78,6 +86,11 @@ if (!empty($PAGE->theme->settings->headeralt)) {
 } else {
     $headeralt = $PAGE->heading; //Use the default page title if the theme setting value is empty
 }
+$haslogo = (!empty($PAGE->theme->settings->logourl)); //Check if a logo is selected
+if ($haslogo) { //Pass the raw variable to the function to render with pix_url if necessary
+    $logourl = zebra_print_logourl($PAGE->theme->settings->logourl);
+    $logo = html_writer::tag('img', '', array('src'=>$logourl,'class'=>'logo'));
+}
 $showbranding = ($PAGE->theme->settings->branding); //Check the theme settings to see if footer logos are displayed
 $userespond = ($PAGE->theme->settings->userespond); //Check the theme settings to see if respond.js should be called
 $usecf = ($PAGE->theme->settings->usecf); //Check the theme settings to see if Chrome Frame should be called
@@ -88,12 +101,20 @@ $usingie9 = strpos($PAGE->bodyclasses, 'ie9'); //Make sure the user isn't using 
 $usingios = (preg_match('/iPhone|iPod|iPad/i', $_SERVER['HTTP_USER_AGENT']));
 $requiresrespond = ($userespond && $usingie && !$usingie9); //Check all the options necessary to print respond.js
 $requirescf = ($usecf && $usingie && $ieversion); // Check all the options necessary to print chrome frame
+$hascustomjs = ($PAGE->theme->settings->customjs); //Check to see if there's any custom JS in the settings page
+if ($hascustomjs) {
+	$customjs = $PAGE->theme->settings->customjs;
+}
 
 echo $OUTPUT->doctype(); ?>
 <html <?php echo $OUTPUT->htmlattributes(); ?>>
 <head>
-    <?php echo $OUTPUT->standard_head_html(); ?>
     <?php if ($usecf) { ?><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><?php } ?>
     <title><?php echo $PAGE->title; ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/png" href="<?php echo $OUTPUT->pix_url('favicon/favicon', 'theme'); ?>" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="<?php echo $OUTPUT->pix_url('favicon/h/apple-touch-icon-precomposed', 'theme'); ?>">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="<?php echo $OUTPUT->pix_url('favicon/m/apple-touch-icon-precomposed', 'theme'); ?>">
+    <link rel="apple-touch-icon-precomposed" href="<?php echo $OUTPUT->pix_url('favicon/l/apple-touch-icon-precomposed', 'theme'); ?>">
+<?php echo $OUTPUT->standard_head_html(); ?>
 </head>
