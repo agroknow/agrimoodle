@@ -1,4 +1,4 @@
-http://localhost:8080/agrimoodle/course/view.php?id=4
+http://localhost/dev/agrimoodle/course/view.php?id=4
 
 
 http://docs.moodle.org/dev/Data_manipulation_API

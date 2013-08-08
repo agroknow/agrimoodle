@@ -35,4 +35,4 @@ http://docs.moodle.org/25/en/Hub_administration
 
 setup on: http://wiki.rural-inclusion.eu/am-hub/
 username: webmaster
-password: Agr1M00dle!
+password: (check zim)

@@ -16,7 +16,7 @@ $CFG->dboptions = array
 
 - http://62.217.124.232/herbal-mednet
 - Agrimoodle admin account:
-  webmaster / Agr1moodle!
+  webmaster / (check zim)
 
 
 
