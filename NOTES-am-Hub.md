@@ -1,27 +1,24 @@
-http://localhost:8080/agrimoodle/course/view.php?id=4
-
-
-http://docs.moodle.org/dev/Data_manipulation_API
-
-# TODO:
-
-oai-target
-----------
-### Tasos, Nov 30
-+ added iterator for json files, check: http://localhost:8080/agrimoodle/blocks/oai_target/lib/PMH.php?verb=GetSql
-- TODO, NEXT: need to insert JSON's into DB for oai-pmh code to pick them up
-- URGENT: find a proper way to provide a persistent unique ID
-### Tasos, Dec 17
-+ talked with Marinos... Not much progress, he'll need to catch up! (or exit...)
-
-
-oerfinder
----------
-### Tasos, Dec 17
-+ catching up...
-
-
 # agriMoodle HUB
+
+> HUB URL  : http://wiki.rural-inclusion.eu/am-hub/
+> PASSWORD : (empty)
+
+## LOG
+
+### Tue, Jun 25 2013
+~ 
+~ registered apivita instance. it can now **Publish** to the hub
+~ setup at http://wiki.rural-inclusion.eu/am-hub/
+~ discussion with Giannis
+
+
+## TODO
+- how can we massively "publish" existing courses
+- try changing the default theme
+- how can we have our hub to appear in the official "HUBS" list 
+
+
+## INSTALLATION
 
 http://docs.moodle.org/25/en/Hub_administration
 - Install the latest stable version of Moodle somewhere on a web server with a nice URL.
@@ -39,10 +36,3 @@ http://docs.moodle.org/25/en/Hub_administration
 setup on: http://wiki.rural-inclusion.eu/am-hub/
 username: webmaster
 password: Agr1M00dle!
-
-
-# DEBUGGING:
-
-  * print_object($USER);
-  * var_dump(__FILE__, __LINE__, $record['lom_record']);
-

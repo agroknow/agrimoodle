@@ -36,9 +36,9 @@ phpunit.xml
 
 
 # sublime text project's files
+*.sp
 *.sublime-project
 *.sublime-workspace
-Drupal.sublime-projectcompletions
 
 # no need to versioni control these "personal" notes
 /blocks/oerfinder/NOTES.md
