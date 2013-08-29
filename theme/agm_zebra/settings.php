@@ -45,9 +45,10 @@ if ($ADMIN->fulltree) {
     $name = 'theme_agm_zebra/logourl';
     $title = get_string('logourl','theme_agm_zebra');
     $description = get_string('logourldesc', 'theme_agm_zebra');
-    $default = 'logo/agrimoodle_wide_trans.png';
+    $default = 'logo/agrimoodle_wide_trans';
     $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_URL);
     $settings->add($setting);
+
 
     //Set the minimum height for the logo image
     $name = 'theme_agm_zebra/logourlheight';
@@ -61,9 +62,18 @@ if ($ADMIN->fulltree) {
     $name = 'theme_agm_zebra/headeralt';
     $title = get_string('headeralt','theme_agm_zebra');
     $description = get_string('headeraltdesc', 'theme_agm_zebra');
-    $default = '&nbsp;';
+    $default = '';
     $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 20);
     $settings->add($setting);
+
+    //Hide the title of the site?
+    $name = 'theme_agm_zebra/hidesitename';
+    $visiblename = get_string('hidesitename', 'theme_agm_zebra');
+    $title = get_string('hidesitename', 'theme_agm_zebra');
+    $description = get_string('hidesitenamedesc', 'theme_agm_zebra');
+    $setting = new admin_setting_configcheckbox($name, $visiblename, $description, 1);
+    $settings->add($setting);
+
 
     //Set body background image url
     $name = 'theme_agm_zebra/backgroundurl';
@@ -118,7 +128,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('bodybgcolor','theme_agm_zebra');
     $description = get_string('bodybgcolordesc', 'theme_agm_zebra');
     $default = '#ddd';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+    $previewconfig = array('selector'=>'html', 'style'=>'backgroundColor');
+    $setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set links and menu color
@@ -126,7 +137,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('linkcolor','theme_agm_zebra');
     $description = get_string('linkcolordesc', 'theme_agm_zebra');
     $default = '#1a8f40';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'a', 'style'=>'color');
+    $setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set hovering color
@@ -134,7 +146,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('hovercolor','theme_agm_zebra');
     $description = get_string('hovercolordesc', 'theme_agm_zebra');
     $default = '#104221';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+    $previewconfig = array('selector'=>'a:hover', 'style'=>'color');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set font color
@@ -142,7 +155,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('fontcolor','theme_agm_zebra');
     $description = get_string('fontcolordesc', 'theme_agm_zebra');
     $default = '#2F2F2F';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'html', 'style'=>'color');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set main content background color
@@ -150,15 +164,18 @@ if ($ADMIN->fulltree) {
     $title = get_string('contentbgcolor','theme_agm_zebra');
     $description = get_string('contentbgcolordesc', 'theme_agm_zebra');
     $default = '#f4f6f8';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'#region-main', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set column background color
     $name = 'theme_agm_zebra/columnbgcolor';
     $title = get_string('columnbgcolor','theme_agm_zebra');
     $description = get_string('columnbgcolordesc', 'theme_agm_zebra');
+    // $default = '#F4F6F8';
     $default = '#fff';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'#region-main', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set page-header background color
@@ -166,7 +183,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('headerbgcolor','theme_agm_zebra');
     $description = get_string('headerbgcolordesc', 'theme_agm_zebra');
     $default = 'transparent';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'#page-header-wrapper', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set page-footer background color
@@ -174,7 +192,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('footerbgcolor','theme_agm_zebra');
     $description = get_string('footerbgcolordesc', 'theme_agm_zebra');
     $default = '#DDD';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'#page-footer', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //This is the descriptor for the following Moodle color settings
@@ -189,7 +208,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('calcourse','theme_agm_zebra');
     $description = get_string('calcoursedesc', 'theme_agm_zebra');
     $default = '#FFD3BD';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'.calendar_event_course', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set calendar global events color
@@ -197,7 +217,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('calglobal','theme_agm_zebra');
     $description = get_string('calglobaldesc', 'theme_agm_zebra');
     $default = '#D6F8CD';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'.calendar_event_global', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set calendar group events color
@@ -205,7 +226,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('calgroup','theme_agm_zebra');
     $description = get_string('calgroupdesc', 'theme_agm_zebra');
     $default = '#FEE7AE';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'.calendar_event_group', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set calendar user events color
@@ -213,7 +235,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('caluser','theme_agm_zebra');
     $description = get_string('caluserdesc', 'theme_agm_zebra');
     $default = '#DCE7EC';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'.calendar_event_user', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set calendar weekend color
@@ -221,7 +244,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('calweekend','theme_agm_zebra');
     $description = get_string('calweekenddesc', 'theme_agm_zebra');
     $default = '#A00';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'td.weekend', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set OK font color
@@ -229,7 +253,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('okfontcolor','theme_agm_zebra');
     $description = get_string('okfontcolordesc', 'theme_agm_zebra');
     $default = '#060';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'.backup-ok', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set warning font color
@@ -237,7 +262,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('warningfontcolor','theme_agm_zebra');
     $description = get_string('warningfontcolordesc', 'theme_agm_zebra');
     $default = '#F0E000';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'.statuswarning', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set serious font color
@@ -245,7 +271,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('seriousfontcolor','theme_agm_zebra');
     $description = get_string('seriousfontcolordesc', 'theme_agm_zebra');
     $default = '#F07000';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'.statusserious', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //Set critical font color
@@ -253,7 +280,8 @@ if ($ADMIN->fulltree) {
     $title = get_string('criticalfontcolor','theme_agm_zebra');
     $description = get_string('criticalfontcolordesc', 'theme_agm_zebra');
     $default = '#F00000';
-    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 10);
+	$previewconfig = array('selector'=>'.statuscritical', 'style'=>'background');
+	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
     $settings->add($setting);
 
     //This is the descriptor for the following color scheme settings
@@ -268,7 +296,7 @@ if ($ADMIN->fulltree) {
     $title = get_string('colorscheme','theme_agm_zebra');
     $description = get_string('colorschemedesc', 'theme_agm_zebra');
     $default = 'none';
-    $choices = array('none'=>'None', 'dark'=>'Dark', 'light'=>'Light');
+    $choices = array('none'=>get_string('schemenone', 'theme_agm_zebra'), 'dark'=>get_string('schemedark', 'theme_agm_zebra'), 'light'=>get_string('schemelight', 'theme_agm_zebra'));
     $setting = new admin_setting_configselect($name, $title, $description, $default, $choices);
     $settings->add($setting);
 
@@ -277,7 +305,7 @@ if ($ADMIN->fulltree) {
     $title = get_string('menucolorscheme','theme_agm_zebra');
     $description = get_string('menucolorschemedesc', 'theme_agm_zebra');
     $default = 'none';
-    $choices = array('none'=>'None', 'dark'=>'Dark', 'light'=>'Light');
+    $choices = array('none'=>get_string('schemenone', 'theme_agm_zebra'), 'dark'=>get_string('schemedark', 'theme_agm_zebra'), 'light'=>get_string('schemelight', 'theme_agm_zebra'));
     $setting = new admin_setting_configselect($name, $title, $description, $default, $choices);
     $settings->add($setting);
 
@@ -384,11 +412,25 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_configtextarea($name, $title, $description, null);
     $settings->add($setting);
 
+    //Set custom JS for theme
+    $name = 'theme_agm_zebra/customjs';
+    $title = get_string('customjs', 'theme_agm_zebra');
+    $description = get_string('customjsdesc', 'theme_agm_zebra');
+    $setting = new admin_setting_configtextarea($name, $title, $description, null);
+    $settings->add($setting);
+
     //Display branded footer logos
     $name = 'theme_agm_zebra/branding';
     $visiblename = get_string('branding', 'theme_agm_zebra');
     $title = get_string('branding', 'theme_agm_zebra');
     $description = get_string('brandingdesc', 'theme_agm_zebra');
-    $setting = new admin_setting_configcheckbox($name, $visiblename, $description, 1);
+    $setting = new admin_setting_configcheckbox($name, $visiblename, $description, 0);
     $settings->add($setting);
+
+    //Beg for money
+    // $name = 'theme_zebra/donate';
+    // $heading = get_string('donate', 'theme_zebra');
+    // $information = get_string('donatedesc', 'theme_zebra');
+    // $setting = new admin_setting_heading($name, $heading, $information);
+    // $settings->add($setting);
 }

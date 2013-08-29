@@ -23,7 +23,11 @@
  * @copyright  2012 Agro-Know Technologies
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// this becomes true only for the login page and only if the setting simplelogin is true
 $simplelogin = (($PAGE->theme->settings->simplelogin) && (strpos($PAGE->bodyclasses, 'path-login'))); //Check for simplelogin setting
+
+$showtitle = ! (($PAGE->theme->settings->hidesitename));
 
 $hasheading = ($PAGE->heading); //Check for the page title
 $hasnavbar = (empty($PAGE->layout_options['nonavbar']) && $PAGE->has_navbar() && !$simplelogin); //Check to see if this page-lay has a navbar
