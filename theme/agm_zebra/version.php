@@ -30,7 +30,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2013131401;
+$plugin->version   = 2013082901;
 $plugin->component = 'theme_agm_zebra';
 $plugin->requires  = 2011120100;
 $plugin->maturity  = MATURITY_STABLE;

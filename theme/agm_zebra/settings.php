@@ -45,7 +45,7 @@ if ($ADMIN->fulltree) {
     $name = 'theme_agm_zebra/logourl';
     $title = get_string('logourl','theme_agm_zebra');
     $description = get_string('logourldesc', 'theme_agm_zebra');
-    $default = 'logo/logo';
+    $default = 'logo/agrimoodle_wide_trans';
     $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_URL);
     $settings->add($setting);
 
@@ -62,9 +62,18 @@ if ($ADMIN->fulltree) {
     $name = 'theme_agm_zebra/headeralt';
     $title = get_string('headeralt','theme_agm_zebra');
     $description = get_string('headeraltdesc', 'theme_agm_zebra');
-    $default = '&nbsp;';
+    $default = '';
     $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_CLEAN, 20);
     $settings->add($setting);
+
+    //Hide the title of the site?
+    $name = 'theme_agm_zebra/hidesitename';
+    $visiblename = get_string('hidesitename', 'theme_agm_zebra');
+    $title = get_string('hidesitename', 'theme_agm_zebra');
+    $description = get_string('hidesitenamedesc', 'theme_agm_zebra');
+    $setting = new admin_setting_configcheckbox($name, $visiblename, $description, 1);
+    $settings->add($setting);
+
 
     //Set body background image url
     $name = 'theme_agm_zebra/backgroundurl';
@@ -419,9 +428,9 @@ if ($ADMIN->fulltree) {
     $settings->add($setting);
 
     //Beg for money
-    $name = 'theme_zebra/donate';
-    $heading = get_string('donate', 'theme_zebra');
-    $information = get_string('donatedesc', 'theme_zebra');
-    $setting = new admin_setting_heading($name, $heading, $information);
-    $settings->add($setting);
+    // $name = 'theme_zebra/donate';
+    // $heading = get_string('donate', 'theme_zebra');
+    // $information = get_string('donatedesc', 'theme_zebra');
+    // $setting = new admin_setting_heading($name, $heading, $information);
+    // $settings->add($setting);
 }

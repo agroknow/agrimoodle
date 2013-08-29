@@ -32,10 +32,8 @@ require_once('header.php'); ?>
             <div id="page-header-wrapper">
                 <div id="page-header" class="clearfix">
                     <div class="headermain">
-                    	<?php if($haslogo) {
-                    	    echo $logo;
-                    	}
-                    	if (!$simplelogin) { ?>
+                    	<?php if($haslogo) { echo $logo; }
+                    	if ($showtitle && !$simplelogin) { ?>
                     		<h1 class="header"><?php echo $headeralt; ?></h1>
                     	<?php } ?>
                     </div>
