@@ -27,7 +27,8 @@
 // this becomes true only for the login page and only if the setting simplelogin is true
 $simplelogin = (($PAGE->theme->settings->simplelogin) && (strpos($PAGE->bodyclasses, 'path-login'))); //Check for simplelogin setting
 
-$showtitle = ! (($PAGE->theme->settings->hidesitename));
+$showtitle = !(($PAGE->theme->settings->hidesitename));
+$haslogo = (!empty($PAGE->theme->settings->logo));
 
 $hasheading = ($PAGE->heading); //Check for the page title
 $hasnavbar = (empty($PAGE->layout_options['nonavbar']) && $PAGE->has_navbar() && !$simplelogin); //Check to see if this page-lay has a navbar

@@ -86,7 +86,7 @@ require_once('header.php'); ?>
                                             		echo '<div id="course-header">' . $courseheader . '</div>';
                                             	}
                                             	echo $coursecontentheader;
-                                                echo $maincontent;
+                                                echo $OUTPUT->main_content();
                                                 echo $coursecontentfooter; ?>
                                             </div>
                                         </div>
