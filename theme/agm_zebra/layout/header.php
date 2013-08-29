@@ -88,7 +88,7 @@ if (!empty($PAGE->theme->settings->headeralt)) {
 }
 $haslogo = (!empty($PAGE->theme->settings->logourl)); //Check if a logo is selected
 if ($haslogo) { //Pass the raw variable to the function to render with pix_url if necessary
-    $logourl = zebra_print_logourl($PAGE->theme->settings->logourl);
+    $logourl = agm_zebra_print_logourl($PAGE->theme->settings->logourl);
     $logo = html_writer::tag('img', '', array('src'=>$logourl,'class'=>'logo'));
 }
 $showbranding = ($PAGE->theme->settings->branding); //Check the theme settings to see if footer logos are displayed

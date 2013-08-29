@@ -45,9 +45,10 @@ if ($ADMIN->fulltree) {
     $name = 'theme_agm_zebra/logourl';
     $title = get_string('logourl','theme_agm_zebra');
     $description = get_string('logourldesc', 'theme_agm_zebra');
-    $default = 'logo/agrimoodle_wide_trans';
+    $default = 'logo/logo';
     $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_URL);
     $settings->add($setting);
+
 
     //Set the minimum height for the logo image
     $name = 'theme_agm_zebra/logourlheight';
@@ -162,6 +163,7 @@ if ($ADMIN->fulltree) {
     $name = 'theme_agm_zebra/columnbgcolor';
     $title = get_string('columnbgcolor','theme_agm_zebra');
     $description = get_string('columnbgcolordesc', 'theme_agm_zebra');
+    // $default = '#F4F6F8';
     $default = '#fff';
 	$previewconfig = array('selector'=>'#region-main', 'style'=>'background');
 	$setting = new admin_setting_configcolourpicker($name, $title, $description, $default, $previewconfig);
@@ -413,7 +415,7 @@ if ($ADMIN->fulltree) {
     $visiblename = get_string('branding', 'theme_agm_zebra');
     $title = get_string('branding', 'theme_agm_zebra');
     $description = get_string('brandingdesc', 'theme_agm_zebra');
-    $setting = new admin_setting_configcheckbox($name, $visiblename, $description, 1);
+    $setting = new admin_setting_configcheckbox($name, $visiblename, $description, 0);
     $settings->add($setting);
 
     //Beg for money

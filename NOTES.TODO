@@ -1,9 +1,7 @@
-http://localhost/dev/agrimoodle/course/view.php?id=4
 
-
-http://docs.moodle.org/dev/Data_manipulation_API
-
-# TODO:
+TODO:
+ ☐ fix logo for agm-zebra theme
+ ☐ 
 
 oai-target
 ----------
@@ -36,9 +34,20 @@ http://docs.moodle.org/25/en/Hub_administration
 - Set up the recaptcha (Administration > Site Administration > Plugins > Authentication > Manage authentication)
 - Set up your hub (Administration > Site Administration > Hub > Settings) Supply a description, enable the hub, supply a hub password. 
 
+
+notes:
+  * http://localhost/dev/agrimoodle/
+  * http://localhost/dev/agrimoodle/course/view.php?id=4 — Test course
+  * http://localhost/dev/agm-hub/
+  * credentials:
+U2FsdGVkX1953LCTzJbybjH0P5T8azAV3VrpvQbKU4KMvEdSPNMli08wVEr2QFns
+
+http://docs.moodle.org/dev/Data_manipulation_API
+
 setup on: http://wiki.rural-inclusion.eu/am-hub/
 username: webmaster
-password: Agr1M00dle!
+password: U2FsdGVkX18D08htBgghi2XKlwTJAFVRlNTqs+7EeyQ=
+
 
 
 # DEBUGGING:

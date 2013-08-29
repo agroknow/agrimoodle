@@ -921,3 +921,30 @@ function agm_zebra_set_customcss($css, $customcss) {
     $css = str_replace($tag, $replacement, $css);
     return $css;
 }
+
+
+/** END CSS POST PROCESSOR FUNCTIONS **/
+
+/**
+ * outputs the logo url for the header
+ *
+ * @param mixed $logourl
+ * @return string
+ */
+function agm_zebra_print_logourl($logourl) {
+    global $OUTPUT;
+    $protocol = '://';
+    $ntp = strpos($logourl, $protocol); // Check to see if a networking protocol is used
+    if($ntp === false) { // No networking protocol used
+        $relative = '/';
+        $rel = strpos($logourl, $relative); // Check to see if a relative path is used
+        if($rel !== 0) { // Doesn't start with a slash
+            $replacement = $OUTPUT->pix_url("$logourl", 'theme'); // Using Moodle output
+        } else {
+            $replacement = $logourl;
+        }
+    } else {
+        $replacement = $logourl;
+    }
+    return $replacement;
+}

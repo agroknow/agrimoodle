@@ -139,6 +139,10 @@ $string['colorschemedesc'] = '<p>Gradients and highlights.</p><p>Note: Safari 4 
 $string['menucolorscheme'] = 'Menu color scheme';
 $string['menucolorschemedesc'] = '<p>Gradient of menu.</p>';
 
+$string['schemenone'] = 'None';
+$string['schemedark'] = 'Dark';
+$string['schemelight'] = 'Light';
+
 $string['columninfo'] = 'Layout Settings';
 $string['columninfodesc'] = '<p>Change the settings for the layout of the page.  To test your settings simply resize your browser window or rotate the orientation of your phone/tablet.</p><figure style="float: left;"><img src="../theme/image.php?theme=agm_zebra&image=core/one_column&component=theme"/><figcaption><ul><li>top: <code>region-main</code></li><li>middle: <code>region-pre</code></li><li>bottom: <code>region-post</code></li></ul></figcaption></figure><figure style="float: left;"><img src="../theme/image.php?theme=agm_zebra&image=core/two_columns&component=theme"/><figcaption><ul><li>top left: <code>region-pre</code></li><li>bottom left: <code>region-post</code></li><li>right: <code>region-main</code></li></ul></figcaption></figure><figure style="float: left;"><img src="../theme/image.php?theme=agm_zebra&image=core/three_columns&component=theme"/><figcaption><ul><li>left: <code>region-pre</code></li><li>center: <code>region-main</code></li><li>right: <code>region-post</code></li></ul></figcaption></figure><br style="clear: left;" />';
 
