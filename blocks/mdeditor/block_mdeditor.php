@@ -53,18 +53,20 @@ class block_mdeditor extends block_base {
 		
 			// add required JS for editing widgets
 			// loading should be performed in a more dynamic fashion
-			$this->page->requires->js('/local/agrimoodle/js/jquery-1.7.2.min.js');
+			// $this->page->requires->js('/local/agrimoodle/js/jquery-1.7.2.min.js');
 			// NOTE change this to min version on the production server
-			//$this->page->requires->js('/local/agrimoodle/js/jquery-1.7.2.dev.js');
+            // FIXME @tafkey do a check here to determine if we're in "dev" mode
+			$this->page->requires->js('/local/agrimoodle/js/jquery-1.7.2.dev.js');
 
 			$this->page->requires->js('/local/agrimoodle/js/jquery-ui3.js');
 			
 
-			// include css for the above jquery widgets
+			// include css for the jquery widgets
 			$this->page->requires->css('/local/agrimoodle/css/jquery-ui3.css');
 			$this->page->requires->css('/local/agrimoodle/css/jquery.toChecklist.css');
 			
-			// TODO: isn't this included automagically by moodle?
+			// FIXME @tafkey isn't this included automagically by moodle?
+            // if it is, why not import the jquery css from it?
 			$this->page->requires->css('/blocks/mdeditor/styles.css');
 
 			$js = get_string('dialog_datepicker_locale', 'block_mdeditor');
@@ -76,6 +78,8 @@ class block_mdeditor extends block_base {
 			$this->page->requires->js('/local/agrimoodle/js/jquery.toChecklist.js');
 
 			$this->page->requires->js('/local/agrimoodle/js/jquery.dform-1.0.0.min.js');
+
+            // them main javascript that actually "builds" the LOM editor
 			$this->page->requires->js('/blocks/mdeditor/js/composer.js');
 
 			$course_id = $COURSE->id;
@@ -117,15 +121,13 @@ class block_mdeditor extends block_base {
                                                       $options,
                                                       $localization));
 
-			// FIXME -- not used?
-			// $edit_button = get_string('block_edit_button', 'block_mdeditor');
 
             // temporary form; perhaps use $OUTPUT instead
 
             $out = '<div id="block_mdeditor-block">'.$javascript_required.'</div>';
 			$foot = '<div style="font-size:xx-small">';
 			$foot .= '<div>'.get_string('block_color_legend', $b).'</div>';
-			$foot .= '<div style="background-color:#cdcdcd;"> version 2.2</div>';
+			$foot .= '<div style="background-color:#cdcdcd;"> version 2.5</div>';
 
 			$this->content->text = $out;
 			$this->content->footer = $foot;
@@ -192,7 +194,7 @@ class block_mdeditor extends block_base {
     }
 
     public function instance_allow_multiple() {
-        return false;
+        return FALSE;
     }
 	
 	public function getConfigData() {

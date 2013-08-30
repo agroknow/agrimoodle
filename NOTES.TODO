@@ -1,9 +1,10 @@
 TODO:
- ☐ (#2) upgrade agm-zebra theme for moodle 2.5
+ ☐ allow only one instance of the mdeditor block
+ ✔ (#3) upgrade block oerfinder @done (13-08-30 02:30)
+ ✔ (#4) upgrade block oai_target @done (13-08-30 02:30)
+ ✔ (#5) upgrade block mdeditor @done (13-08-30 02:30)
  ☐ (#7) make agm-clean the default theme after first install
- ☐ (#3) upgrade block oerfinder 
- ☐ (#4) upgrade block oai_target 
- ☐ (#5) upgrade block mdeditor
+ ☐ (#2) upgrade agm-zebra theme for moodle 2.5
     does not define the standard capability block/module:addinstance
 =======
 URLS: 

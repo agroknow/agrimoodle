@@ -128,7 +128,7 @@ $CFG->admin = 'admin';
 // in PHP.ini, you can also specify it here if needed.
 // See details at: http://php.net/manual/en/function.date-default-timezone-set.php
 // List of time zones at: http://php.net/manual/en/timezones.php
-//     date_default_timezone_set('Australia/Perth');
+     date_default_timezone_set('Greece/Athens');
 //
 // Change the key pair lifetime for Moodle Networking
 // The default is 28 days. You would only want to change this if the key
@@ -142,7 +142,7 @@ $CFG->admin = 'admin';
 // if the backup file is publicy available. Use it only if you can guarantee
 // that all your backup files remain only privacy available and are never
 // shared out from your site/institution!
-//      $CFG->includeuserpasswordsinbackup = true;
+      $CFG->includeuserpasswordsinbackup = true;
 //
 // Completely disable user creation when restoring a course, bypassing any
 // permissions granted via roles and capabilities. Enabling this setting
@@ -171,7 +171,7 @@ $CFG->admin = 'admin';
 //      $CFG->disablestatsprocessing = true;
 //
 // Setting this to true will enable admins to edit any post at any time
-//      $CFG->admineditalways = true;
+      $CFG->admineditalways = true;
 //
 // These variables define DEFAULT block variables for new courses
 // If this one is set it overrides all others and is the only one used.
@@ -416,7 +416,7 @@ $CFG->admin = 'admin';
 // is not enabled. This can be set through the UI however it is noted here as well
 // because the other CSS optimiser settings can not be set through the UI.
 //
-//      $CFG->enablecssoptimiser = true;
+       $CFG->enablecssoptimiser = true;
 //
 // If set the CSS optimiser will add stats about the optimisation to the top of
 // the optimised CSS file. You can then inspect the CSS to see the affect the CSS

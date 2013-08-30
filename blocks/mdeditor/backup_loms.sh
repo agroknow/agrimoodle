@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # the backup directory, change this if needed
-backup_dir="backups"
+backup_dir="~/backups"
+mkdir "${backup_dir}"
 
 # nothing to change from here on...
 
