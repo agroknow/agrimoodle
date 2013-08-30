@@ -30,6 +30,29 @@ class block_mdeditor extends block_base {
 //		}
 //	}
 	
+
+    function get_required_javascript() {
+        parent::get_required_javascript();
+ 
+        $this->page->requires->jquery();
+        // $this->page->requires->jquery_plugin('migrate');
+        $this->page->requires->jquery_plugin('ui');
+        $this->page->requires->jquery_plugin('ui-css');
+
+        $js = get_string('dialog_datepicker_locale', 'block_mdeditor');
+        if ($js) {
+            $this->page->requires->js("/local/agrimoodle/js/{$js}");
+        }
+
+        $this->page->requires->js('/local/agrimoodle/js/jquery.validate.js');
+        $this->page->requires->js('/local/agrimoodle/js/jquery.toChecklist.js');
+
+        $this->page->requires->js('/local/agrimoodle/js/jquery.dform-1.0.0.min.js');
+
+        // them main javascript that actually "builds" the LOM editor
+        $this->page->requires->js('/blocks/mdeditor/js/composer.js');
+
+    }
 	
     public function get_content() {
 
@@ -56,31 +79,22 @@ class block_mdeditor extends block_base {
 			// $this->page->requires->js('/local/agrimoodle/js/jquery-1.7.2.min.js');
 			// NOTE change this to min version on the production server
             // FIXME @tafkey do a check here to determine if we're in "dev" mode
-			$this->page->requires->js('/local/agrimoodle/js/jquery-1.7.2.dev.js');
+//			$this->page->requires->js('/local/agrimoodle/js/jquery-1.7.2.dev.js');
 
-			$this->page->requires->js('/local/agrimoodle/js/jquery-ui3.js');
-			
+//			$this->page->requires->js('/local/agrimoodle/js/jquery-ui3.js');
+
+            // $this->$page->requires->jquery();	
+            // $this->$page->requires->jquery_plugin('ui');
+            // $this->$page->requires->jquery_plugin('ui-css');
 
 			// include css for the jquery widgets
-			$this->page->requires->css('/local/agrimoodle/css/jquery-ui3.css');
+			// $this->page->requires->css('/local/agrimoodle/css/jquery-ui3.css');
 			$this->page->requires->css('/local/agrimoodle/css/jquery.toChecklist.css');
 			
 			// FIXME @tafkey isn't this included automagically by moodle?
             // if it is, why not import the jquery css from it?
 			$this->page->requires->css('/blocks/mdeditor/styles.css');
 
-			$js = get_string('dialog_datepicker_locale', 'block_mdeditor');
-			if ($js) {
-				$this->page->requires->js("/local/agrimoodle/js/{$js}");
-			}
-
-			$this->page->requires->js('/local/agrimoodle/js/jquery.validate.js');
-			$this->page->requires->js('/local/agrimoodle/js/jquery.toChecklist.js');
-
-			$this->page->requires->js('/local/agrimoodle/js/jquery.dform-1.0.0.min.js');
-
-            // them main javascript that actually "builds" the LOM editor
-			$this->page->requires->js('/blocks/mdeditor/js/composer.js');
 
 			$course_id = $COURSE->id;
 

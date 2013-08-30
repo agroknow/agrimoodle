@@ -1964,8 +1964,10 @@ console.log( ' DATA', data);
             "title"     : L10n.dialog.caption,
             "resizable" : true,
             "modal"     : true,
-            "width"     : "600px",
-            "position"  : "top",
+            "width"     : 600,
+            "height"    : 400,
+            "maxHeight" : 600,
+            "position"  : { my: "center top", at: "center top+20", of: window },
 			"closeOnEscape" : false,
             "close"     : function( event, ui ) {
                 // remove dialog and ALL its elements

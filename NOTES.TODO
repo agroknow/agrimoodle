@@ -1,5 +1,5 @@
 TODO:
- ☐ allow only one instance of the mdeditor block
+ ✔ allow only one instance of the mdeditor block @done (13-08-30 03:00)
  ✔ (#3) upgrade block oerfinder @done (13-08-30 02:30)
  ✔ (#4) upgrade block oai_target @done (13-08-30 02:30)
  ✔ (#5) upgrade block mdeditor @done (13-08-30 02:30)
