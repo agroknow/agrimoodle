@@ -32,7 +32,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
     /*
      * Describe the element
      */
-
     var titleControl = {
         "type"  : "container",
         "class" : controlClass, 
@@ -161,8 +160,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
     };
 
 
-
-
     /* create an 'instance' of this top-level container */
     var c = $('<div>').dform(titleContainer);
     /* get rid of the wrapper div */
@@ -192,7 +189,7 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
 
 
         /* this is to be invoked when a new child should be created */
-//        "addChild" : newLocale,  replace by and .data() on "post"
+        // "addChild" : newLocale,  replace by and .data() on "post"
 
         "localeHideButton" : out.get(fieldName, 'hideLocale'),
 
@@ -251,23 +248,21 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
 }
 
 /**
+ * Called by composeChecklist()
  *
- * widget - currently, only 'height' is supported
+ * @param widget: currently, only 'height' and 'width' is supported
  */
 function block_mdeditor_compose_checklist(kit, data, fieldName, L10n, classRule, widget) {
     fieldName || (fieldName = 'checklist');
     classRule || (classRule = '');
     widget || (widget = {});
 
-    var
-
-        /* variables */
-        controlClass = kit.controlClass,
+    var controlClass = kit.controlClass,
         containerClass = kit.containerClass;
 
     var style = '';
-    style += widget['height'] ? ('height: ' + widget['height']) : 'height: 100px;';
-    style += widget['width'] ? ('width: ' + widget['width']) : 'width: 250px';
+    // style += 'height: ' + (widget['height'] ? widget['height'] : '100px;');
+    style += 'width:  ' + (widget['width']  ? widget['width']  : '100%;');
 
     /*
      * Describe the element
@@ -298,8 +293,8 @@ function block_mdeditor_compose_checklist(kit, data, fieldName, L10n, classRule,
                 "style"       : style,
                 "options"     : data,
                 "toChecklist" : {
-//                    "addSearchBox"      : true,
-//                    "searchBoxText"     : L10n.element[fieldName].searchtext,
+                   // "addSearchBox"      : true,
+                   // "searchBoxText"     : L10n.element[fieldName].searchtext,
                     "showSelectedItems" : true,
                     "preferIdOverName"  : false,
                     "checkboxClass"     : classRule + ' checklist-option'
@@ -354,7 +349,7 @@ function block_mdeditor_compose_description(kit, data, fieldName, L10n, widget) 
         "post"  : function() {
             $(this).data('parent', out.get(fieldName, 'localeControl'));
         }
-//        "class" : "rule_non-empty"
+       // "class" : "rule_non-empty"
     };
     $.extend(defaults, widget);
 
@@ -520,7 +515,7 @@ function block_mdeditor_compose_description(kit, data, fieldName, L10n, widget) 
             {
                 "type"  : "a",
                 "href"  : "#",
-//                "html" : L10n.element[fieldName].cardinality_add,
+               // "html" : L10n.element[fieldName].cardinality_add,
 				"html"  : "+ Add new",
 				"style" : "border: 1px dotted; width: 250px",
                 "post"  : function() {
@@ -607,7 +602,7 @@ function block_mdeditor_compose_description(kit, data, fieldName, L10n, widget) 
         "shades"    : []
 
         /* this is to be invoked when a new child should be created */
-//        "addChild"  : newLocale, replace this with a simple .data() on "post"
+       // "addChild"  : newLocale, replace this with a simple .data() on "post"
     };
 
     containerData.childData = v;
@@ -725,7 +720,7 @@ function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory
         "type"  : "container",
         "class" : controlClass,
         "post"  : function() {
-//            $(this).data('fieldName', !!);
+           // $(this).data('fieldName', !!);
 
             $(this).data('setFieldName', setStimsName);
             out.add(fieldName, 'localeControl', this);
@@ -807,7 +802,7 @@ function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory
                         "html"  : {
                             "type"    : "text",
                             "name"    : "firstname",
-//                            "caption" : L10n.element[fieldName].entities.firstname,
+                           // "caption" : L10n.element[fieldName].entities.firstname,
                             "size"    : 30,
 							"placeholder"   : L10n.element[fieldName].entities.firstname
                         }
@@ -818,7 +813,7 @@ function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory
                         "html"  : {
                             "type"    : "text",
                             "name"    : "lastname",
-//                            "caption" : L10n.element[fieldName].entities.lastname,
+                           // "caption" : L10n.element[fieldName].entities.lastname,
                             "size"    : 30,
 							"placeholder"   : L10n.element[fieldName].entities.lastname
                         }
@@ -829,7 +824,7 @@ function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory
                         "html"  : {
                             "type"    : "text",
                             "name"    : "email",
-//                            "caption" : L10n.element[fieldName].entities.email,
+                           // "caption" : L10n.element[fieldName].entities.email,
                             "size"    : 30,
 							"placeholder"   : L10n.element[fieldName].entities.email
                         }
@@ -840,7 +835,7 @@ function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory
                         "html"  : {
                             "type"    : "text",
                             "name"    : "organization",
-//                            "caption" : L10n.element[fieldName].entities.organization,
+                           // "caption" : L10n.element[fieldName].entities.organization,
                             "size"    : 30,
 							"placeholder"   : L10n.element[fieldName].entities.organization
                         }
@@ -1118,7 +1113,7 @@ function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory
         "shades"    : []
 
         /* this is to be invoked when a new child should be created */
-//        "addChild"  : newLocale, replace this with a simple .data() on "post"
+       // "addChild"  : newLocale, replace this with a simple .data() on "post"
     };
 
     containerData.childData = v;
@@ -1512,17 +1507,17 @@ function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
     }
 
     var cc = L10n.element.rights.cc_options;
-//    var ccOptions = {},
-//        options = L10n.element.rights.cc_options,
-//    for (var option in options) {
-//        ccOptions[option] = {
-//            "caption" : options[option],
-//            "post"    : function() {
-//                index =  out.get(fieldName, 'indexName');
-//                $(this).attr('name', index + '[cc]');
-//            }
-//        };
-//    }
+   // var ccOptions = {},
+   //     options = L10n.element.rights.cc_options,
+   // for (var option in options) {
+   //     ccOptions[option] = {
+   //         "caption" : options[option],
+   //         "post"    : function() {
+   //             index =  out.get(fieldName, 'indexName');
+   //             $(this).attr('name', index + '[cc]');
+   //         }
+   //     };
+   // }
 
     var uniContainer = {
         "type"  : "container",
@@ -1636,7 +1631,7 @@ function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
                 "realtype" : "radiobuttons",
                 "options"  : {
                     "yes"  : {
-//                        "id" : "cost_yes",              // must be unique
+                       // "id" : "cost_yes",              // must be unique
                         "class"   : "rule_exactly-one restrictions_yes",
                         "caption" : "Yes",
                         "post"    : function() {
@@ -1648,7 +1643,7 @@ function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
                         }
                     },
                     "no"  : {
-//                        "id" : "cost_no",
+                       // "id" : "cost_no",
                         "class" : "rule_exactly-one  restrictions_no",
                         "caption"  : "No",
                         "post"    : function() {
@@ -1678,7 +1673,7 @@ function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
                          "ref" : "control"}]
         },
         "post" : function() {
-//            $(this).data('setFieldName', setRightsFieldName);
+           // $(this).data('setFieldName', setRightsFieldName);
             out.add(fieldName, 'rightsContainer', this);
             out.add(fieldName, 'localeContainerParent', this);
 
@@ -1810,7 +1805,7 @@ function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
         "shades"    : []
 
         /* this is to be invoked when a new child should be created */
-//        "addChild"  : newLocale, replace this with a simple .data() on "post"
+       // "addChild"  : newLocale, replace this with a simple .data() on "post"
     };
 
     containerData.childData = v;
@@ -1907,7 +1902,7 @@ function block_mdeditor_compose(target, data, L10n, targetUrl, requestParams) {
     L10n.element.interactivity_level.options = $.extend(true, {}, L10n.common.scale_low_high);
     L10n.element.semantic_density.options = $.extend(true, {}, L10n.common.scale_low_high);
 
-console.log( ' DATA', data);
+    // +++ console.log( ' DATA', data);
 
     var form = 'block_mdeditor-edit_form',//'block_mdeditor-edit_dialog',
         formSelector = '#'+form,
@@ -2092,7 +2087,7 @@ console.log( ' DATA', data);
                         },
                         {
                             "type" : "span",
-                            "html" : composeChecklist(kit, data, 'language5', L10n, '')
+                            "html" : composeChecklist(kit, data, 'language5', L10n)
                         },
                     ]
                 },
@@ -2105,10 +2100,10 @@ console.log( ' DATA', data);
 							"class": "rule_mandatory",
                             "html" : e.cc
                         }//,
-//                        {
-//                            "type" : "span",
-//                            "html" : e.rights
-//                        }
+                       // {
+                       //     "type" : "span",
+                       //     "html" : e.rights
+                       // }
                     ]
                 },
                 {
@@ -2118,7 +2113,7 @@ console.log( ' DATA', data);
                         {
                             "type" : "span",
                             "html" : composeChecklist(kit, data, 'classification_details', L10n, '', {
-                                     "width" : "350px;",
+                                     "width" : "100%;",
                                      "height" : "250px;"})
                         }
                     ]
@@ -2178,7 +2173,7 @@ console.log( ' DATA', data);
     delete e.title;
     delete e.description;
 
-//    L10n.element.language13.options = L10n.common.languages;
+    //    L10n.element.language13.options = L10n.common.languages;
     $.dform.options.prefix = null;
     $(target).dform(dialog);
 }
@@ -2463,7 +2458,7 @@ function block_mdeditor_init_kit(target, L10n) {
             /* call the function with the supplied parameters */
             func(element.params);
 
-//            delete this;
+           // delete this;
         });
 
         for (var i in womb) {
@@ -2549,9 +2544,9 @@ function block_mdeditor_init_kit(target, L10n) {
             indexName = $(this).data('fieldName') + '[' + count + ']',
             keyName = fieldName + '-' + total;
 
-// the next two commented-out lines have been replaced with #1-3
-//        childData.indexName = indexName;
-//        childData.keyName = keyName;
+        // the next two commented-out lines have been replaced with #1-3
+        // childData.indexName = indexName;
+        // childData.keyName = keyName;
         out.add(fieldName, 'keyName', keyName);
 
 
@@ -2676,7 +2671,7 @@ function block_mdeditor_init_kit(target, L10n) {
         var key = out.get(fieldName, 'hideLocaleField'), /* key 'hideLocale' is registered with */
             hide = out.get(key, 'hideLocale');
         var localeControl = out.get(fieldName, 'localeControl');
-//        var hide = out.get(fieldName, 'hideLocale');
+       // var hide = out.get(fieldName, 'hideLocale');
         $(hide).data('runMethod', {"method" : "hideChild",
                                    "target" : localeContainer,
                                    "data"   : localeControl});
@@ -2733,7 +2728,7 @@ function block_mdeditor_init_kit(target, L10n) {
         v.localeButton = addLocaleButton
 
 
-//after womb
+        //------- after womb
 
         // deal with the first child of the container
 
@@ -2999,7 +2994,7 @@ function block_mdeditor_init_kit(target, L10n) {
              * If need be, get the actual definition of each `setIndex' within
              * the loop. */
             for (index; index < refs.length ; ++index) {
-//                func = $(refs[i]).data('setIndex');
+               // func = $(refs[i]).data('setIndex');
                 f = $.proxy(func, refs[index]);
                 f(index);
             }
@@ -3159,10 +3154,10 @@ function block_mdeditor_init_kit(target, L10n) {
 
 
                 /* if the prefered value is available, then give it that */
-//                if (prefer && !field.hidden[prefer]) {
-//                else
-//                FIXME !!!
-// ------------------------
+                //                if (prefer && !field.hidden[prefer]) {
+                //                else
+                //                FIXME !!!
+                // ------------------------
                 /* replace this with an algorithm that suggest a value */
                 for (var i in values) {
 
@@ -3247,7 +3242,7 @@ function block_mdeditor_init_kit(target, L10n) {
                 return this.refs[field].count < this.count;
             },
 
-//            "rename" : function(
+           // "rename" : function(
 
             /* these two beauties may be merged into one ? */
             "_hide" : function(field, value, exclude) {
@@ -3489,7 +3484,7 @@ function block_mdeditor_init_kit(target, L10n) {
         var stims = $(this).data('stims'),
             stim = null;
 
-//        clearIndex(); /* do this manually instead of calling `clearIndex' */
+       // clearIndex(); /* do this manually instead of calling `clearIndex' */
         for (var i = 0 ; i < stims.length ; ++i) {
             stim = stims[i];
             $(stim.ref).attr(stim.attr, '');
@@ -3647,23 +3642,23 @@ function block_mdeditor_init_kit(target, L10n) {
          *  <id> the ID of a particular mod or course */
         deleteId = hideThis.id;
 
-		console.log("L10n.templates : ", L10n.templates);
-		console.log("options        : ", options);
-		console.log("hideThis       : ", hideThis);
+		// console.log("L10n.templates : ", L10n.templates);
+		// console.log("options        : ", options);
+		// console.log("hideThis       : ", hideThis);
         for (var option in options) {
-			console.log("OPTION ", option);
+			// console.log("OPTION ", option);
             if ((options[option].value == deleteId) || 
 					(options[option].title && 
 					 options[option].title == 'No record found.')) {
                 delete options[option];
 			}
         }
-		console.log("options        : ", options);
+		// console.log("options        : ", options);
 
 		
         var desc = {
             "type"    : "container",
-            "class"   : "block_mdeditor-element_twoline",
+            // "class"   : "block_mdeditor-element_twoline",
             "html"    : [
                 {
                     "type"  : "label",
@@ -3879,43 +3874,43 @@ function block_mdeditor_init_kit(target, L10n) {
 
     function getKeywords(request, callback) {
         var result = new Array();//,
-//            data = $(this.element).data();
-//            lang = $(data.parent).data('refs')['lang'];
+        //            data = $(this.element).data();
+        //            lang = $(data.parent).data('refs')['lang'];
 
-//        if (! lang) callback(result);
+        //        if (! lang) callback(result);
 
-//        var language = $(lang).val();
+        //        var language = $(lang).val();
 
-//        if (! language) callback(result);
-//console.log('selected language is', language);
+        //        if (! language) callback(result);
+        //console.log('selected language is', language);
 
-//        var term = request.term,
-//            url = M.cfg.wwwroot + '/blocks/mdeditor/action/get_keywords.php?' +
-//            'term=' + term +
-//            '&language=' + language;
+        //        var term = request.term,
+        //            url = M.cfg.wwwroot + '/blocks/mdeditor/action/get_keywords.php?' +
+        //            'term=' + term +
+        //            '&language=' + language;
 
-//        $.ajax(url, {
-//            "async" : false,
-//            "success" : function(response) {
-//                console.log('get_keywords.php: ', response);
-//                if (! response) return result;
+        //        $.ajax(url, {
+        //            "async" : false,
+        //            "success" : function(response) {
+        //                console.log('get_keywords.php: ', response);
+        //                if (! response) return result;
 
-//                var terms = $.parseJSON(response);
-//                if (! terms) return result;
+        //                var terms = $.parseJSON(response);
+        //                if (! terms) return result;
 
-//                result = terms;
-//            }
-//        });
-//        .success(function(response) {
-//            console.log('get_keywords.php: ', response);
-//            if (! response) return result;
+        //                result = terms;
+        //            }
+        //        });
+        //        .success(function(response) {
+        //            console.log('get_keywords.php: ', response);
+        //            if (! response) return result;
 
-//            var terms = $.parseJSON(response);
-//            if (! terms) return result;
-//console.log(callback);
-//            callback(result);
-//        });
-//console.log(callback);
+        //            var terms = $.parseJSON(response);
+        //            if (! terms) return result;
+        //console.log(callback);
+        //            callback(result);
+        //        });
+        //console.log(callback);
         callback(result);
     }
 
@@ -4018,7 +4013,7 @@ function block_mdeditor_init_kit(target, L10n) {
     function composeKeyword(kit, data, fieldName, L10n) {
         var widget = {
             "type" : "text",
-//            "size" : 30,
+           // "size" : 30,
 			"style" : "width: 250px;",
             "autocomplete" : {
                 source : getKeywords
@@ -4077,7 +4072,7 @@ function block_mdeditor_init_kit(target, L10n) {
                     f = $.proxy(f, inputs[input].input);
                     f(data);
                 } else {
-console.log(' ', input, data, data[input]);
+                    console.log(' ', input, data, data[input]);                 // +++
                     f = $(inputs[input]).data('setData');
                     f = $.proxy(f, inputs[input]);
                     f(data[input]);

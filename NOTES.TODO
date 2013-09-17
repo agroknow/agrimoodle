@@ -3,9 +3,19 @@ TODO:
  ✔ (#3) upgrade block oerfinder @done (13-08-30 02:30)
  ✔ (#4) upgrade block oai_target @done (13-08-30 02:30)
  ✔ (#5) upgrade block mdeditor @done (13-08-30 02:30)
+ ✔ #12 mdeditor: does not define the standard capability block/mdeditor:addinstance @done (13-09-17 15:04)
+ ✔ #10 oai_target: does not define the standard capability block/oai_target:addinstance @done (13-09-17 15:13)
+ ✔ #11 oai_target: Constant TEST already defined in oerfinder/lang/en/block_oerfinder.php @done (13-09-17 15:15)
+ ✔ mdeditor: block probably doesn't close its div @done (13-09-17 15:39)
+ ☐ #8 mdeditor: the popup content is too wide!
+     http://api.jqueryui.com/position/
+     http://docs.moodle.org/dev/Using_jQuery_with_Moodle
+     http://docs.moodle.org/dev/jQuery
+
  ☐ (#7) make agm-clean the default theme after first install
  ☐ (#2) upgrade agm-zebra theme for moodle 2.5
-    does not define the standard capability block/module:addinstance
+ 
+ ☐ (# ) SyntaxError with jquery-1.9.1.js:541: JSON.parse: unexpected character
 =======
 URLS: 
 http://localhost/dev/agrimoodle/course/view.php?id=4

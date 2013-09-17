@@ -7,6 +7,9 @@
 
 #if (! defined('MOODLE_INTERNAL')) die;
 
+# NOTE: For the time being, this file is parsed from the module.js script!
+
+
 #function block_mdeditor_L10n() {
     /* Most (if not all) of these strings are localized before sent to the
      * client. */

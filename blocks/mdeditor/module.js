@@ -126,7 +126,7 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
 //			console.log("Parsed! Result is:", response, resp_json);
 
             /* response holds the data */
-            var L10n = $(block).data('L10n'),                                                // ++++ buggy !
+            var L10n = $(block).data('L10n'),                                   // ++++ TODO buggy?
                 targetUrl = base + '/persist.php';
 
             requestParams.updateCallback = M.block_mdeditor.update_status;
@@ -265,8 +265,8 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
 
     /* display a listbox that allows selection of one item at a time */
                                                                                 // This is not complete !!
-    $($(block).find('select.block_mdeditor-resource_select option')).click(
-        function() {
-            $(this).siblings('option').prop('selected', false);
-        });
+    // $($(block).find('select.block_mdeditor-resource_select option')).click(
+    //     function() {
+    //         $(this).siblings('option').prop('selected', false);
+    //     });
 };

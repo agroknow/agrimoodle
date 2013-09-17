@@ -26,4 +26,4 @@ $string['db_insert_error'] = "Could not write entry in the database";
 $string['db_update_error'] = "Could not update existing log entry in the database";
 
 /* Widget Lang Param */
-define('TEST','HW!');
+// define('TEST','HW!');

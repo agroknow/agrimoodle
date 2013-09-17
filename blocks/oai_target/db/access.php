@@ -1,3 +1,4 @@
+<?php
 /**
  * OAI-PMH Target block caps.
  *

@@ -1,7 +1,21 @@
 <?php
 
-//require_once('L10n.php');
 
+/**
+ * Block for that allows editing of metadata for each course and related resources
+ *
+ * @package    block_mdeditor
+ * @copyright  2012 onwards AgroKnow Technologies {@link http://www.agroknow.gr/}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author     Tasos Koutoumanos <tafkey@about.me>
+ */
+
+defined('MOODLE_INTERNAL') || die();
+// require_once('L10n.php');
+
+/**
+ * Displays the block with elements that hold metadata descriptions
+ */
 class block_mdeditor extends block_base {
 
     public function init() {
@@ -57,7 +71,7 @@ class block_mdeditor extends block_base {
     public function get_content() {
 
         if ($this->content !== null) {
-            return $this;
+            return $this->content;
         }
 
 		$this->content = new stdClass();
@@ -139,9 +153,11 @@ class block_mdeditor extends block_base {
             // temporary form; perhaps use $OUTPUT instead
 
             $out = '<div id="block_mdeditor-block">'.$javascript_required.'</div>';
-			$foot = '<div style="font-size:xx-small">';
-			$foot .= '<div>'.get_string('block_color_legend', $b).'</div>';
-			$foot .= '<div style="background-color:#cdcdcd;"> version 2.5</div>';
+			// $foot  = '<div style="font-size:xx-small">';
+			// $foot = '  <div>'.get_string('block_color_legend', $b).'</div>';
+            $foot = get_string('block_color_legend', $b);
+			// $foot .= '  <div style="background-color:#cdcdcd;">version 2.6</div>';
+            // $foot .= '</div>';
 
 			$this->content->text = $out;
 			$this->content->footer = $foot;

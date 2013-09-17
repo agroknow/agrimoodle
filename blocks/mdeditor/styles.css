@@ -89,6 +89,9 @@ input.block_mdeditor-element_oneline[class~='date'] {
 	width: 250px;
 }
 
+.block_mdeditor-element_twoline > label {
+    width: 400px;
+}
 
 
 /* usually for group: [langString][-][+] */

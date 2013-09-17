@@ -1,3 +1,5 @@
+<?php
+
 /**
  * Metadata Editor block caps.
  *
