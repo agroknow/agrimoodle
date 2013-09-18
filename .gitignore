@@ -45,3 +45,6 @@ composer.lock
 /behat.yml
 */yui/build/*/*-coverage.js
 /lib/yuilib/*/build/*/*-coverage.js
+
+# LOM records
+/blocks/mdeditor/lom/

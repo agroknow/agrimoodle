@@ -212,8 +212,11 @@ class block_mdeditor extends block_base {
      * metadata of the resource corresponding to the supplied id.
      */
     protected function get_meta_state($id, $type = 'resource') {
+        global $CFG;
+
         $d = DIRECTORY_SEPARATOR;
-        $base = dirname(__FILE__).$d.'lom'.$d.$type.$d;
+        // $base = dirname(__FILE__).$d.'lom'.$d.$type.$d;
+        $base = $CFG->wwwroot.$d.'blocks'.$d.'mdeditor'.$d.'lom'.$d.$type.$d;
 
         if (file_exists($base.'complete'.$d.$id.'.json')) {
             return 'complete';

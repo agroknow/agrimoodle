@@ -3711,12 +3711,14 @@ function block_mdeditor_init_kit(target, L10n) {
         }
 
         var formData = $(formId).serialize();
-        /* construct the complete url */
+        /* construct the complete url */          
         url = url + '&id=' + params.id;
 
         $.post(url, formData, function(response, status) {
 
+        console.log("Trying to parse response: ", response);    // ---- ++++
             var response = $.parseJSON(response);
+        console.log("JSONified it: ", response);                // ---- ++++
 
             if (status == 'success') {
 

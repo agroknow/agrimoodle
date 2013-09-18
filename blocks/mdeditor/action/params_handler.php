@@ -57,7 +57,7 @@ function block_mdeditor_get_action_params($ignore_state = false) {
     $params = array(
         'type'  => $type,
         'id'    => $id,
-        'base' => '..'.DS.'lom'.DS.$type.DS,
+        'base'  => dirname(__FILE__).DS.'..'.DS.'lom'.DS.$type.DS,
         'file'  => $id.'.json');
 
     if (! $ignore_state) $params['state'] = $state;
