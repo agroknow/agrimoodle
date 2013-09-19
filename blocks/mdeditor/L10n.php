@@ -33,6 +33,9 @@
             'title' => array(
                 'caption' => 'Title'
             ),
+            'subTitle' => array(
+                'caption' => 'Subtitle'
+            ),
             'language13' => array(
                 'caption' => 'Primary language(s)',
                 'seachtext' => 'Type here to search list',

@@ -1,3 +1,7 @@
+## Automatic Machine Translation functionality
+* http://wiki.organic-lingua.eu/APIs#API_cheatsheat
+* http://api.example.com/translationapi/analytics/translate?text=%CF%80%CE%B1%CF%84%CE%B1%CF%84%CE%B1&from=el&to=fr
+
 
 L10n.php
 --------
@@ -25,8 +29,8 @@ The "beast" (>4100 loc). These are the main parts:
 0312: (kit, data, fieldName, L10n, widget)
 0668: (kit, data, fieldName, L10n, mandatory)
 1200: (kit, data, fieldName, L10n)
-1879: (target, data, L10n, targetUrl, requestParams)
-2180: ------ HEALT WARNING - sic ;-) ------
+1879: block_mdeditor_compose(target, data, L10n, targetUrl, requestParams)
+2180: ------ HEALTH WARNING - sic ;-) ------
 2215: mapper(children)
 2244: indexer(params)
 2295: $.dform.addType('language-selector', function(o)
