@@ -1,4 +1,6 @@
 TODO:
+ ☐ rm.is undefined in composer.js:2680
+ ✔ persist.php does not create folder structure @done (13-10-10 08:41)
  ✔ allow only one instance of the mdeditor block @done (13-08-30 03:00)
  ✔ (#3) upgrade block oerfinder @done (13-08-30 02:30)
  ✔ (#4) upgrade block oai_target @done (13-08-30 02:30)
@@ -11,15 +13,14 @@ TODO:
      http://api.jqueryui.com/position/
      http://docs.moodle.org/dev/Using_jQuery_with_Moodle
      http://docs.moodle.org/dev/jQuery
-
  ☐ (#7) make agm-clean the default theme after first install
  ☐ (#2) upgrade agm-zebra theme for moodle 2.5
  
  ☐ (# ) SyntaxError with jquery-1.9.1.js:541: JSON.parse: unexpected character
 =======
 URLS: 
-http://localhost/dev/agrimoodle/course/view.php?id=4
-http://docs.moodle.org/dev/Data_manipulation_API
+  - http://localhost/dev/agrimoodle/course/view.php?id=4
+  - http://docs.moodle.org/dev/Data_manipulation_API
 
 
 oai-target
@@ -70,7 +71,10 @@ password: U2FsdGVkX18D08htBgghi2XKlwTJAFVRlNTqs+7EeyQ=
 
 
 # DEBUGGING:
-
-  * print_object($USER);
+http://blog.danpoltawski.co.uk/2009/05/secrets-of-learning-moodle-development/
+Set debugging to DEBUG_DEVELOPER
+  * print_object() is basically print_r with whitespace
+  * debugging() prints stack trace
   * var_dump(__FILE__, __LINE__, $record['lom_record']);
 
+  * error_log('My variable x is: ' . print_r($variable, true));
