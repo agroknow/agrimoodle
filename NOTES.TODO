@@ -29,6 +29,8 @@ URLS:
   - http://localhost/dev/agrimoodle/admin/purgecaches.php
   - file:///home/tkout/dev/agrimoodle/blocks/mdeditor/test/test_dform.html
 
+  - http://apivita.agrimoodle.org/course/view.php?id=6
+
 
 oai-target
 ----------

@@ -38,7 +38,7 @@ global $DB, $USER;
 
 /* Check whether the exact same fields are supported for some mods and 'group'
  * them into one branch/case */
-if ($type == 'resource' || $type = 'page') {
+if ($type == 'resource' || $type == 'page') {
     $resource = $DB->get_record($type,
                                 array('id' => $id),
                                'id, name, intro',
