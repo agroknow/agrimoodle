@@ -34,6 +34,11 @@ M.block_mdeditor.update_status = function(params) {
     var block = M.block_mdeditor.block;
     var L10n = M.block_mdeditor.L10n;
 
+    if (!params) {
+        console.error("Empty params, cannot continue!");
+        return -1;
+    }
+
     if (params.type == 'course') {
         var div = $(block).find('.course_status_div')[0],
             caption = $(div).find('.course_status_caption')[0],
@@ -47,7 +52,8 @@ M.block_mdeditor.update_status = function(params) {
             item = $(select).children('[value=' + params.id + ']');
 
         if (!item) return;
-        $(item).attr('class', 'status_' + params.status );								// change class of elements according to status! 
+        $(item).attr('class', 'status_' + params.status );								
+        // change class of elements according to status! 
         $(item).attr('title', L10n['message']['course_status_' + params.status]);
     }
 }
@@ -61,8 +67,8 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
     var url = {'persist' : M.cfg.wwwroot + '/blocks/mdeditor/action/persist.php'};
 
     if (! block) {
-		console.log("ERROR: Could not find the mdeditor block. Exiting!");
-		return;
+		console.error("Could not find the mdeditor block. Exiting!");
+		return -1;
 	}
 
     M.block_mdeditor.block = block;
@@ -80,8 +86,7 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
             $(block).data('L10n', L10n);
             M.block_mdeditor.L10n = L10n;
 
-            /* for now, pass available resources and course as template via
-             * L10n */
+            /* for now, pass available resources and course as template via L10n */
             var templates = {};
             /* provide the course in the same format used by mods -- the key is
              * not really important any more */

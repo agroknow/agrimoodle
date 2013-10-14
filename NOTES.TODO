@@ -1,6 +1,8 @@
 TODO:
- ☐ rm.is undefined in composer.js:2680
- ☐ better form controls for md form (smaller, not bootstrap)
+ ☐ @amt rm.is undefined in composer.js:2680
+ ☐ @mdeditor consider changing theme, enable allowthemechangeonurl and add &theme=afterburner
+ ☐ @amt (composer.js:3030) duplicate code, replace appropriately for amt
+ ☐ @mdeditor better form controls for md form (smaller, not bootstrap)
  ✔ persist.php does not create folder structure @done (13-10-10 08:41)
  ✔ allow only one instance of the mdeditor block @done (13-08-30 03:00)
  ✔ (#3) upgrade block oerfinder @done (13-08-30 02:30)
@@ -21,7 +23,11 @@ TODO:
 =======
 URLS: 
   - http://localhost/dev/agrimoodle/course/view.php?id=4
+  - http://localhost/dev/agrimoodle/course/view.php?id=4&theme=agm_clean
+  - http://localhost/dev/agrimoodle/course/view.php?id=4&theme=arialist
   - http://docs.moodle.org/dev/Data_manipulation_API
+  - http://localhost/dev/agrimoodle/admin/purgecaches.php
+  - file:///home/tkout/dev/agrimoodle/blocks/mdeditor/test/test_dform.html
 
 
 oai-target

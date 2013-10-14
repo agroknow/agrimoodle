@@ -17,7 +17,7 @@ extract($params);
  */
 
 // print_object($_POST);
-error_log('POST is: ' . print_r($_POST, true));
+// error_log('POST is: ' . print_r($_POST, true));
 
 /* remove any previous data that have been stored under a different state */
 $previous = ($state == 'complete') ? 'partial' : 'complete';

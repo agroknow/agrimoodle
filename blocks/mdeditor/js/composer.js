@@ -9,8 +9,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
     newLocale = kit.newLocale,
     setIndex = kit.setIndex,
     hideLocale = kit.hideLocale,
-    // +++  amt 
-    amt = kit.amt,
     runInstead = kit.runInstead,
     runMethod = kit.runMethod,
 
@@ -18,7 +16,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
     womb = kit.womb,
     out = kit.out,
     langRepo = kit.langRepo,
-    langRepoAMT = kit.langRepoAMT,
     addLocaleButton = kit.addLocaleButton,
 
     /* variables */
@@ -89,20 +86,20 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
                 "class" : "block_mdeditor-element_top",
                 "html"  : [
                 {
-                    "type" : "language-selector",
-                    "name" : out.get(fieldName, 'keyName'),
-                    "repo" : langRepo,
-                    "attr" : {
-                        "name" : "language"
-                    }
-                },
-                {
                     "type"  : "textarea",
                     "name"  : "value",
                     "rows" : "2",
                     "style": "width: 250px",
                     // "size"  : 40,
                     "class" : "rule_non-empty"
+                },
+                {
+                    "type" : "language-selector",
+                    "name" : out.get(fieldName, 'keyName'),
+                    "repo" : langRepo,
+                    "attr" : {
+                        "name" : "language"
+                    }
                 },
                 {
                     "type"  : "span",
@@ -125,26 +122,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
                         "class" : "placeholder"
                     }
                     ]
-                },
-                {
-                    "type" : "language-selector",
-                    "name" : out.get(fieldName, 'keyName'),
-                    "repo" : langRepoAMT,
-                    "attr" : {
-                        "name" : "language"
-                    }
-                },
-                {
-                    "type" : "a",
-                    "class" : "ui-icon ui-icon-circle-triangle-e block_mdeditor-multiplicity_icons",
-                    "href"  : '#',
-                    "html"  : '[*]',
-                    // "title" : L10n.common.langString_amt,
-                    "title" : "Automatic Machine Translation",
-                    "post"  : function() {
-                        out.add(fieldName, 'amt', this);
-                        $(this).click(runMethod);
-                    }
                 }
                 ]
             }
@@ -178,8 +155,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
             $(this).data('setData', setData);
             $(this).data('addChild', newLocale);
             $(this).data('hideChild', hideLocale);
-            // +++ amt
-            $(this).data('amt', amt);
             $(this).data('dataFormat', {
                 "language" : {
                     "ref"     : "lang",
@@ -230,7 +205,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
         "womb" : womb,
         "out"  : out,
         "langRepo" : langRepo,
-        "langRepoAMT" : langRepoAMT,
 
 
         /* this is to be invoked when a new child should be created */
@@ -238,8 +212,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
 
         "localeHideButton" : out.get(fieldName, 'hideLocale'),
 
-        // +++ added for amt 
-        "amtButton" : out.get(fieldName, 'amt'),
 
         /* there is an extra array, called `refs' which holds references to the
          * children of this container. It is created when a call to `wombBear'
@@ -280,13 +252,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
         "data"   : child
     });
 
-    // +++ amt
-    var do_amt = out.get(fieldName, 'amt');
-    $(do_amt).data('runMethod', {
-        "method" : "amt",
-        "target" : c,
-        "data"   : child
-    });
 
     var func = $.proxy(setIndex, child),
     indexName = $(c).data('indexName');
@@ -379,13 +344,12 @@ function block_mdeditor_compose_description(kit, data, fieldName, L10n, widget) 
     wombBear = kit.wombBear,
     setLocButton = kit.setLocButton,
     newLocale = kit.newLocale,
-    // newLocaleContainer = kit.newLocaleContainer,
+    newLocaleContainer = kit.newLocaleContainer,
     newLocaleContainerNG = kit.newLocaleContainerNG,
     setIndex = kit.setIndex,
     clearContainerIndex = kit.clearContainerIndex,
     setIndexToContainer = kit.setIndexToContainer,
     hideLocale = kit.hideLocale,
-    amt = kit.amt,
     hideContainer = kit.hideContainer,
     runInstead = kit.runInstead,
     runMethod = kit.runMethod,
@@ -610,9 +574,9 @@ function block_mdeditor_compose_description(kit, data, fieldName, L10n, widget) 
         ],
         "post" : function() {
             $(this).data('hideChild', hideContainer);
-            // ++++ !!!! trying to replace with NG !!!
-            // $(this).data('addChild', newLocaleContainer);            
-            $(this).data('addChild', newLocaleContainerNG);
+            // ++++ !!!! FIXME: replace with NG !!!
+            $(this).data('addChild', newLocaleContainer);            
+            // $(this).data('addChild', newLocaleContainerNG);
             $(this).data('setData', setContainerData);
             $(this).data('dataFormat', {
                 "language" : {
@@ -770,7 +734,7 @@ function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory
     wombBear = kit.wombBear,
     setLocButton = kit.setLocButton,
     newLocale = kit.newLocale,
-    // newLocaleContainer = kit.newLocaleContainer,
+    newLocaleContainer = kit.newLocaleContainer,
     newLocaleContainerNG = kit.newLocaleContainerNG,
     setIndex = kit.setIndex,
     setStimsIndex = kit.setStimsIndex,
@@ -783,8 +747,6 @@ function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory
     setIndexToContainer = kit.setIndexToContainer,
     hideLocale = kit.hideLocale,
     hideContainer = kit.hideContainer,
-    // +++ amt
-    amt = kit.amt,
     runInstead = kit.runInstead,
     runMethod = kit.runMethod,
 
@@ -1364,7 +1326,7 @@ function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
     wombBear = kit.wombBear,
     setLocButton = kit.setLocButton,
     newLocale = kit.newLocale,
-    // newLocaleContainer = kit.newLocaleContainer,
+    newLocaleContainer = kit.newLocaleContainer,
     newLocaleContainerNG = kit.newLocaleContainerNG,
     setIndex = kit.setIndex,
     setStimsIndex = kit.setStimsIndex,
@@ -1920,7 +1882,7 @@ function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
 
 
     var topContainer = {
-        "type" : "container",
+        "type" : "container-fluid",
         "default-mapper" : {
             "womb"   : womb,
             "name"   : fieldName + '-top-container',
@@ -2140,7 +2102,6 @@ function block_mdeditor_compose(target, data, L10n, targetUrl, requestParams) {
 
     var e = {
         "title" : block_mdeditor_compose_title(kit, data, 'title', L10n),
-        "subTitle" : block_mdeditor_compose_title(kit, data, 'subTitle', L10n),
         "language13"  : "checklist",
         "description" : composeDescription(kit, data, 'description', L10n),
         "keyword"     : composeKeyword(kit, data, 'keyword', L10n),
@@ -2190,7 +2151,7 @@ function block_mdeditor_compose(target, data, L10n, targetUrl, requestParams) {
             "title"     : L10n.dialog.caption,
             "resizable" : true,
             "modal"     : true,
-            "width"     : 600,
+            "width"     : 650,
             "height"    : 400,
             "maxHeight" : 600,
             "position"  : {
@@ -2229,10 +2190,6 @@ function block_mdeditor_compose(target, data, L10n, targetUrl, requestParams) {
                     "type" : "span", 
                     "class": "rule_mandatory",
                     "html" : e.title
-                },
-                {
-                    "type" : "span",
-                    "html" : e.subTitle
                 },
                 {
                     "type" : "span", 
@@ -2562,7 +2519,7 @@ $(function() {
             o.name = func();
         }
 
-        var myRepo = o.repo; //   || o.repoAMT;
+        var myRepo = o.repo;
 
         /* set the language repo for this element */
         $(element).data('repo', myRepo);
@@ -2764,7 +2721,7 @@ function block_mdeditor_init_kit(target, L10n) {
      * Runs in the context of the parent container.
      *
      */
-    function __________________newLocaleContainer() {
+    function newLocaleContainer() {
         var shades = $(this).data('shades');
         /* check whether shades exists in this container, and display one of
          * them instead of creating a brand-new one */
@@ -2921,18 +2878,6 @@ function block_mdeditor_init_kit(target, L10n) {
         wombBear(womb, true);
 
 
-        /* +++ *** tkout is WORKING HERE *** +++ */
-        var key = out.get(fieldName, 'hideLocaleField'), /* key 'hideLocale' is registered with */
-        hide = out.get(key, 'amt');
-        var localeControl = out.get(fieldName, 'localeControl');
-        // var hide = out.get(fieldName, 'hideLocale');
-        $(hide).data('runMethod', {
-            "method" : "amt",
-            "target" : amt,
-            "data"   : localeControl
-        });
-
-
         /* set the parameters that are required when attempting to hide the
          * default localeContainer of the new container */
         var key = out.get(fieldName, 'hideLocaleField'), /* key 'hideLocale' is registered with */
@@ -3038,7 +2983,6 @@ function block_mdeditor_init_kit(target, L10n) {
         var button = $(this).data('localeButton');
         var out = $(this).data('out'),
         repo = $(this).data('langRepo'),
-        repoAMT = $(this).data('langRepoAMT'),
         field = $(this).data('fieldName'),
         shades = $(this).data('shades'),
         keyName = $(this).data('keyName'),
@@ -3084,16 +3028,6 @@ function block_mdeditor_init_kit(target, L10n) {
         });
 
 
-        /* set requirements for the AMT element +++ */
-        var hide = out.get(field, 'hideLocale');
-
-        $(hide).data('runMethod', {
-            "method" : "hideChild",
-            "target" : this,
-            "data"   : child
-        });
-
-
         setLocButton(button, child);
 
         return child;
@@ -3111,7 +3045,6 @@ function block_mdeditor_init_kit(target, L10n) {
         stims = $(shade).data('stims'),
         lang = $(shade).data('refs')['lang'],
         repo = $(this).data('langRepo'),
-        repoAMT = $(this).data('langRepoAMT'),
         keyName = $(this).data('keyName'),
         indexName = $(this).data('indexName'),
         refs = $(this).data('refs');
@@ -3175,34 +3108,6 @@ function block_mdeditor_init_kit(target, L10n) {
 
 
         $(shade).show('fast');
-    }
-
-
-    /* ++++ *** tkout is working here *** +++ */
-    function amt(control) {
-        var refs = $(this).data('refs');
-
-        /* if this control was the bottom-most, then attach localeButton to the
-         * new bottom-most control */
-        index = $.inArray(control, refs),
-        indexName = $(this).data('indexName');
-
-        if (index == refs.length) {
-            var button = $(this).data('amt'),
-            last = refs[refs.length - 1];
-            setAMTButton(button, last);
-        }
-        var setFieldName = $(this).data('setFieldName');
-        if (setFieldName) {
-            setFieldName = $.proxy(setFieldName, this);
-            setFieldName($(this).data('indexName'));
-        } else {
-            /* re-index any controls the succeed the one that has been hidden */
-            for (index; index < refs.length ; ++index) {
-                setIndex(indexName, index, $(refs[index]).data('stims'));
-            }
-        }
-        console.log("AUTOMATIC MACHINE TRANSLATION: ", setFieldName);
     }
 
 
@@ -3328,12 +3233,6 @@ function block_mdeditor_init_kit(target, L10n) {
         pholder = refs.placeholder;
         $(pholder).append(button);
     }
-
-    function setAMTButton(button, control) {
-        var refs = $(control).data('refs'),
-        pholder = refs.placeholder;
-        $(pholder).append(button);
-    }    
 
     /*
      *
@@ -3564,157 +3463,6 @@ function block_mdeditor_init_kit(target, L10n) {
         },
 
         // "rename" : function(
-
-        /* these two beauties may be merged into one ? */
-        "_hide" : function(field, value, exclude) {
-            /* hide the reserved value from the other members for it is no
-                 * longer available to them
-                 */
-            $.each(field.members, function() {
-                if (exclude == this) return;
-                var option = $(this).find('[value=' + value + ']');
-                $(option).attr('disabled', true);
-                $(option).hide();
-            });
-
-            /* mark the value as reserved (hidden) for this field */
-            field.hidden[value] = true;
-            ++field.count;
-        },
-        "_show" : function(field, value) {
-            /* hide the reserved value from the other members for it is no
-                 * longer available to them
-                 */
-            $.each(field.members, function() {
-                var option = $(this).find('[value=' + value + ']');
-                $(option).removeAttr('disabled');
-                $(option).show();
-            });
-
-            /* remove this value from the hidden values of this field */
-            delete field.hidden[value];
-            --field.count;
-        }
-    };
-
-
-    /* aggregation of language-selectors per field */
-    langRepoAMT = {
-
-        "values"  : $.extend(true, {}, L10n.common.languages),
-        /* the number of available values */
-        "count"   : L10n.common.languages_count,
-        "default" : null,
-        "refs"    : {},
-
-        "enroll"  : function(name, member) {
-            if (! this.refs[name]) {
-                this.refs[name] = {
-                    "hidden"  : {},
-                    "count"   : 0,
-                    "members" : []
-                };
-            }
-                
-            /* get all the available values */
-            var values = this.values,
-            field = this.refs[name],
-            suggest = null,
-            /* this value will have been set for elements that have been
-                     * previously hidden and now displayed again */
-            prefer = $(member).data('reserved');
-
-
-            /* if the prefered value is available, then give it that */
-            //                if (prefer && !field.hidden[prefer]) {
-            //                else
-            //                FIXME !!!
-            // ------------------------
-            /* replace this with an algorithm that suggest a value */
-            for (var i in values) {
-
-                /* ignore value if it has been reserved for this field */
-                if (field.hidden[i]) continue;
-                suggest = i;
-                break;
-            }
-
-            /* append options */
-            $.each(values, function(i ,v) {
-
-                var opt = $('<option value="' + i + '">' + v + '</option>');
-                /* add value as hidden if it has already been reserved for
-                     * this field
-                     */
-                if (field.hidden[i]) {
-                    $(opt).attr('disabled', true);
-                    $(opt).hide();
-                }
-                $(member).append(opt);
-            });
-
-            /* set and store the value within the element */
-            $(member).val(suggest);
-            $(member).data('reserved', suggest);
-
-            this._hide(field, suggest);
-
-            /* append this element to the members of this field */
-            field.members[field.members.length] = member;
-            return values;
-        },
-
-        "disenroll" : function(name, member) {
-            if (! this.refs[name]) return;
-            var members = this.refs[name].members,
-            index = $.inArray(member, members);
-
-            if (index < 0) return;
-
-            var value = $(member).data('reserved');
-
-            /* remove this member and its history */
-            $(member).empty();
-            members.splice(index, 1);
-
-            /* make the reserved value available to others */
-            this._show(this.refs[name], value);
-        },
-
-        "clear" : function() {
-            this.refs = {};
-        },
-
-        /*
-             * Must be run in the context of this object (the repo).
-             */
-        "change" : function(e) {
-            /* swap between the previously reserved language and the one
-                 * requested if the latter is available
-                 */
-            var reserved = $(e.target).data('reserved'),
-            requested = $(e.target).val(),
-            field = this.refs[$(e.target).data('field')];
-
-            /* `reserved' equals `requested' when data are being loaded
-                 * where fake change-events are triggered to enroll the elements
-                 * to the repo */
-            if (reserved != requested && field.hidden[requested]) {
-                /* reset the previous value */
-                $(e.target).val(reserved);
-                return;
-            }
-
-            $(e.target).data('reserved', requested);
-
-            this._show(field, reserved);
-            this._hide(field, requested, e.target);
-        },
-
-        "isAvailable" : function(field) {
-            return this.refs[field].count < this.count;
-        },
-
 
         /* these two beauties may be merged into one ? */
         "_hide" : function(field, value, exclude) {
@@ -4564,7 +4312,7 @@ function block_mdeditor_init_kit(target, L10n) {
     }
 
     var controlClass = 'control',
-    containerClass = 'container';
+    containerClass = 'container-fluid';
 
     target.kit = {
         /* functions */
@@ -4576,7 +4324,7 @@ function block_mdeditor_init_kit(target, L10n) {
         "setLocButton" : setLocButton,
         "newLocale"    : newLocale,
         "addContainer" : addContainer,
-        // "newLocaleContainer" : newLocaleContainer,
+        "newLocaleContainer" : newLocaleContainer,
         "newLocaleContainerNG" : newLocaleContainerNG,
         "setIndex"     : setIndex,
         "setStimsIndex" : setStimsIndex,
@@ -4588,7 +4336,6 @@ function block_mdeditor_init_kit(target, L10n) {
         "setIndexToContainer" : setIndexToContainer,
         "hideLocale"   : hideLocale,
         "hideContainer"   : hideContainer,
-        "amt"   : amt,
         "runInstead"   : runInstead,
         "runMethod"   : runMethod,
 
@@ -4605,7 +4352,6 @@ function block_mdeditor_init_kit(target, L10n) {
         "womb"     : womb,
         "out"      : out,
         "langRepo" : langRepo,
-        "langRepoAMT" : langRepoAMT,
         "addLocaleButton" : addLocale,
 
         /* variables */

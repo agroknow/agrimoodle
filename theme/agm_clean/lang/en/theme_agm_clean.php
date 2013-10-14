@@ -19,8 +19,10 @@
  *
  * @package   theme_agm_clean
  * @copyright 2013 Moodle, moodle.org
+ * @copyright 2013 AgroKnow, agroknow.gr
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 
 $string['choosereadme'] = '
 <div class="clearfix">
@@ -32,7 +34,7 @@ $string['choosereadme'] = '
 <h3>About</h3>
 <p>agriMoodle Clean is based on the <i>Clean theme</i>, which has been redesigned and adopted to meet the needs of <b><a href="http://agrimoodle.org>agriMoodle</a></b>.</p>
 <h3>Parents</h3>
-<p>Clean is a modified Moodle bootstrap theme which inherits styles and renderers from its parent theme.</p>
+<p>Clean is a modified Moodle Bootstrap theme which inherits styles and renderers from its parent theme.</p>
 <p>Clean is therefore based upon the Bootstrap theme, which was created for Moodle 2.5, with the help of:<br>
 Stuart Lamour, Mark Aberdour, Paul Hibbitts, Mary Evans.</p>
 <h3>Theme Credits</h3>
