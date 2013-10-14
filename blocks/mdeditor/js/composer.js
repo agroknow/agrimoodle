@@ -2096,7 +2096,7 @@ function block_mdeditor_compose(target, data, L10n, targetUrl, requestParams) {
 
     // +++ console.log( ' DATA', data);
 
-    var form = 'block_mdeditor-edit_form',//'block_mdeditor-edit_dialog',
+    var form = 'block_mdeditor-edit_form', //'block_mdeditor-edit_dialog',
     formSelector = '#'+form,
     edu = 'educational';
 

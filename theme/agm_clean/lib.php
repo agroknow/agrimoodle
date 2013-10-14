@@ -26,7 +26,7 @@
  *
  * @package   theme_agm_clean
  * @copyright 2013 Moodle, moodle.org
- * @copyright 2013 AgroKnow - agroknow.gr
+ * @copyright 2013 AgroKnow, agroknow.gr
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

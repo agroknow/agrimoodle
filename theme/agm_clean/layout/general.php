@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Moodle's Clean theme, an example of how to make a Bootstrap theme
+ * AgriMoodle's Clean theme (Bootstrap)
+ * Based on Moodle's clean theme, an example of how to make a Bootstrap theme
  *
  * DO NOT MODIFY THIS THEME!
  * COPY IT FIRST, THEN RENAME THE COPY AND MODIFY IT INSTEAD.
@@ -25,6 +26,7 @@
  *
  * @package   theme_agm_clean
  * @copyright 2013 Moodle, moodle.org
+ * @copyright 2013 AgroKnow, agroknow.gr
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
