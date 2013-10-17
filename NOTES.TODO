@@ -1,8 +1,11 @@
 TODO:
- ☐ @amt rm.is undefined in composer.js:2680
+ ☐ @hub all a-m instances should have a preconfigured registration for hub.agrimoodle.org
+ ☐ @hub update hub installation to latest agrimoodle's code / https://github.com/moodlehq/moodle-local_hub
+ ☐ @hub add a-m hub on http://hubdirectory.moodle.org/
+ ✔ @amt rm.is undefined in composer.js:2680 (13-10-17)
  ☐ @mdeditor consider changing theme, enable allowthemechangeonurl and add &theme=afterburner
  ☐ @amt (composer.js:3030) duplicate code, replace appropriately for amt
- ☐ @mdeditor better form controls for md form (smaller, not bootstrap)
+ ✔ @mdeditor better form controls for md form (smaller, not bootstrap) @done (13-10-17 08:35)
  ✔ persist.php does not create folder structure @done (13-10-10 08:41)
  ✔ allow only one instance of the mdeditor block @done (13-08-30 03:00)
  ✔ (#3) upgrade block oerfinder @done (13-08-30 02:30)
@@ -30,6 +33,17 @@ URLS:
   - file:///home/tkout/dev/agrimoodle/blocks/mdeditor/test/test_dform.html
 
   - http://apivita.agrimoodle.org/course/view.php?id=6
+
+
+agrimoodle hub
+--------------
+  - http://localhost/dev/agrimoodle/admin/registration/index.php
+  - http://localhost/dev/agrimoodle/admin/index.php?confirmplugincheck=1
+  - http://localhost/dev/agrimoodle/course/publish/index.php?id=4
+  - http://localhost/dev/agm-hub
+
+  $ mysql -u dev -pd3v
+  > select * from mdl_registration_hubs;
 
 
 oai-target
