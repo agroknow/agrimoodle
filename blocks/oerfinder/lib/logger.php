@@ -10,6 +10,7 @@ $timestamp = time();
  *
  * @package   block_oerfinder
  * @developer Tasos Koutoumanos <anastasios.koutoumanos@gmail.com>
+ * @developer Stauros Gkinis <gkista@agroknow.gr>
  * @copyright 2012 AgroKnow Technologies
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @version   1.01

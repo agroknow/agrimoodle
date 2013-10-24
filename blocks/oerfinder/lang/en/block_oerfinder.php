@@ -16,7 +16,6 @@ $string['loading_text'] = "Loading...";
 $string['first'] = "First";
 $string['last'] = "Last";
 $string['close'] = "[close]";
-$string['instructions_title'] = "Instructions";
 
 $string['hdr_config'] = "Configuration";
 $string['dsc_config'] = "Configure the parameters for the OER Finder widget";
@@ -25,5 +24,7 @@ $string['dsc_config'] = "Configure the parameters for the OER Finder widget";
 $string['db_insert_error'] = "Could not write entry in the database";
 $string['db_update_error'] = "Could not update existing log entry in the database";
 
+$string['search_available'] = "Will you allow user change the search value?";
+$string['instructions_searchvalue'] = "Select the default search value";
 /* Widget Lang Param */
 // define('TEST','HW!');

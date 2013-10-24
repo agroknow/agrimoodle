@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * OER Finder Block Widget
  *
@@ -14,16 +13,13 @@
 
 class block_oerfinder extends block_base {
 
-
     function has_config() {
         return true;
     }
 
-
     function get_required_javascript() {
         
     }
-
 
     function instance_allow_config() {
         return true;
@@ -32,15 +28,14 @@ class block_oerfinder extends block_base {
     /*
      * We aren't going to allow more than one instance of oefinder per course!
      */
+
     public function instance_allow_multiple() {
         return false;
     }
 
-
     function init() {
         $this->title = get_string('pluginname', 'block_oerfinder');
     }
-
 
     /**
      * Called immediately after init()
@@ -66,9 +61,9 @@ class block_oerfinder extends block_base {
         }
 
 
-         $PAGE->requires->jquery();
-         // added migrate in order to use allow the call to jQuery.browser() by boxy
-         $PAGE->requires->jquery_plugin('migrate');
+        $PAGE->requires->jquery();
+        // added migrate in order to use allow the call to jQuery.browser() by boxy
+        $PAGE->requires->jquery_plugin('migrate');
 //         $PAGE->requires->js('/local/agrimoodle/js/jquery16.js');
         $PAGE->requires->js('/local/agrimoodle/js/jquery.boxy.js');
         // FIXME +++ prototype clashes with yui, and tree controls will not work
@@ -84,23 +79,54 @@ class block_oerfinder extends block_base {
         //get language strings .
         $ml_strings = get_strings(array('search_box_text', 'loading_text', 'search_button_text'), 'block_oerfinder');
 
-        $this->content->text .= "
+        ////////////////Check if there is a search value from the user
+        ////////////////else course full name
+        $oersearchvalue = '';
+        if (!empty($this->config->searchvalue) AND (strlen($this->config->searchvalue) > 0)) {
+            $oersearchvalue = $this->config->searchvalue;
+        } else {
+            $oersearchvalue = $COURSE->fullname;
+        }
+        ///Check if user select to enable or not the search mechanism
+        if (!empty($this->config->search_available) AND ($this->config->search_available > 0)) {
+            $this->content->text .= "
 			<div class='searchform'>
 				<input id='simple_search_fld' name='oerfinder_search' size='16'
 					   placeholder='{$ml_strings->search_box_text}'
-					   type='text' value='{$COURSE->fullname}' maxlength='300'/>
+					   type='text' value='{$oersearchvalue}' maxlength='300'/>
 				<input type='submit' id='submit_search' title='Submit Search' value='{$ml_strings->search_button_text}' />
 			</div>
 			<div id='noOfResults'></div>
 			<div id='results'>{$ml_strings->loading_text}</div>
-             <div id='debug'>{$DB->count_records('block_oerfinder_logs', null)} records in logs</div>
-		";
+                            ";
+            ///Check if user select to enable or not the experiment mechanism
+            if (!empty($this->config->experiment) AND ($this->config->experiment > 0)) {
+                $this->content->text .= "<div id='debug'>{$DB->count_records('block_oerfinder_logs', null)} records in logs</div>";
+            }
+        } else {
+            $this->content->text .= "
+			<div class='searchform'>
+				<input id='simple_search_fld' name='oerfinder_search' size='16'
+					   placeholder='{$ml_strings->search_box_text}'
+					   type='hidden' value='{$oersearchvalue}' maxlength='300' readonly='readonly'/>
+			</div>
+			<div id='noOfResults'></div>
+			<div id='results'>{$ml_strings->loading_text}</div>  
+                            ";
+            ///Check if user select to enable or not the experiment mechanism
+            if (!empty($this->config->experiment) AND ($this->config->experiment > 0)) {
+                $this->content->text .= "<div id='debug'>{$DB->count_records('block_oerfinder_logs', null)} records in logs</div>";
+            }
+        }
+        ////variable for experiment to inform the oerfinder js not to run functions for experiment
+        $this->content->text .= "<div id='run_experiment' style='display:none;'>{$this->config->experiment}</div>";
         $this->content->text .= $this->getUserInfoJSObject();
         return $this->content;
     }
 
+    public
 
-    public function getUserInfoJSObject() {
+    function getUserInfoJSObject() {
         global $USER, $DB, $COURSE;
         $table = 'course_sections';
         $select = "course = $COURSE->id";
@@ -109,14 +135,13 @@ class block_oerfinder extends block_base {
         $sections = '[';
         $len = count($results);
         $i = 0;
-        foreach ($results as
-                $result) {
+        foreach ($results as $result) {
             $sections.=$result->section . ( ( $i != $len - 1 ) ? "," : "]" );
             $i+=1;
         }
 
         return
-        '<script type="text/javascript">
+                '<script type="text/javascript">
             var page ={
                 "user_id":"' . $USER->id . '",
                 "course_id":"' . $COURSE->id . '",
@@ -127,11 +152,9 @@ class block_oerfinder extends block_base {
          </script>';
     }
 
-
     function hide_header() {
         return false;
     }
-
 
     function preferred_width() {
         return 310;
