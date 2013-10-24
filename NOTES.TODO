@@ -1,4 +1,5 @@
 TODO:
+ ☐ @oai-target #stavros check everything works ok
  ☐ @hub all a-m instances should have a preconfigured registration for hub.agrimoodle.org
  ☐ @hub update hub installation to latest agrimoodle's code / https://github.com/moodlehq/moodle-local_hub
  ☐ @hub add a-m hub on http://hubdirectory.moodle.org/
