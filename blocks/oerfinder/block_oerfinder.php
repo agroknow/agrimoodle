@@ -55,11 +55,13 @@ class block_oerfinder extends block_base {
         $this->content->text = '';
         $this->content->footer = '';
 
+        if (empty($this->config)) {
+          $this->config = new stdClass;
+        }
         // check to see if this is part of an A-B Experiment
         if (!empty($this->config->experiment) AND ($this->config->experiment > 0)) {
-            $this->content->text .= '<p>Experiment</p>';
+          $this->content->text .= '<p>Experiment</p>';
         } else {
-          $this->config->experiment = new stdClass;
           $this->config->experiment = 0;
         }
 
