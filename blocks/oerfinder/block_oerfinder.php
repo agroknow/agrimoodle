@@ -58,6 +58,8 @@ class block_oerfinder extends block_base {
         // check to see if this is part of an A-B Experiment
         if (!empty($this->config->experiment) AND ($this->config->experiment > 0)) {
             $this->content->text .= '<p>Experiment</p>';
+        } else {
+          $this->config->experiment = 0;
         }
 
 
@@ -100,7 +102,7 @@ class block_oerfinder extends block_base {
 			<div id='results'>{$ml_strings->loading_text}</div>
                             ";
             ///Check if user select to enable or not the experiment mechanism
-            if (!empty($this->config->experiment) AND ($this->config->experiment > 0)) {
+            if ($this->config->experiment > 0) {
                 $this->content->text .= "<div id='debug'>{$DB->count_records('block_oerfinder_logs', null)} records in logs</div>";
             }
         } else {
@@ -114,7 +116,7 @@ class block_oerfinder extends block_base {
 			<div id='results'>{$ml_strings->loading_text}</div>  
                             ";
             ///Check if user select to enable or not the experiment mechanism
-            if (!empty($this->config->experiment) AND ($this->config->experiment > 0)) {
+            if ($this->config->experiment > 0) {
                 $this->content->text .= "<div id='debug'>{$DB->count_records('block_oerfinder_logs', null)} records in logs</div>";
             }
         }

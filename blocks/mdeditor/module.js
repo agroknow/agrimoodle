@@ -73,7 +73,7 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
 
     M.block_mdeditor.block = block;
 
-	/* for some inexplicable reason, contribute3 is not included into the L10n,
+    /* for some inexplicable reason, contribute3 is not included into the L10n,
      * if the latter is sent directly to this function via the parameters above;
      * need to get it via other means so here it goes… */
     $.get(M.cfg.wwwroot + '/blocks/mdeditor/L10n.php')
