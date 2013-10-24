@@ -79,7 +79,7 @@ class block_oai_target extends block_base {
 		$this->content   = new stdClass;
 		$Course = new Course();
 		$course_registration = $Course->get_registration($COURSE->id);
-		
+
 
         // last update info
         $this->content->text = "<span style='font-size: small'>";
@@ -102,12 +102,13 @@ class block_oai_target extends block_base {
             $this->content->text.="</div>";
             //
             $this->content->text.="<ol>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=GetRecord'>GetRecord</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=Identify'>Identify</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=ListIdentifiers'>ListIdentifiers</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=ListMetadataFormats'>ListMetadataFormats</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=ListRecords'>ListRecords</a></li>";
-            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/lib/PMH.php?verb=ListSets'>ListSets</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=Identify'>Identify</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=ListSets'>ListSets</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=ListMetadataFormats'>ListMetadataFormats</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=ListIdentifiers&metadataPrefix=oai_lom&set=course'>ListIdentifiers (courses)</a></li>";
+			$this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=ListIdentifiers&metadataPrefix=oai_lom&set=resource'>ListIdentifiers (resources)</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=ListRecords&metadataPrefix=oai_lom'>ListRecords</a></li>";
+            $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=GetRecord&identifier=http://www.foo.gr&metadataPrefix=oai_lom'>GetRecord</a></li>";
             $this->content->text.="</ol>";
 //		}
 		$this->content->footer = '<b>Note:</b> under construction!';
@@ -122,56 +123,13 @@ function cron() {
 		global $CFG;
 		echo "\n\n****** oai_target :: begin ******";
 
-		$Course = new Course();
-		// clean deleted courses data
-		$Course->collect_garbage();
+		include_once('lib/cronlib.php');
 
-		// get the list of courses that are using this block
-		$courses = $Course->get_all_courses_using_oai_target_block();
-		
-		// if no courses are using this block exit
-		if( !is_array($courses) or count($courses) < 1 ) {
-			echo "\n--> None course is using oai_target plugin.";
-			echo "\n****** oai_target :: end ******\n\n";
-			return;
-		}
+		$cl = new cronlib(0, "all"); 
+		echo $cl->scan_files();
 
-		foreach($courses as $course) {
-			// if course is not visible then skip
-			if ( $course->visible == 0 ) { continue; }
-
-			// if the course has not been registered so far then register
-			echo "\n--> Processing course: $course->fullname";
-			if( !$Course->is_registered($course->id) ) {
-				$Course->register($course->id, time());
-			}
-
-			// check update frequency for this course
-			$course_registration = $Course->get_registration($course->id);
-
-			// if course log entry does not exist
-			// or the last update time is older than two days
-			// then reinitialize course log
-			if( !$Course->log_exists($course->id) or $course_registration->last_update_time + 48*3600 < time() )
-				$Course->initialize_log($course);
-
-			// check update frequency for the course and skip to next cron cycle if neccessary
-			if( $course_registration->last_update_time + $course_registration->update_frequency > time() ){
-				echo " - Skipping to next cron cycle.";
-				continue;
-			}
-
-			$Course->update_log($course);
-
-			// check if the course has something new or not
-			$changelist = $Course->get_recent_activities($course->id);
-			// update the last update time
-			$Course->update_last_update_time($course->id, time());
-			if( empty($changelist) ) { continue; } // check the next course. No new items in this one.
-
-
-		}
 		echo "\n****** oai_target :: end ******\n\n";
+
 		return;
 	}
 

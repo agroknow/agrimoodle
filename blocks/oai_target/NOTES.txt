@@ -1,0 +1,148 @@
+block_oai_target
+
+
+NOTES
+=====
+
+* To check the OAI-PMH target (verbs)
+  - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=Identify
+  - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=ListSets
+  - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=ListMetadataFormats
+  - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=ListIdentifiers&metadataPrefix=oai_lom&set=foo
+  - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=ListRecords&metadataPrefix=oai_lom
+  - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=GetRecord&identifier=http://www.foo.gr&metadataPrefix=oai_lom
+  
+* TEMPLATE implementations (verbs)
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=Identify
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=ListSets
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=ListIdentifiers&metadataPrefix=oai_lom
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=ListRecords&metadataPrefix=oai_lom
+  - http://aglr.agroknow.gr/organic-edunet/oai?verb=GetRecord&identifier=oai:aglr.agroknow.gr/organic-edunet/:45&metadataPrefix=oai_lom
+
+
+* To check the cron operation
+  tkout@maya ~/dev/agrimoodle/admin/cli $ php cron.php
+
+* A sample LOM record (Organic Edunet Application Profile)
+  http://data.organic-edunet.eu/ODS_LOM2LD/ODS_FirstDraft.html
+
+
+
+
+FIXME:
+------
+- Handle DELETED records
+
+
+TODO:
+-----
+The general idea is to parse all files that are generated from the mdeditor
+widget (LOM editor), for every course that is registered to the target and
+store the information in a LOM format, ready to be posted to the harvester.
+
+Then, when the harvester calls with a proper verb, this plugin should respond
+with appropriate answers!
+
+
+RELATED:
+--------
+- check BOAIDP plugin, it's for Moodle 1.9 but has some interesting ideas,
+  esp. related to the database schema. Overall it's useless.
+  https://github.com/mglaredo/moodle-block_boaidp/tree/master/db
+  http://moodle.org/plugins/pluginversion.php?id=695
+
+- checked the DOOR plugin, it's quite old and useless
+  http://moodle.org/mod/data/view.php?d=13&rid=502
+
+- check information from this page:
+  http://www.physnet.uni-oldenburg.de/projects/OAD/software.html
+
+- it Refers to the phpoai2 connector which can serve as a basis for our work
+
+- check information from here:
+  http://www.oaforum.org/tutorial/english/page4.htm
+
+
+
+
+
+	version 2013011301
+
+------------------------------------------------------------------------------------------------------------------------
+	files that has been changed
+------------------------------------------------------------------------------------------------------------------------
+
+	- block_oai_target.php
+	- common.php
+		remove whitespace from the end of the file
+
+	- lib/cronlib.php
+		remove assocArrayToXML function
+		remove json_to_xml function
+		remove array_to_xml function
+		remove xml header from every entry sending to db
+		reform xml string
+		remove whitespace from the end of the file
+
+	- lib/PMH.php
+		remove whitespace from the end of the file
+
+	- target/oai2.php
+		add lines 39-41
+		remove whitespace from the end of the file
+
+	- target/lib/record_dc.php
+		recover old version
+
+	- target/lib/oaidp-util.php
+		remove whitespace from the end of the file
+
+	- target/lib/oaidp-config.php
+		comment line 54
+		uncommnet line 58
+		edit line 142
+		create $INDENT for gloabal use for the xmlrecord() and xmlformat() line 170
+		change/correct $METADATAFORMATS line 189 (new record record_prefix)
+		change/correct DB connection line 216-219(Use Moodle config)
+		remove whitespace from the end of the file
+
+	- target/lib/listsets.php
+		use global $INDENT
+		remove whitespace from the end of the file
+
+	- target/lib/listrecords.php
+		create it from scratch because something was wrong (secret character or something in encoding)
+		use global $INDENT
+		remove whitespace from the end of the file
+
+	- target/lib/listmetadataformats.php
+		use global $INDENT
+		remove whitespace from the end of the file
+
+	- target/lib/listidentifiers.php
+		use global $INDENT
+		remove whitespace from the end of the file
+
+	- target/lib/identify.php
+		use global $INDENT
+		remove whitespace from the end of the file
+
+	- target/lib/getrecord.php
+		use global $INDENT
+		remove whitespace from the end of the file
+
+	- NEW
+		create file record_lom.php
+
+------------------------------------------------------------------------------
+TODO LIST (from marinos, 23/01/2013)
+-------------------------------------------------------------------------------
+
++ πρέπει να μπεί στο install ο πίνακας που γράφει η cronlib (mdl_oai_records). DONE
++ πρέπει να γίνουν αλλαγές στην cronlib ώστε να μπορεί να μπεί στο cron του moodle. DONE
+- αυτή τη στιγμή γράφουμε στον πίνακα mdl_oai_records αλλά δεν κάνουμε έλεγχο αν υπάρχει η εγγραφή στον πίνακα ώστε να κάνουμε update αν χρειάζεται.
+
+Έχω σκεφτεί τρόπο για update, αλλά δεν ξέρω τι να βάλω σαν κλειδί στον πίνακα που να προσδιορίζει μοναδικά την εγγραφή.
+Από όσα κρατάτε στο json δεν φαίνεται να μας κάνει κάτι εκτός και αν κάνω κάπου λάθος.
+Μία καλή ιδέα ίσως να ήταν να κρατάτε το shortname του μαθήματος ή το Course ID number.
+Θα πρέπει λοιπόν με κάποιο τρόπο να τα έχουμε μέσα στο json.

@@ -42,20 +42,20 @@
  - the encoding your data is stored (all below DATABASE SETUP)
 */
 
-// To install, test and debug use this	
+// To install, test and debug use this
 // If set to TRUE, will die and display query and database error message
 // as soon as there is a problem. Do not set this to TRUE on a production site,
 // since it will show error messages to everybody.
 // If set FALSE, will create XML-output, no matter what happens.
 $SHOW_QUERY_ERROR = FALSE;
 
-// The content-type the WWW-server delivers back. For debug-puposes, "text/plain" 
+// The content-type the WWW-server delivers back. For debug-puposes, "text/plain"
 // is easier to view. On a production site you should use "text/xml".
-$CONTENT_TYPE = 'Content-Type: text/plain';
+//$CONTENT_TYPE = 'Content-Type: text/plain';
 
 // If everything is running ok, you should use this
 // $SHOW_QUERY_ERROR = FALSE;
-//$CONTENT_TYPE = 'Content-Type: text/xml;charset=utf-8';
+$CONTENT_TYPE = 'Content-Type: text/xml';
 
 // PEAR SETUP
 // use PEAR classes
@@ -63,11 +63,12 @@ $CONTENT_TYPE = 'Content-Type: text/plain';
 // if you do not find PEAR, use something like this
 //ini_set('include_path', '.:/usr/share/php:/www/oai/PEAR');
 // Windows users might like to try this
-ini_set('include_path', '.;c:\wamp\bin\php\php5.3.5\pear');
+//ini_set('include_path', '.;c:\wamp\bin\php\php5.3.5\pear');
 //ini_set('include_path', '.;C:\wamp\bin\php\php5.3.5\pear\pear');
 
 // if there are problems with unknown 'numrows', then make sure
-// to upgrade to a decent PEAR version. 
+// to upgrade to a decent PEAR version.
+
 require_once('DB.php');
 
 error_reporting(E_ALL & ~E_NOTICE);
@@ -77,7 +78,7 @@ $MY_URI = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'];
 
 // MUST (only one)
 // please adjust
-$repositoryName       = 'An OAI Repository, coming from phpland';
+$repositoryName       = 'An agriMoodle\'s instance OAI Repository';
 $baseURL			  = $MY_URI;
 // You can use a static URI as well.
 //$baseURL 			= "http://localhost/oai/oai2.php";
@@ -87,17 +88,17 @@ $protocolVersion      = '2.0';
 // How your repository handles deletions
 // no: 			The repository does not maintain status about deletions.
 //				It MUST NOT reveal a deleted status.
-// persistent:	The repository persistently keeps track about deletions 
+// persistent:	The repository persistently keeps track about deletions
 //				with no time limit. It MUST consistently reveal the status
 //				of a deleted record over time.
-// transient:   The repository does not guarantee that a list of deletions is 
+// transient:   The repository does not guarantee that a list of deletions is
 //				maintained. It MAY reveal a deleted status for records.
-// 
+//
 // If your database keeps track of deleted records change accordingly.
 // Currently if $record['deleted'] is set to 'true', $status_deleted is set.
-// Some lines in listidentifiers.php, listrecords.php, getrecords.php  
+// Some lines in listidentifiers.php, listrecords.php, getrecords.php
 // must be changed to fit the condition for your database.
-$deletedRecord        = 'no'; 
+$deletedRecord        = 'no';
 
 // MAY (only one)
 //granularity is days
@@ -108,7 +109,7 @@ $granularity          = 'YYYY-MM-DDThh:mm:ssZ';
 // MUST (only one)
 // the earliest datestamp in your repository,
 // please adjust
-$earliestDatestamp    = '2000-01-01';
+$earliestDatestamp    = '2012-01-01';
 
 // this is appended if your granularity is seconds.
 // do not change
@@ -118,35 +119,37 @@ if ($granularity == 'YYYY-MM-DDThh:mm:ss:Z') {
 
 // MUST (multiple)
 // please adjust
-$adminEmail			= array('mailto:me@localhost.de'); 
+$adminEmail			= array('mailto:webmaster@agrimoodle.org');
 
-// MAY (multiple) 
+// MAY (multiple)
 // Comment out, if you do not want to use it.
-// Currently only gzip is supported (you need output buffering turned on, 
-// and php compiled with libgz). 
-// The client MUST send "Accept-Encoding: gzip" to actually receive 
+// Currently only gzip is supported (you need output buffering turned on,
+// and php compiled with libgz).
+// The client MUST send "Accept-Encoding: gzip" to actually receive
 // compressed output.
-$compression		= array('gzip');
+// $compression		= array('gzip');
 
 // MUST (only one)
 // should not be changed
 $delimiter			= ':';
 
 // MUST (only one)
-// You may choose any name, but for repositories to comply with the oai 
-// format for unique identifiers for items records. 
+// You may choose any name, but for repositories to comply with the oai
+// format for unique identifiers for items records.
 // see: http://www.openarchives.org/OAI/2.0/guidelines-oai-identifier.htm
-// Basically use domainname-word.domainname
-// please adjust
-$repositoryIdentifier = 'aName.org'; 
+// this is the namespace_id of OAI 2.0 identifier's spec
+// (scheme ":" namespace_id ":" local_id where scheme should always be "oai")
+// $parseURL = parse_url($CFG->wwwroot);
+// $repositoryIdentifier = $parseURL['host'].''.$parseURL['path']; 
+$repositoryIdentifier = parse_url($CFG->wwwroot)['host']; 
 
 
-// description is defined in identify.php 
-$show_identifier = false;
+// description is defined in identify.php
+$show_identifier = true;
 
 // You may include details about your community and friends (other
 // data-providers).
-// Please check identify.php for other possible containers 
+// Please check identify.php for other possible containers
 // in the Identify response
 
 // maximum mumber of the records to deliver
@@ -163,50 +166,55 @@ $MAXIDS = 200;
 
 // After 24 hours resumptionTokens become invalid.
 $tokenValid = 24*3600;
-$expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid); 
+$expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
+
+//INDENT for the xmlrecord()
+$INDENT = 4;
 
 // define all supported sets in your repository
 $SETS = 	array (
-				array("setSpec"=>"phdthesis", 'setName'=>'PHD Thesis', 'setDescription'=>'a dfsasd fsdf sdf asdf sdf asdf sdaf sdf sdf sdf sdf sdf sdf asd f') //,
-				// array('setSpec'=>'math', 'setName'=>'Mathematics') ,
-				// array('setSpec'=>'phys', 'setName'=>'Physics') 
-			);
+				//array("setSpec"=>"phdthesis", 'setName'=>'PHD Thesis', 'setDescription'=>'Very nice thesis'),
+				array("setSpec"=>"courses", 'setName'=>'Courses that are deployed through agriMoodle') ,
+				array("setSpec"=>"resources", 'setName'=>'Resources from agriMoodle courses'),
+	// array('setSpec'=>'math', 'setName'=>'Mathematics') ,
+	// array('setSpec'=>'phys', 'setName'=>'Physics')
+);
 
 // define all supported metadata formats
 
 //
-// myhandler is the name of the file that handles the request for the 
+// myhandler is the name of the file that handles the request for the
 // specific metadata format.
 // [record_prefix] describes an optional prefix for the metadata
 // [record_namespace] describe the namespace for this prefix
 
 
-//----marinos changes start here
 $METADATAFORMATS = 	array (
-						'oai_lom' => array('metadataPrefix'=>'oai_lom', 
-							'schema'=>'http://www.openarchives.org/OAI/2.0/oai_dc.xsd',
-							'metadataNamespace'=>'http://www.openarchives.org/OAI/2.0/oai_dc/',
-							'myhandler'=>'record_dc.php',
-							'record_prefix'=>'lom',
-							'record_namespace' => 'http://purl.org/dc/elements/1.1/'
-						) //,
-						//array('metadataPrefix'=>'olac', 
-						//	'schema'=>'http://www.language-archives.org/OLAC/olac-2.0.xsd',
-						//	'metadataNamespace'=>'http://www.openarchives.org/OLAC/0.2/',
-						//	'handler'=>'record_olac.php'
-						//)
-					);
-//----marinos changes ends here
+	'oai_dc' => array('metadataPrefix'=>'oai_dc',
+		'schema'=>'http://www.openarchives.org/OAI/2.0/oai_dc.xsd',
+		'metadataNamespace'=>'http://www.openarchives.org/OAI/2.0/oai_dc/',
+		'myhandler'=>'record_dc.php',
+		'record_prefix'=>'dc',
+		'record_namespace' => 'http://purl.org/dc/elements/1.1/'
+	),
+	'oai_lom' => array('metadataPrefix'=>'oai_lom',
+		'schema'=>'http://www.openarchives.org/OAI/2.0/oai_dc.xsd',
+		'metadataNamespace'=>'http://www.openarchives.org/OAI/2.0/oai_dc/',
+		'myhandler'=>'record_lom.php',
+		'record_prefix'=>'lom',
+		'record_namespace' => 'http://ltsc.ieee.org/xsd/LOM'
+	)
+);
 
-// 
+//
 // DATABASE SETUP
 //
 
 // change according to your local DB setup.
-$DB_HOST   = 'localhost';
-$DB_USER   = 'root';
-$DB_PASSWD = '';
-$DB_NAME   = 'agrimoodle';												           
+$DB_HOST   = $CFG->dbhost;
+$DB_USER   = $CFG->dbuser;
+$DB_PASSWD = $CFG->dbpass;
+$DB_NAME   = $CFG->dbname;
 
 // Data Source Name: This is the universal connection string
 // if you use something other than mysql edit accordingly.
@@ -220,32 +228,30 @@ $DSN = "mysql://$DB_USER:$DB_PASSWD@$DB_HOST/$DB_NAME";
 // currently only utf-8 and iso8859-1 are supported
 $charset = "utf-8";
 
-// if entities such as < > ' " in your metadata has already been escaped 
+// if entities such as < > ' " in your metadata has already been escaped
 // then set this to true (e.g. you store < as &lt; in your DB)
 $xmlescaped = false;
 
-// We store multiple entries for one element in a single row 
-// in the database. SQL['split'] ist the delimiter for these entries.
+// We store multiple entries for one element in a single row
+// in the database. SQL['split'] is the delimiter for these entries.
 // If you do not do this, do not define $SQL['split']
-//-----marinos changes start here (previous value=';')
 $SQL['split'] = '@@';
-//-----marinos changes ends here
 
 // the name of the table where your store your metadata
-$SQL['table'] = 'mdl_oai_records';
+$SQL['table'] = 'mdl_block_oai_target_lom_records';
 
-// the name of the column where you store your sequence 
+// the name of the column where you store your sequence
 // (or autoincrement values).
 $SQL['id_column'] = 'id';
 
 // the name of the column where you store the unique identifiers
 // pointing to your item.
 // this is your internal identifier for the item
-$SQL['identifier'] = 'url';
+$SQL['identifier'] = 'oai_identifier';
 
 // If you want to expand the internal identifier in some way
 // use this (but not for OAI stuff, see next line)
-$idPrefix = '';
+$idPrefix = 'v1/';
 
 // this is your external (OAI) identifier for the item
 // this will be expanded to
@@ -254,7 +260,7 @@ $idPrefix = '';
 $oaiprefix = "oai".$delimiter.$repositoryIdentifier.$delimiter.$idPrefix; 
 
 // adjust anIdentifier with sample contents an identifier
-$sampleIdentifier     = $oaiprefix.'anIdentifier';
+$sampleIdentifier     = $oaiprefix.'c21/r1972';
 
 // the name of the column where you store your datestamps
 $SQL['datestamp'] = 'datestamp';
@@ -269,7 +275,7 @@ $SQL['deleted'] = 'deleted';
 // the name of the column where you store sets
 $SQL['set'] = 'oai_set';
 
-// Here are a couple of queries which might need to be adjusted to 
+// Here are a couple of queries which might need to be adjusted to
 // your needs. Normally, if you have correctly named the columns above,
 // this does not need to be done.
 
@@ -300,7 +306,7 @@ function idQuery ($id = '')
 	} else {
 		$query = 'select '.$SQL['identifier'].','.$SQL['datestamp'].' FROM '.$SQL['table'].' WHERE ';
 	}
-	
+
 	if ($id == '') {
 		$query .= $SQL['id_column'].' = '.$SQL['id_column'];
 	}
@@ -312,7 +318,7 @@ function idQuery ($id = '')
 }
 
 // filter for until
-function untilQuery($until) 
+function untilQuery($until)
 {
 	global $SQL;
 
@@ -342,15 +348,14 @@ $datetime = gmstrftime('%Y-%m-%dT%T');
 $responseDate = $datetime.'Z';
 
 // do not change
-$XMLHEADER = 
-'<?xml version="1.0" encoding="UTF-8"?>
+$XMLHEADER = '<?xml version="1.0" encoding="UTF-8"?>
 <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
-         http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">'."\n";
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
+	http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">'."\n";
 
-$xmlheader = $XMLHEADER . 
-			  ' <responseDate>'.$responseDate."</responseDate>\n";
+$xmlheader = $XMLHEADER .
+	' <responseDate>'.$responseDate."</responseDate>\n";
 
 // the xml schema namespace, do not change this
 $XMLSCHEMA = 'http://www.w3.org/2001/XMLSchema-instance';

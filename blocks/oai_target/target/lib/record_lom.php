@@ -1,11 +1,11 @@
-﻿<? 
+<?php
 /*
 * +----------------------------------------------------------------------+
 * | PHP Version 4                                                        |
 * +----------------------------------------------------------------------+
-* | Copyright (c) 2002-2005 Heinrich Stamerjohanns                       |
+* | Copyright (c) 2013 Agro-Know Technologies                            |
 * |                                                                      |
-* | listsets.php -- Utilities for the OAI Data Provider                  |
+* | dc_lom.php -- Utilities for the OAI Data Provider                    |
 * |                                                                      |
 * | This is free software; you can redistribute it and/or modify it under|
 * | the terms of the GNU General Public License as published by the      |
@@ -21,60 +21,31 @@
 * |                                                                      |
 * +----------------------------------------------------------------------+
 * | Derived from work by U. Mόller, HUB Berlin, 2002                     |
+* |     and from work by Heinrich Stamerjohanns, 2005                    | 
 * |                                                                      |
-* | Written by Heinrich Stamerjohanns, May 2002                          |
-* |            stamer@uni-oldenburg.de                                   |
+* | Written by Tasos Koutoumanos, May 2012                               |
+* |            tafkey@about.me                                           |
 * +----------------------------------------------------------------------+
 */
-//
-// $Id: listsets.php,v 1.00 2002/08/26 13:08:04 stamer Exp $
-//
 
-// parse and check arguments
-foreach($args as $key => $val) {
 
-	switch ($key) { 
-		case 'resumptionToken':
-			$resumptionToken = $val;
-			$errors .= oai_error('badResumptionToken', $key, $val); 
-			break;
 
-		default:
-			$errors .= oai_error('badArgument', $key, $val);
-	}
-}
+// please change to the according metadata prefix you use 
+$prefix = 'oai_lom';
 
-// break and clean up on error
-if ($errors != '') {
-	oai_exit();
-}
+$output .= 
+'   <metadata>'."\n";
+$output .= metadataHeader($prefix);
 
-if (is_array($SETS)) {
-	$output .= "  <ListSets>\n";
-	foreach($SETS as $key=>$val) {
-		$output .= "   <set>\n";
-		$output .= xmlformat($val['setSpec'], 'setSpec', '', 4);
-		$output .= xmlformat($val['setName'], 'setName', '', 4);
-		if (isset($val['setDescription']) && $val['setDescription'] != '') {
-			$output .= "    <setDescription>\n";
-			$prefix = 'oai_dc';
-			$output .= metadataHeader($prefix);
-			$output .= xmlrecord($val['setDescription'], 'dc:description', '', 7);
-			$output .=           
-			'     </'.$prefix;
-			if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
-				$output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
-			}
-			$output .= ">\n";
-			$output .= "    </setDescription>\n";
-		}
-		$output .= "   </set>\n";
-	}
-	$output .= "  </ListSets>\n"; 
-}
-else {
-	$errors .= oai_error('noSetHierarchy'); 
-	oai_exit();
-}
+$output .= $record['lom_record'];
 
+// FIXME: this is a hack, Marinos pls. fix!
+$output .= '</lom>';          
+// '     </'.$prefix.';
+// if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
+  // $output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
+// }
+$output .= ">\n";
+$output .= 
+'   </metadata>'."\n";
 ?>
