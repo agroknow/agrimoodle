@@ -59,6 +59,7 @@ class block_oerfinder extends block_base {
         if (!empty($this->config->experiment) AND ($this->config->experiment > 0)) {
             $this->content->text .= '<p>Experiment</p>';
         } else {
+          $this->config->experiment = new stdClass;
           $this->config->experiment = 0;
         }
 
