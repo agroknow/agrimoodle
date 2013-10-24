@@ -1,5 +1,5 @@
 <?php
 
-$string['pluginname'] = 'Agri-Moodle';
+$string['pluginname'] = 'agriMoodle';
 
 ?>

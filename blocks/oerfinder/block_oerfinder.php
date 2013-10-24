@@ -5,7 +5,7 @@
  * OER Finder Block Widget
  *
  * @developer Tasos Koutoumanos <anastasios.koutoumanos@gmail.com>
- * @version 1.05
+ * @version 1.10
  *
  * Based on the Ariadne Block widget originally
  * developed by A.Shukr <ahshukr@eummena.org>
@@ -29,10 +29,11 @@ class block_oerfinder extends block_base {
         return true;
     }
 
-
-    // FIXME maybe remove this for production
+    /*
+     * We aren't going to allow more than one instance of oefinder per course!
+     */
     public function instance_allow_multiple() {
-        return true;
+        return false;
     }
 
 
@@ -65,7 +66,10 @@ class block_oerfinder extends block_base {
         }
 
 
-        $PAGE->requires->js('/local/agrimoodle/js/jquery16.js');
+         $PAGE->requires->jquery();
+         // added migrate in order to use allow the call to jQuery.browser() by boxy
+         $PAGE->requires->jquery_plugin('migrate');
+//         $PAGE->requires->js('/local/agrimoodle/js/jquery16.js');
         $PAGE->requires->js('/local/agrimoodle/js/jquery.boxy.js');
         // FIXME +++ prototype clashes with yui, and tree controls will not work
 //        $PAGE->requires->js('/local/agrimoodle/js/prototype.js');

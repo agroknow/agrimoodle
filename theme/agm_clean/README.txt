@@ -60,7 +60,6 @@ The problem when copying a theme is that you need to rename all those instances
 where the old theme name occurs, in this case clean. So using the above list as
 a guide, search through and change all the instances of the theme name
 'clean' to 'cleantheme'. This includes the filename of the lang/en/theme_agm_clean.php.
-You need to change this to 'theme_agmcleantheme.php'.
 
 Installing your theme
 ---------------------

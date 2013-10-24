@@ -1,5 +1,9 @@
-- move jquery staff into main agrimoodle module !!!
 - merge common lang strings into the main agrimoodle module
+- remove jquery-ui-*
+
+DONE
+====
++ move jquery staff into main agrimoodle module !!!
 
 
 LEGEND

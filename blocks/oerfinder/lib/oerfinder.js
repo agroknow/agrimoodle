@@ -276,7 +276,9 @@ function createPager(inDiv, numrows) {
     return true;
 }
 
-jQuery('.wnext_page').live('click',function(){
+// jQuery.live has been removed since jquery 1.9 ...
+// jQuery('.wnext_page').live('click',function(){
+jQuery(document).on('click', '.wnext_page', function() {
     boxy_ref.setTitle('Loading...');
 
     var pg = parseInt( jQuery(this).attr('pg'));
@@ -302,7 +304,8 @@ jQuery(document).ready(function() {
         sendJSONRequest(jQuery('#simple_search_fld').val());
     });
 
-    jQuery('.modal_show').live('click',function() {
+//    jQuery('.modal_show').live('click',function() {
+    jQuery(document).on('click', '.modal_show', function() {
         var title = jQuery(this).attr('title');
         var body =  jQuery(this).attr('body');
         var location =jQuery(this).attr('location');
@@ -375,7 +378,8 @@ jQuery(document).keyup(function(e) {
 
 
 
-jQuery('#getMoreResults').live('click',function( ) {
+//jQuery('#getMoreResults').live('click',function( ) {
+jQuery(document).on('click', '#getMoreResults', function() {
 //    console.log("User is trying to get more results!")
     selected_page=2;
     searchPages();

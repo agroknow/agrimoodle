@@ -2,34 +2,63 @@
 /* Custom tentative styles
 --------------------------------- */
 
-form#block_mdeditor_dialog_form h3 {
+form#block_mdeditor-edit_form h3 {
     border-bottom: 1.5px solid #999;
     padding-bottom: 0.1em;
     margin-top: 1em;
+    font-size: 50em;
 /*    text-shadow: 0px 0px 5px #63AB74;*/
 }
 
-form#block_mdeditor_dialog_form .error {
-    color: red;
+form#block_mdeditor-edit_form button {
+    margin-bottom: 10px;
 }
 
-form#block_mdeditor_dialog_form .bordering-button {
+
+form#block_mdeditor-edit_form .error {
+    color: red;
+    background-color: lightsalmon;
+}
+
+form#block_mdeditor-edit_form>div>label.error {
+    display: none;
+}
+
+
+form#block_mdeditor-edit_form .bordering-button {
     margin-bottom: 1em;
 }
 
-form#block_mdeditor_dialog_form h5 {
+form#block_mdeditor-edit_form h5 {
      margin-top: 1em;
 }
 
-form#block_mdeditor_dialog_form h6 {
+form#block_mdeditor-edit_form h6 {
      margin-top: 1em;
+}
+
+form#block_mdeditor-edit_form label {
+    display: inline;
+    margin-right: 5px;
+}
+
+ul.checklist>li>input {
+    margin-top: 4px;
+}
+
+fieldset>legend {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    width: auto;
+    border: none;
 }
 
 .small-button {
     margin: 0.2em 0.2em 0 0;
 }
 
-.block_mdeditor_control {
+.block_mdeditor-control {
     margin-top: 0.5em;
     margin-bottom: 0;
 }
@@ -38,12 +67,12 @@ form#block_mdeditor_dialog_form h6 {
     margin-right: 0.5em;
 }
 
-ol.block_mdeditor_container-b {
+ol.block_mdeditor-container-b {
     margin-top: 0.5em;
     margin-bottom: 0;
 }
 
-.block_mdeditor_container-a {
+.block_mdeditor-container-a {
     margin-top: 0.5em;
     margin-bottom: 0;
 }
@@ -107,8 +136,6 @@ input.block_mdeditor-element_oneline[class~='date'] {
     vertical-align : sub;
 }
 
-.block_mdeditor-container {
-}
 
 #block_mdeditor-edit_form fieldset {
     border: 1px dotted;
@@ -120,7 +147,7 @@ input.block_mdeditor-element_oneline[class~='date'] {
 
 /* used at elements that support multiple values, especially LangStrings */
 ol.block_mdeditor-multiple_values {
-    margin: 0 0 0 0;
+    margin: 0px;
 }
 
 ol.block_mdeditor-multiple_values > li {
@@ -136,6 +163,13 @@ ol.block_mdeditor-multiple_values > li > a {
 	color: #003333;
 }
 
+ol.block_mdeditor-multiple_values > li + div {
+    font-style: italic;
+    font-size: 0.6em;
+    color: #003333;
+}
+
+
 .ui-widget {
     font-size: 1em;
 }
@@ -144,13 +178,11 @@ ol.block_mdeditor-multiple_values > li > a {
     margin-top: 0.5em;
 }
 
-#block_mdeditor-edit_form .error {
-	background-color: lightsalmon;
-}
 
 #block_mdeditor-edit_form .success {
     color: green;
 }
+
 
 
 .block_mdeditor-resources .status_complete {
@@ -186,5 +218,5 @@ select.block_mdeditor-language_selector {
 }
 
 ol.block_mdeditor-multiple_values :first-child > a.block_mdeditor-cardinality_hide {
-	background-color: transparent; color: transparent;
+	display: none;
 }

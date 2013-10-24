@@ -24,12 +24,12 @@ composer.js
 ----------- 
 The "beast" (>4100 loc). These are the main parts:
 
-0001: block_mdeditor_compose_title(kit, data, fieldName, L10n)
-0255: (kit, data, fieldName, L10n, classRule, widget)
-0312: (kit, data, fieldName, L10n, widget)
-0668: (kit, data, fieldName, L10n, mandatory)
-1200: (kit, data, fieldName, L10n)
-1879: block_mdeditor_compose(target, data, L10n, targetUrl, requestParams)
+0001: block_mdeditor_compose_title			(kit, data, fieldName, L10n)
+0255: block_mdeditor_compose_checklist		(kit, data, fieldName, L10n, classRule, widget)
+0312: block_mdeditor_compose_description	(kit, data, fieldName, L10n, widget)
+0668: block_mdeditor_compose_contribute		(kit, data, fieldName, L10n, mandatory)
+1200: block_mdeditor_compose_rights			(kit, data, fieldName, L10n)
+1879: block_mdeditor_compose 				(target, data, L10n, targetUrl, requestParams)
 2180: ------ HEALTH WARNING - sic ;-) ------
 2215: mapper(children)
 2244: indexer(params)

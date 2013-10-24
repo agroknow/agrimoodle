@@ -69,13 +69,13 @@ class block_mdeditor extends block_base {
     }
 	
     public function get_content() {
+        global $PAGE, $COURSE, $DB;
 
         if ($this->content !== null) {
             return $this->content;
         }
 
 		$this->content = new stdClass();
-        global $PAGE, $COURSE, $DB;
 
 		// Check to see if we are in editing mode
 		$canmanage = $PAGE->user_is_editing($this->instance->id);
@@ -97,9 +97,10 @@ class block_mdeditor extends block_base {
 
 //			$this->page->requires->js('/local/agrimoodle/js/jquery-ui3.js');
 
-            // $this->$page->requires->jquery();	
-            // $this->$page->requires->jquery_plugin('ui');
-            // $this->$page->requires->jquery_plugin('ui-css');
+            // $this->page->requires->jquery();	
+            // $this->page->requires->jquery_plugin('ui');
+            // $this->page->requires->jquery_plugin('ui-css');
+            // $this->page->requires->jquery_plugin('mobile', 'theme_mymobile');
 
 			// include css for the jquery widgets
 			// $this->page->requires->css('/local/agrimoodle/css/jquery-ui3.css');
@@ -107,7 +108,7 @@ class block_mdeditor extends block_base {
 			
 			// FIXME @tafkey isn't this included automagically by moodle?
             // if it is, why not import the jquery css from it?
-			$this->page->requires->css('/blocks/mdeditor/styles.css');
+			// $this->page->requires->css('/blocks/mdeditor/styles.css');
 
 
 			$course_id = $COURSE->id;
@@ -215,8 +216,9 @@ class block_mdeditor extends block_base {
         global $CFG;
 
         $d = DIRECTORY_SEPARATOR;
-        // $base = dirname(__FILE__).$d.'lom'.$d.$type.$d;
-        $base = $CFG->wwwroot.$d.'blocks'.$d.'mdeditor'.$d.'lom'.$d.$type.$d;
+        $base = dirname(__FILE__).$d.'lom'.$d.$type.$d;
+
+        // error_log('>>>>  looking ' . print_r($base.'partial'.$d.$id.'.json', true));
 
         if (file_exists($base.'complete'.$d.$id.'.json')) {
             return 'complete';

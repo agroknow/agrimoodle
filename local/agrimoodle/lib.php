@@ -2,18 +2,6 @@
 
 /**
  * Library of functions and constants for module agrimoodle.
- * Automatically included with by config.php
- * This file should have two well differenced parts:
- *   - All the core Moodle functions, neeeded to allow
- *     the module to work integrated in Moodle.
- *   - All the agrimoodle specific functions, needed
- *     to implement all the module logic. Please, note
- *     that, if the module become complex and this lib
- *     grows a lot, it's HIGHLY recommended to move all
- *     these module specific functions to a new php file,
- *     called "locallib.php" (see forum, quiz...). This will
- *     help to save some memory when Moodle is performing
- *     actions across all modules.
  *
  * @author     Tasos Koutoumanos <@tafkey>
  * @version    $Id: version.php,v 1.5.2.2 2009/03/19 12:23:11 mudrd8mz Exp $
@@ -23,32 +11,27 @@
  */
 
 
-$agrimoodle_EXAMPLE_CONSTANT = 21;     /// an example
-
-
+/**
+ * agriMoodle hub directory url (should be under agrimoodle.org)
+ */
+define('AGRIMOODLE_HUB_HUBDIRECTORYURL', "http://hubdirectory.agrimoodle.org");
 
 /**
- * Execute post-install custom actions for the module
- *
- * @return boolean true if success, false on error
- * @todo Add some logging and maybe send out an email!
+ * agriMoodle url (should be under moodle.org)
  */
-function agrimoodle_install() {
-    return true;
-}
-
+define('AGRIMOODLE_HUB_MOODLEORGHUBURL', "http://hub.agrimoodle.org");
 
 /**
- * Execute post-uninstall custom actions for the module
- * This function was added in 1.9
- *
- * @return boolean true if success, false on error
- * @todo Add some logging and maybe send out an email!
+ * Name of the agriMoodle hub
  */
-function agrimoodle_uninstall() {
-    return true;
-}
+define('AGRIMOODLE_HUB_NAME', "The agriMoodle hub");
 
+
+
+
+function local_agrimoodle_cron() {
+  // nothing yet
+}
 
 
 ?>
