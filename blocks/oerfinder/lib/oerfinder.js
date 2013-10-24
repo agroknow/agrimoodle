@@ -14,6 +14,7 @@
 
 // var service_url = 'http://ariadne.cs.kuleuven.be/GlobeFinderF1/servlet/search';
 //
+// TODO: make this configurable, probably only for the administrator
 var service_url = 'http://83.212.96.169:8080/repository2/api/ariadne/restp';
 
 // Check div in block_oerfinder to run or not the experment
