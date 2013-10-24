@@ -32,7 +32,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2013052104;
+$plugin->version   = 2013102104;
 $plugin->requires  = 2013050100;
 $plugin->component = 'theme_agm_clean';
 $plugin->dependencies = array(
