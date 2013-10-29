@@ -1,4 +1,4 @@
-﻿<?PHP
+﻿<?php
 /*
 * +----------------------------------------------------------------------+
 * | PHP Version 4                                                        |
@@ -20,7 +20,7 @@
 * | Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA         |
 * |                                                                      |
 * +----------------------------------------------------------------------+
-* | Derived from work by U. Mόller, HUB Berlin, 2002                     |
+* | Derived from work by U. M?ller, HUB Berlin, 2002                     |
 * |                                                                      |
 * | Written by Heinrich Stamerjohanns, May 2002                          |
 * /            stamer@uni-oldenburg.de                                   |
@@ -205,7 +205,7 @@ while ($countrec++ < $maxrec) {
 	if ($countrec == 1 && $deliveredrecords) {
 		$record = $res->fetchRow(DB_FETCHMODE_ASSOC, $deliveredrecords); 
 	} else {
-		$record = $res->fetchRow(DB_FETCHMODE_ASSOC);
+		$record = $res->fetchRow();
 	}
 	if (DB::isError($record)) {
 		if ($SHOW_QUERY_ERROR) {
@@ -226,11 +226,11 @@ while ($countrec++ < $maxrec) {
 
 	$output .= '  <record>'."\n";
 	$output .= '   <header>'."\n";
-	$output .= xmlformat($identifier, 'identifier', '', 4);
-	$output .= xmlformat($datestamp, 'datestamp', '', 4);
+	$output .= xmlformat($identifier, 'identifier', '', $INDENT);
+	$output .= xmlformat($datestamp, 'datestamp', '', $INDENT);
 	if (!$status_deleted) 
-		// use xmlrecord since we use stuff from database
-		$output .= xmlrecord($record[$SQL['set']], 'setSpec', '', 4);
+		 // use xmlrecord since we use stuff from database
+		$output .= xmlrecord($record[$SQL['set']], 'setSpec', '', $INDENT);
 
 	$output .= '   </header>'."\n"; 
 
@@ -247,8 +247,5 @@ if (isset($restoken)) {
 }
 
 // end ListRecords
-$output .= 
-' </ListRecords>'."\n";
-$output = utf8_decode($output);
-  
+$output .= ' </ListRecords>'."\n";
 ?>

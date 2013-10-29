@@ -14,7 +14,7 @@
 * | This software is distributed in the hope that it will be useful, but |
 * | WITHOUT  ANY WARRANTY; without even the implied warranty of          |
 * | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         |
-* | GNU General Public License for more details.                         |     
+* | GNU General Public License for more details.                         |
 * | You should have received a copy of the GNU General Public License    |
 * | along with  software; if not, write to the Free Software Foundation, |
 * | Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA         |
@@ -31,10 +31,15 @@
 //
 // Report all errors except E_NOTICE
 // This is the default value set in php.ini
-error_reporting (E_ALL ^ E_NOTICE);
+
+error_reporting (E_ALL  ^ E_NOTICE);
 
 $output = '';
 $errors = '';
+
+$DS = DIRECTORY_SEPARATOR;
+$PDIR = $DS . '..';
+require_once(dirname(__FILE__) . $PDIR . $PDIR . $PDIR . $DS . 'config.php');
 
 require_once('lib/oaidp-util.php');
 
@@ -78,13 +83,29 @@ foreach($verbs as $val) {
 	unset($$val);
 }
 
-$db = DB::connect($DSN);
+$options = array(
+    'debug'       => 2,
+    'portability' => DB_PORTABILITY_ALL,
+);
 
-if (DB::isError($db)) {
+$dbc = new DB();
+$db = $dbc->connect($DSN, $options);
+
+/* change character set to utf8 */
+$db->query("SET CHARACTER SET 'utf8'");
+
+//if (DB::isError($db)) {
+//	die($db->getMessage());
+//} else {
+//	$db->setFetchMode(DB_FETCHMODE_ASSOC);
+//}
+
+if (@PEAR::isError($db)) {
 	die($db->getMessage());
 } else {
 	$db->setFetchMode(DB_FETCHMODE_ASSOC);
 }
+
 
 $request = ' <request'.$reqattr.'>'.$MY_URI."</request>\n";
 $request_err = ' <request>'.$MY_URI."</request>\n";
@@ -147,14 +168,13 @@ if ($errors != '') {
 	oai_exit();
 }
 
-if ($compress) {
-	ob_start('ob_gzhandler');
-}
+//if ($compress) {
+//	ob_start('ob_gzhandler');
+//}
 
 header($CONTENT_TYPE);
 echo $xmlheader;
 echo $request;
 echo $output;
-oai_close(); 
-
+oai_close();
 ?>

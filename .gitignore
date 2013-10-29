@@ -32,6 +32,8 @@ phpunit.xml
 /0misc
 /0marinos/
 
+PHP_errors.log
+
 
 # sublime text project's files
 *.sublime-project

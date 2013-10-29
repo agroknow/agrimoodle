@@ -28,6 +28,7 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
     /* set the current key-name of this field. The key-name is a unique id that
      * can be used as key in an object */
     out.add(fieldName, 'keyName', fieldName);
+    
 
     /*
      * Describe the element
@@ -42,17 +43,14 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
                 "sel" : "[name=value]",
                 "ref" : "value"
             },
-
             {
                 "sel" : "[name=language]",
                 "ref" : "lang"
             },
-
             {
                 "sel" : "[for=value]",
                 "ref" : "value-error"
             },
-
             {
                 "sel" : ".placeholder",
                 "ref" : "placeholder"
@@ -88,20 +86,20 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
                 "class" : "block_mdeditor-element_top",
                 "html"  : [
                 {
-                    "type" : "language-selector",
-                    "name" : out.get(fieldName, 'keyName'),
-                    "repo" : langRepo,
-                    "attr" : {
-                        "name" : "language"
-                    }
-                },
-                {
                     "type"  : "textarea",
                     "name"  : "value",
                     "rows" : "2",
                     "style": "width: 250px",
                     // "size"  : 40,
                     "class" : "rule_non-empty"
+                },
+                {
+                    "type" : "language-selector",
+                    "name" : out.get(fieldName, 'keyName'),
+                    "repo" : langRepo,
+                    "attr" : {
+                        "name" : "language"
+                    }
                 },
                 {
                     "type"  : "span",
@@ -124,26 +122,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
                         "class" : "placeholder"
                     }
                     ]
-                },
-                {
-                    "type" : "language-selector",
-                    "name" : out.get(fieldName, 'keyName'),
-                    "repo" : langRepo,
-                    "attr" : {
-                        "name" : "language"
-                    }
-                },
-                {
-                    "type" : "a",
-                    "class" : "ui-icon ui-icon-circle-triangle-e block_mdeditor-multiplicity_icons",
-                    "href"  : '#',
-                    "html"  : '[*]',
-                    //                        "title" : L10n.common.langString_hide,
-                    "title" : "auto",
-                    "post"  : function() {
-                        out.add(fieldName, 'hideLocale', this);
-                        $(this).click(runMethod);
-                    }
                 }
                 ]
             }
@@ -234,6 +212,7 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
 
         "localeHideButton" : out.get(fieldName, 'hideLocale'),
 
+
         /* there is an extra array, called `refs' which holds references to the
          * children of this container. It is created when a call to `wombBear'
          * has been performed. */
@@ -264,7 +243,6 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
      * some aspects */
     var child = $(c).data('refs')[0]; // it is an array now
 
-
     /* set the parameters that are required when attempting to hide this child
      */
     var hide = out.get(fieldName, 'hideLocale');
@@ -273,6 +251,7 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
         "target" : c,
         "data"   : child
     });
+
 
     var func = $.proxy(setIndex, child),
     indexName = $(c).data('indexName');
@@ -366,6 +345,7 @@ function block_mdeditor_compose_description(kit, data, fieldName, L10n, widget) 
     setLocButton = kit.setLocButton,
     newLocale = kit.newLocale,
     newLocaleContainer = kit.newLocaleContainer,
+    newLocaleContainerNG = kit.newLocaleContainerNG,
     setIndex = kit.setIndex,
     clearContainerIndex = kit.clearContainerIndex,
     setIndexToContainer = kit.setIndexToContainer,
@@ -594,7 +574,9 @@ function block_mdeditor_compose_description(kit, data, fieldName, L10n, widget) 
         ],
         "post" : function() {
             $(this).data('hideChild', hideContainer);
-            $(this).data('addChild', newLocaleContainer);
+            // ++++ !!!! FIXME: replace with NG !!!
+            $(this).data('addChild', newLocaleContainer);            
+            // $(this).data('addChild', newLocaleContainerNG);
             $(this).data('setData', setContainerData);
             $(this).data('dataFormat', {
                 "language" : {
@@ -738,7 +720,6 @@ function block_mdeditor_compose_description(kit, data, fieldName, L10n, widget) 
     }
 
     return t;
-
 }
 
 function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory) {
@@ -1332,7 +1313,6 @@ function block_mdeditor_compose_contribute(kit, data, fieldName, L10n, mandatory
         if (data.date) $(refs['date']).val(data.date);
 
     }
-
 }
 
 function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
@@ -1902,7 +1882,7 @@ function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
 
 
     var topContainer = {
-        "type" : "container",
+        "type" : "container-fluid",
         "default-mapper" : {
             "womb"   : womb,
             "name"   : fieldName + '-top-container',
@@ -2086,7 +2066,6 @@ function block_mdeditor_compose_rights(kit, data, fieldName, L10n) {
     }
 
     return t;
-
 }
 
 function block_mdeditor_compose(target, data, L10n, targetUrl, requestParams) {
@@ -2117,13 +2096,12 @@ function block_mdeditor_compose(target, data, L10n, targetUrl, requestParams) {
 
     // +++ console.log( ' DATA', data);
 
-    var form = 'block_mdeditor-edit_form',//'block_mdeditor-edit_dialog',
+    var form = 'block_mdeditor-edit_form', //'block_mdeditor-edit_dialog',
     formSelector = '#'+form,
     edu = 'educational';
 
     var e = {
         "title" : block_mdeditor_compose_title(kit, data, 'title', L10n),
-        "subTitle" : block_mdeditor_compose_title(kit, data, 'subTitle', L10n),
         "language13"  : "checklist",
         "description" : composeDescription(kit, data, 'description', L10n),
         "keyword"     : composeKeyword(kit, data, 'keyword', L10n),
@@ -2173,12 +2151,13 @@ function block_mdeditor_compose(target, data, L10n, targetUrl, requestParams) {
             "title"     : L10n.dialog.caption,
             "resizable" : true,
             "modal"     : true,
-            "width"     : 600,
+            "width"     : 650,
             "height"    : 400,
             "maxHeight" : 600,
             "position"  : {
-                my: "center top", 
-                at: "center top+20", 
+                // my: "center top+80", 
+                // at: "center top+80",
+                at: "center 80", 
                 of: window
             },
             "closeOnEscape" : false,
@@ -2211,10 +2190,6 @@ function block_mdeditor_compose(target, data, L10n, targetUrl, requestParams) {
                     "type" : "span", 
                     "class": "rule_mandatory",
                     "html" : e.title
-                },
-                {
-                    "type" : "span",
-                    "html" : e.subTitle
                 },
                 {
                     "type" : "span", 
@@ -2544,20 +2519,22 @@ $(function() {
             o.name = func();
         }
 
+        var myRepo = o.repo;
+
         /* set the language repo for this element */
-        $(element).data('repo', o.repo);
+        $(element).data('repo', myRepo);
         $(element).data('field', o.name);
 
         /* append this element to the list of other elements of this kind for
          * the given field
          */
-        o.repo.enroll(o.name, element);
+        myRepo.enroll(o.name, element);
 
         /* remember the current value of this select */
         $(element).data('reserved', $(element).val());
 
 
-        var delegate = $.proxy(o.repo.change, o.repo);
+        var delegate = $.proxy(myRepo.change, myRepo);
         $(element).change(delegate);
 
         return container;
@@ -2631,10 +2608,11 @@ $(function() {
         var dialogWidth = parseInt($(this).dialog('option', 'width'));
         var windowWidth = $(window).width();
         var positionX = parseInt((windowWidth -  dialogWidth)/2);
-        var scrollTop = $(document).scrollTop()
+        // add 30 pixel to appear below the agriMoodle menu
+        var scrollTop = $(document).scrollTop() + 30;
 
         $(this).dialog('option', 'height', ($(window).height()*0.8));
-        $(this).dialog('option', 'position', [positionX, (0 - scrollTop)]);
+        $(this).dialog('option', 'position', [positionX, scrollTop]);
     });
 });
 
@@ -2655,9 +2633,10 @@ function block_mdeditor_init_kit(target, L10n) {
     function runMethod(e) {
         var self = e.target;
 
-        var rm = $(self).data('runMethod'),
-        data = rm.data,
-        target = rm.target,
+        var rm = $(self).data('runMethod');
+        console.log(">>>>>> ", e);
+        var data = rm.data;
+        var target = rm.target;
         func = $(target).data(rm.method);
 
         func = $.proxy(func, rm.target);
@@ -2941,8 +2920,6 @@ function block_mdeditor_init_kit(target, L10n) {
     }
 
 
-
-
     /*
      * Runs in the context of the parent container.
      */
@@ -3134,7 +3111,6 @@ function block_mdeditor_init_kit(target, L10n) {
     }
 
 
-
     /*
      * Runs in the context of a container which supports localization.
      * Uses the `refs' and `shades' properties.
@@ -3320,7 +3296,6 @@ function block_mdeditor_init_kit(target, L10n) {
             "function" : mapper,
             "params"   : o.params
         };
-
     });
 
 
@@ -3521,6 +3496,8 @@ function block_mdeditor_init_kit(target, L10n) {
         }
     };
 
+
+
     /**
      * Runs in the context of a container.
      *
@@ -3640,7 +3617,6 @@ function block_mdeditor_init_kit(target, L10n) {
         "title" : L10n.common.langString_add,
         "post"  : function() {
             $(this).click(function(e){
-                console.log("xaossss");
                 var self = e.target;
 
                 var ri = $(self).data('runInstead'),
@@ -3962,9 +3938,9 @@ function block_mdeditor_init_kit(target, L10n) {
 
         $.post(url, formData, function(response, status) {
 
-            console.log("Trying to parse response: ", response);    // ---- ++++
+            // console.log("Trying to parse response: ", response);    // ---- ++++
             var response = $.parseJSON(response);
-            console.log("JSONified it: ", response);                // ---- ++++
+            // console.log("JSONified it: ", response);                // ---- ++++
 
             if (status == 'success') {
 
@@ -4336,7 +4312,7 @@ function block_mdeditor_init_kit(target, L10n) {
     }
 
     var controlClass = 'control',
-    containerClass = 'container';
+    containerClass = 'container-fluid';
 
     target.kit = {
         /* functions */

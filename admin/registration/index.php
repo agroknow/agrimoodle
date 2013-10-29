@@ -195,7 +195,6 @@ if (empty($cancel) and $unregistration and !$confirm) {
     }
 
     echo $OUTPUT->heading(get_string('registerwith', 'hub'));
-
     $hubselectorform->display();
 
     if (extension_loaded('xmlrpc')) {

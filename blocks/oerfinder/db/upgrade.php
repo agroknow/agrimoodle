@@ -34,5 +34,6 @@ function xmldb_block_oerfinder_upgrade($oldversion) {
     // Moodle v2.3.0 release upgrade line
     // Put any upgrade step following this
 
+    
     return true;
 }

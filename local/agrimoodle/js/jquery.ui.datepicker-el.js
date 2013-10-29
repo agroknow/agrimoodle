@@ -1,5 +1,6 @@
-﻿/* Greek (el) initialisation for the jQuery UI date picker plugin. */
-/* Written by Alex Cicovic (http://www.alexcicovic.com) */
+/* Greek (el) initialisation for the jQuery UI date picker plugin. */
+/* Written by Alex Cicovic (http://www.alexcicovic.com),
+              Tasos Koutoumanos (http://tafkey.eu) */
 jQuery(function($){
 	$.datepicker.regional['el'] = {
 		closeText: 'Κλείσιμο',
@@ -12,7 +13,8 @@ jQuery(function($){
 		'Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'],
 		dayNames: ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'],
 		dayNamesShort: ['Κυρ','Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ'],
-		dayNamesMin: ['Κυ','Δε','Τρ','Τε','Πε','Πα','Σα'],
+        // NOTE: changed to one-letter codes, in accordance to French translation
+        dayNamesMin: ['Κ','Δ','Τ','Τ','Π','Π','Σ'],
 		weekHeader: 'Εβδ',
 		dateFormat: 'dd/mm/yy',
 		firstDay: 1,

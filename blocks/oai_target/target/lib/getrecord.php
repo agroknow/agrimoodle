@@ -132,10 +132,10 @@ if ($num_rows) {
 	$output .='>'."\n";
 
 	// use xmlrecord since we include stuff from database;
-	$output .= xmlrecord($identifier, 'identifier', '', 3);
-	$output .= xmlformat($datestamp, 'datestamp', '', 3);
+	$output .= xmlrecord($identifier, 'identifier', '', $INDENT);
+	$output .= xmlformat($datestamp, 'datestamp', '', $INDENT);
 	if (!$status_deleted) 
-		$output .= xmlrecord($record[$SQL['set']], 'setSpec', '', 3);
+		$output .= xmlrecord($record[$SQL['set']], 'setSpec', '', $INDENT);
 	$output .= 
 '   </header>'."\n"; 
 
@@ -154,5 +154,4 @@ else {
 // End GetRecord
 $output .= 
 ' </GetRecord>'."\n"; 
-$output = utf8_decode($output);
 ?>

@@ -36,9 +36,7 @@
 // change output your metadata records further below.
 
 // please change to the according metadata prefix you use 
-//-------marinos changes start here - previous value="oai_dc"
-$prefix = 'oai_lom';
-//-------marinos changes ends here
+$prefix = 'oai_dc';
 
 // you do need to change anything in the namespace and schema stuff
 // the correct headers should be created automatically
@@ -50,28 +48,22 @@ $output .= metadataHeader($prefix);
 
 // please change according to your metadata format
 $indent = 6;
+$output .= xmlrecord($record['dc_title'], 'dc:title', '', $indent);
+$output .= xmlrecord($record['dc_creator'],'dc:creator', '', $indent);
+$output .= xmlrecord($record['dc_subject'], 'dc:subject', '', $indent);
+$output .= xmlrecord($record['dc_description'], 'dc:description', '', $indent);
+$output .= xmlrecord($record['dc_publisher'], 'dc:publisher', '', $indent);
+$output .= xmlrecord($record['dc_contributor'], 'dc:contributor', '', $indent);
+$output .= xmlrecord($record['dc_date'], 'dc:date', '', $indent);
+$output .= xmlrecord($record['dc_type'], 'dc:type', '', $indent);
+$output .= xmlrecord($record['dc_format'], 'dc:format', '', $indent);
+$output .= xmlrecord($record['dc_identifier'], 'dc:identifier', '', $indent);
+$output .= xmlrecord($record['dc_source'], 'dc:source', '', $indent);
+$output .= xmlrecord($record['dc_language'], 'dc:language', '', $indent);
+$output .= xmlrecord($record['dc_relation'], 'dc:relation', '', $indent);
+$output .= xmlrecord($record['dc_coverage'], 'dc:coverage', '', $indent);
+$output .= xmlrecord($record['dc_rights'], 'dc:rights', '', $indent);
 
-//-----marinos changes start here 
-//-- comment all $output lines, create the next one
-$output .= xmlrecord($record['lom_record'], 'lom:LOMRecord', '', $indent);
-
-//$output .= xmlrecord($record['dc_title'], 'dc:title', '', $indent);
-//$output .= xmlrecord($record['dc_creator'],'dc:creator', '', $indent);
-//$output .= xmlrecord($record['dc_subject'], 'dc:subject', '', $indent);
-//$output .= xmlrecord($record['dc_description'], 'dc:description', '', $indent);
-//$output .= xmlrecord($record['dc_publisher'], 'dc:publisher', '', $indent);
-//$output .= xmlrecord($record['dc_contributor'], 'dc:contributor', '', $indent);
-//$output .= xmlrecord($record['dc_date'], 'dc:date', '', $indent);
-//$output .= xmlrecord($record['dc_type'], 'dc:type', '', $indent);
-//$output .= xmlrecord($record['dc_format'], 'dc:format', '', $indent);
-//$output .= xmlrecord($record['dc_identifier'], 'dc:identifier', '', $indent);
-//$output .= xmlrecord($record['dc_source'], 'dc:source', '', $indent);
-//$output .= xmlrecord($record['dc_language'], 'dc:language', '', $indent);
-//$output .= xmlrecord($record['dc_relation'], 'dc:relation', '', $indent);
-//$output .= xmlrecord($record['dc_coverage'], 'dc:coverage', '', $indent);
-//$output .= xmlrecord($record['dc_rights'], 'dc:rights', '', $indent);
-
-//-----marinos changes ends here
 
 // Here, no changes need to be done
 $output .=           

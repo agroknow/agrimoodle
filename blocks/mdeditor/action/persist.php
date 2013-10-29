@@ -16,6 +16,9 @@ extract($params);
  *  $file string; the name of the file for this LO
  */
 
+// print_object($_POST);
+// error_log('POST is: ' . print_r($_POST, true));
+
 /* remove any previous data that have been stored under a different state */
 $previous = ($state == 'complete') ? 'partial' : 'complete';
 $previous .= DS;
@@ -27,6 +30,9 @@ if (file_exists($previous)) {
 
 $response = new object();
 try {
+	// We need to create the directory structure if it doesn't exist!
+	is_dir($base.$state) ||  mkdir($base.$state, 0755, true);
+	// Encode to json format and save to file
     file_put_contents($base.$state.DS.$file, json_encode($_POST));
     $response->status = 200;
     $response->message = 'Changes have been saved.';

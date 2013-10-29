@@ -20,7 +20,7 @@
 * | Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA         |
 * |                                                                      |
 * +----------------------------------------------------------------------+
-* | Derived from work by U. Müller, HUB Berlin, 2002                     |
+* | Derived from work by U. Mï¿½ller, HUB Berlin, 2002                     |
 * |                                                                      |
 * | Written by Heinrich Stamerjohanns, May 2002                          |
 * |            stamer@uni-oldenburg.de                                   |
@@ -28,7 +28,7 @@
 */
 //
 // $Id: identify.php,v 1.02 2003/04/08 14:15:34 stamer Exp $
-//
+// 
 
 // parse and check args
 if (empty($errors) && (count($args) > 0)){
@@ -44,7 +44,7 @@ if ($errors != '') {
 // see http://www.openarchives.org/OAI/2.0/guidelines-oai-identifier.htm 
 // for details
 
-$indent = 2;
+$indent = $INDENT;
 $output .= " <Identify>\n";
 $output .= xmlformat($repositoryName, 'repositoryName', '', $indent);
 $output .= xmlformat($baseURL, 'baseURL', '', $indent);

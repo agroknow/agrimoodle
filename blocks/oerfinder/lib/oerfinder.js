@@ -13,13 +13,17 @@
 //http://agrolab.sytes.net:9999/wiki/doku.php/project/ariadne_search
 
 // var service_url = 'http://ariadne.cs.kuleuven.be/GlobeFinderF1/servlet/search';
-//
-var service_url = 'http://83.212.96.169:8080/repository2/api/ariadne/restp';
+//Check div in block_oerfinder for web service url
+var service_url = document.getElementById("web_service_url").innerHTML;
+//var service_url = 'http://83.212.96.169:8080/repository2/api/ariadne/restp';
 
-// the URL of the service that logs the experiment
-// NOTE: leave null if you don't want to run an experiment!
-// FIXME: make this a configurable parameter
-var logger_url = home_url() + "blocks/oerfinder/lib/logger.php";
+// Check div in block_oerfinder to run or not the experment
+var runexperiment = document.getElementById("run_experiment").innerHTML;
+if(runexperiment=='1'){
+    var logger_url = home_url() + "blocks/oerfinder/lib/logger.php";
+}else{
+    var logger_url =null;
+}
 
 // Holds the results accross various pages
 var searchResultList = [];
@@ -63,13 +67,13 @@ function sendJSONRequest(es_query) {
         resultListSize: per_page+1
     };
 
-//    console.log("Sending JSON request :", JSON.stringify(petition));
+    //    console.log("Sending JSON request :", JSON.stringify(petition));
     jQuery.getJSON(service_url+"?callback=?", {
         json: JSON.stringify(petition),
         engine: 'InMemory'
     },
     function(data) {
-//        console.log("GOT RESPONSE !!! ", data);
+        //        console.log("GOT RESPONSE !!! ", data);
         searchResultList = data.result.metadata;
         //search result id list
         searchIdResultList=data.result.id;
@@ -94,7 +98,7 @@ function sendJSONRequest(es_query) {
                     content+= title + '</a>';
                     //~ content+= '</a><div class="raty" id="'+id+'" data-startvalue="'+0+'"></div>' ;
                     content+= '</li>';
-//                    console.log(sr);
+                //                    console.log(sr);
                 }
 
                 content+=' </ul>'
@@ -121,7 +125,14 @@ function logExperiment(results, click) {
 
     click = (click || 0);
 
-    var rr = {"results" : results, "search" : "XXXXX", "action" : 0, "click" : 0, "id": 0, "timestamp" : "" } ;
+    var rr = {
+        "results" : results, 
+        "search" : "XXXXX", 
+        "action" : 0, 
+        "click" : 0, 
+        "id": 0, 
+        "timestamp" : ""
+    } ;
 
     if (click) {
         dt = new Date();
@@ -130,28 +141,28 @@ function logExperiment(results, click) {
         rr.action = 10;
     }
 
-//    console.log("Trying to log experiment: " + JSON.stringify(rr));
+    //    console.log("Trying to log experiment: " + JSON.stringify(rr));
 
     jQuery.getJSON(logger_url+"?callback=?", {
-            json: JSON.stringify(rr),
-            engine: 'InMemory'
-        },
-        function(res) {
-            logger_timestamp = res.timestamp;
-            content= "&gt; " + res.newLogEntries + " entries logged (" +
-                        res.totalLogEntries + " total)";
-            jQuery('#debug').html(content);
-        })
-        .error(function(response) {
-            console.log("JSON failure ", response);
-            content= "Unable to log experiment!";
-            jQuery('#debug').html(content);
-        }
+        json: JSON.stringify(rr),
+        engine: 'InMemory'
+    },
+    function(res) {
+        logger_timestamp = res.timestamp;
+        content= "&gt; " + res.newLogEntries + " entries logged (" +
+        res.totalLogEntries + " total)";
+        jQuery('#debug').html(content);
+    })
+    .error(function(response) {
+        console.log("JSON failure ", response);
+        content= "Unable to log experiment!";
+        jQuery('#debug').html(content);
+    }
     );
 }
 
 function pagingRequest(es_query, start) {
-//    console.log("=============", es_query, start);
+    //    console.log("=============", es_query, start);
     start = start || 1 ;
     if (start < 1) start = 1;
 
@@ -224,7 +235,7 @@ function pagingRequest(es_query, start) {
         //  fixed:false
         });
 
-//        console.log("created new boxy: " + boxy_ref, "for ::: ", data);
+        //        console.log("created new boxy: " + boxy_ref, "for ::: ", data);
 
         createPager('#widget_pages', data.result['nrOfResults']);
     })
@@ -238,10 +249,10 @@ function pagingRequest(es_query, start) {
 
 
 function createPager(inDiv, numrows) {
-//    console.log("~~~~~~~~~~~~~~~~~~~~~~", inDiv, "--", numrows, "--", selected_page);
-//    if( numrows <= per_page ) {
-//        return false;
-//    }
+    //    console.log("~~~~~~~~~~~~~~~~~~~~~~", inDiv, "--", numrows, "--", selected_page);
+    //    if( numrows <= per_page ) {
+    //        return false;
+    //    }
 
     var total_pages = Math.ceil(  numrows / per_page  );
     
@@ -276,7 +287,9 @@ function createPager(inDiv, numrows) {
     return true;
 }
 
-jQuery('.wnext_page').live('click',function(){
+// jQuery.live has been removed since jquery 1.9 ...
+// jQuery('.wnext_page').live('click',function(){
+jQuery(document).on('click', '.wnext_page', function() {
     boxy_ref.setTitle('Loading...');
 
     var pg = parseInt( jQuery(this).attr('pg'));
@@ -294,7 +307,7 @@ jQuery('.wnext_page').live('click',function(){
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 jQuery(document).ready(function() {
     /* Lets Start */
-//    console.log("JUST STARTED!");
+    //    console.log("JUST STARTED!");
     sendJSONRequest(jQuery('#simple_search_fld').val());
 
     jQuery('#submit_search').click( function() {
@@ -302,7 +315,8 @@ jQuery(document).ready(function() {
         sendJSONRequest(jQuery('#simple_search_fld').val());
     });
 
-    jQuery('.modal_show').live('click',function() {
+    //    jQuery('.modal_show').live('click',function() {
+    jQuery(document).on('click', '.modal_show', function() {
         var title = jQuery(this).attr('title');
         var body =  jQuery(this).attr('body');
         var location =jQuery(this).attr('location');
@@ -375,8 +389,9 @@ jQuery(document).keyup(function(e) {
 
 
 
-jQuery('#getMoreResults').live('click',function( ) {
-//    console.log("User is trying to get more results!")
+//jQuery('#getMoreResults').live('click',function( ) {
+jQuery(document).on('click', '#getMoreResults', function() {
+    //    console.log("User is trying to get more results!")
     selected_page=2;
     searchPages();
     return false;
@@ -433,8 +448,8 @@ function implode (glue, pieces) {
 }
 
 function base_url() {
-    var l = window.location;
-    return l.protocol + "//" + l.host + "/" + l.pathname.split('/')[1] + "/agrimoodle/blocks/oerfinder/";
+    //    return l.protocol + "//" + l.host + "/" + l.pathname.split('/')[1] + "/agrimoodle/blocks/oerfinder/";
+    return M.cfg.wwwroot + "/blocks/oerfinder/";
 }
 
 
@@ -458,7 +473,7 @@ function home_url() {
     lsplit.pop();
     // and finally join the array back into a string
     new_loc = lsplit.join('/');
-//    console.log("ABS_URL: " + old_loc + " --> " + new_loc);
+    //    console.log("ABS_URL: " + old_loc + " --> " + new_loc);
     return old_loc.protocol + "//" + old_loc.host + new_loc + '/';
 }
 
