@@ -126,10 +126,8 @@ class block_oerfinder extends block_base {
         ////variable for experiment to inform the oerfinder js not to run functions for experiment
         $this->content->text .= "<div id='run_experiment' style='display:none;'>{$this->config->experiment}</div>";
         ////Finder's web service URL to inform the oerfinder js
-        if (!($this->config->service_url and strlen($this->config->service_url)) > 0) {
-            $this->config->service_url = 'http://83.212.96.169:8080/repository2/api/ariadne/restp';
-        }
-        $this->content->text .= "<div id='web_service_url' style='display:none;'>{$this->config->service_url}</div>";
+        $surl = get_config('oerfinder', 'service_url');
+        $this->content->text .= "<div id='web_service_url' style='display:none123;'>{$surl}</div>";
         $this->content->text .= $this->getUserInfoJSObject();
         return $this->content;
     }

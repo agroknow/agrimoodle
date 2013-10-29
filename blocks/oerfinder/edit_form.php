@@ -23,9 +23,9 @@ class block_oerfinder_edit_form extends block_edit_form {
         
         //Finder's web service URL
         if (is_siteadmin()){
-        $mform->addElement('text', 'config_service_url', get_string('config_service_url', 'block_oerfinder'));
-        $mform->setDefault('config_service_url', 'http://83.212.96.169:8080/repository2/api/ariadne/restp');
-        $mform->setType('config_service_url', PARAM_MULTILANG);
+          $mform->addElement('text', 'config_service_url', get_string('config_service_url', 'block_oerfinder'));
+          $mform->setDefault('config_service_url', 'http://83.212.96.169:8080/repository2/api/ariadne/restp');
+          $mform->setType('config_service_url', PARAM_MULTILANG);
         }
         
         //Enable or not if this course is using the experiment
