@@ -29,10 +29,8 @@
 //
 // $Id: oai2.php,v 1.11 2003/04/08 14:27:21 stamer Exp $
 //
-// Report all errors except E_NOTICE
-// This is the default value set in php.ini
 
-error_reporting (E_ALL  ^ E_NOTICE);
+
 
 $output = '';
 $errors = '';

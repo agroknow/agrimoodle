@@ -15,9 +15,16 @@ $BA = "block_oerfinder";
 
 if ($ADMIN->fulltree) {
 
-  $settings->add(
-      new admin_setting_heading('oerfinder/headerconfig',
-        new lang_string('hdr_config', $BA),
-        new lang_string('dsc_config', $BA)));
+    $settings->add(
+            new admin_setting_heading('oerfinder/headerconfig',
+                    new lang_string('hdr_config', $BA),
+                    new lang_string('dsc_config', $BA)));
+    //Finder's web service URL
+    $settings->add(
+            new admin_setting_configtext('oerfinder_config_service_url_default',
+                    get_string('config_service_url_label', 'block_oerfinder'),
+                    get_string('config_service_url_help', 'block_oerfinder'),
+                    get_string('config_service_url_default', 'block_oerfinder'),
+                    PARAM_URL));
 }
 

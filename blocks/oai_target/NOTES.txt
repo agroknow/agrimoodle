@@ -1,8 +1,5 @@
-block_oai_target
-
-
-NOTES
-=====
+OAI-TARGET
+==========
 
 * To check the OAI-PMH target (verbs)
   - http://localhost/dev/agrimoodle/blocks/oai_target/target/oai2.php?verb=Identify
@@ -22,6 +19,8 @@ NOTES
 
 * To check the cron operation
   tkout@maya ~/dev/agrimoodle/admin/cli $ php cron.php
+
+* Or use the direct-run URL:  http://localhost/dev/agrimoodle/blocks/oai_target/lib/cronlib.php?ParseJson
 
 * A sample LOM record (Organic Edunet Application Profile)
   http://data.organic-edunet.eu/ODS_LOM2LD/ODS_FirstDraft.html
@@ -69,7 +68,7 @@ RELATED:
 	version 2013011301
 
 ------------------------------------------------------------------------------------------------------------------------
-	files that has been changed
+	files that have been changed
 ------------------------------------------------------------------------------------------------------------------------
 
 	- block_oai_target.php

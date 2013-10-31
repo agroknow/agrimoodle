@@ -34,6 +34,10 @@ function xmldb_block_oerfinder_upgrade($oldversion) {
     // Moodle v2.3.0 release upgrade line
     // Put any upgrade step following this
 
+    //if (!($this->config->service_url and strlen($this->config->service_url)) > 0) {
+    //    $this->config->service_url = 'http://83.212.96.169:8080/repository2/api/ariadne/restp';
+    //}    
+    
     
     return true;
 }
