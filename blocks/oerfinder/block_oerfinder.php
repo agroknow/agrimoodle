@@ -16,6 +16,14 @@ class block_oerfinder extends block_base {
     function has_config() {
         return true;
     }
+    function after_install() {
+		global $CFG;
+		// initialize the global configuration
+		$global_config = array(
+			"oerfinder_config_service_url_default" => get_string('config_service_url_default', 'block_oerfinder')
+		);
+		return parent::config_save($global_config);
+            }
 
     function get_required_javascript() {
         
@@ -127,7 +135,7 @@ class block_oerfinder extends block_base {
         $this->content->text .= "<div id='run_experiment' style='display:none;'>{$this->config->experiment}</div>";
         ////Finder's web service URL to inform the oerfinder js
         $surl = get_config('oerfinder', 'service_url');
-        $this->content->text .= "<div id='web_service_url' style='display:none123;'>{$surl}</div>";
+        $this->content->text .= "<div id='web_service_url' style='display:none;'>{$surl}</div>";
         $this->content->text .= $this->getUserInfoJSObject();
         return $this->content;
     }

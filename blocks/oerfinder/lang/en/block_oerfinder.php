@@ -30,7 +30,8 @@ $string['instructions_searchvalue'] = "Select the default search value";
 
 $string['config_service_url_label'] = "Web service URL";
 $string['config_service_url_help'] = "Please enter the finder's web service URL";
-$string['config_service_url_default'] = "http://83.212.96.169:8080/repository2/api/ariadne/restp";
+//$string['config_service_url_default'] = "http://83.212.96.169:8080/repository2/api/ariadne/restp";
+$string['config_service_url_default'] = "54.228.180.124:8080/glnRepo/api/ariadne/restp";
 
 
 
