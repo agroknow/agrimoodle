@@ -30,6 +30,7 @@
 // $Id: oaidp-util.php,v 1.03 2003/04/08 14:40:23 stamer Exp $
 //
 
+
 function get_token()
 {
 	list($usec, $sec) = explode(" ", microtime());

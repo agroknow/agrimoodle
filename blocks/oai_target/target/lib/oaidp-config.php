@@ -67,9 +67,12 @@ $CONTENT_TYPE = 'Content-Type: text/xml';
 // if there are problems with unknown 'numrows', then make sure
 // to upgrade to a decent PEAR version.
 
+// don't show errors on screen it breaks the XML output!
+ini_set('display_errors', '0'); 
+// error_reporting(E_ALL ^ E_STRICT);
+
 require_once('DB.php');
 
-error_reporting(E_ALL & ~E_NOTICE);
 
 // do not change
 $MY_URI = 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['SCRIPT_NAME'];
