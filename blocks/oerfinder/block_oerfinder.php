@@ -16,14 +16,15 @@ class block_oerfinder extends block_base {
     function has_config() {
         return true;
     }
+
     function after_install() {
-		global $CFG;
-		// initialize the global configuration
-		$global_config = array(
-			"oerfinder_config_service_url_default" => get_string('config_service_url_default', 'block_oerfinder')
-		);
-		return parent::config_save($global_config);
-            }
+        global $CFG;
+        // initialize the global configuration
+        $global_config = array(
+            "oerfinder_config_service_url_default" => get_string('config_service_url_default', 'block_oerfinder')
+        );
+        return parent::config_save($global_config);
+    }
 
     function get_required_javascript() {
         
@@ -50,6 +51,10 @@ class block_oerfinder extends block_base {
      */
 //    public function specialization() {
 //    }
+    //config for displaying this block only in courses
+    function applicable_formats() {
+        return array('course-view' => true);
+    }
 
     function get_content() {
         global $PAGE, $CFG, $DB, $COURSE;
