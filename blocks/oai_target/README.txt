@@ -93,10 +93,14 @@ INSTALLATION
 ============
 To install you will have to perform the following steps:
 
-	1.
-	2.
-	3.	Login in your Moodle platform as Administrator and
-		click on OAI Target inside Site Administration block.
+	1. Download the oai_target plugin.
+	2. Copy the oai_target folder in your <moodle>/blocks folder
+	3. Login in your Moodle platform as Administrator and
+	   click on OAI Target inside Site Administration block.
+	4. Make sure that some json files with metadata records have been 
+           created and exist in the related folder (blocks/mdeditor/lom/{course,resource}/complete)
+	5. Make sure cron has executed, eg. http://example.com/admin/cron.php
+        6. Check the target at: http://example.com/blocks/oai_target/target/oai2.php?verb=Identify
 
 At this point the block initialization should be performed and the block
 should be available in the Blocks list. Note that the block is available
