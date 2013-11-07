@@ -49,6 +49,9 @@
 // If set FALSE, will create XML-output, no matter what happens.
 $SHOW_QUERY_ERROR = FALSE;
 
+global $CFG;
+
+
 // The content-type the WWW-server delivers back. For debug-puposes, "text/plain"
 // is easier to view. On a production site you should use "text/xml".
 //$CONTENT_TYPE = 'Content-Type: text/plain';
@@ -140,7 +143,11 @@ $delimiter = ':';
 // (scheme ":" namespace_id ":" local_id where scheme should always be "oai")
 // $parseURL = parse_url($CFG->wwwroot);
 // $repositoryIdentifier = $parseURL['host'].''.$parseURL['path']; 
-$repositoryIdentifier = parse_url($CFG->wwwroot)['host'];
+// $repositoryIdentifier = parse_url($CFG->wwwroot)['host'];
+$purl =  parse_url($CFG->wwwroot);
+$repositoryIdentifier = $purl['host'];
+// error_log(print_r($repositoryIdentifier));
+
 
 
 // description is defined in identify.php
