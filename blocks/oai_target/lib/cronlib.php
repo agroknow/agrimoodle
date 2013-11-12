@@ -35,10 +35,17 @@ class cronlib {
   function scan_files() {
     global $CFG, $DB, $tmpId, $setType, $repositoryIdentifier, $delimiter;
     $output = "";
-
+    
     $baseCourses = $CFG->dirroot . '/blocks/mdeditor/lom/course/complete/';
     $baseResources = $CFG->dirroot . '/blocks/mdeditor/lom/resource/complete/';
-
+    
+    //Check if fiolder exist. If not create an empty one.
+        if (!file_exists($baseCourses)) {
+            mkdir($baseCourses, 0755, true);
+        }
+        if (!file_exists($baseResources)) {
+            mkdir($baseResources, 0755, true);
+        }
     print_object($baseCourses);
     print_object($baseResources);
 
