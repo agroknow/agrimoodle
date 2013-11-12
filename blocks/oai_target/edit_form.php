@@ -14,27 +14,27 @@ class block_oai_target_edit_form extends block_edit_form {
 		$attributes['group'] = 'oai_target_settings';
 
 
-		if( $CFG->block_oai_target_pmh_channel == 1 ) {
-        	$mform->addElement( 'checkbox', 'notify_by_pmh', get_string('notify_by_pmh', 'block_oai_target') );
-		} else {
-        	$mform->addElement( 'advcheckbox', 'notify_by_pmh', get_string('notify_by_pmh', 'block_oai_target'), null, $attributes );
-		}
+		//if( $CFG->block_oai_target_pmh_channel == 1 ) {
+        	//$mform->addElement( 'checkbox', 'notify_by_pmh', get_string('notify_by_pmh', 'block_oai_target') );
+		//} else {
+        	//$mform->addElement( 'advcheckbox', 'notify_by_pmh', get_string('notify_by_pmh', 'block_oai_target'), null, $attributes );
+		//}
 
-		if ( isset($course_oai_target_setting->notify_by_pmh) and $course_oai_target_setting->notify_by_pmh == 1 ) {
-        	$mform->setDefault( 'notify_by_pmh', 1 );
-		}
+		//if ( isset($course_oai_target_setting->notify_by_pmh) and $course_oai_target_setting->notify_by_pmh == 1 ) {
+        	//$mform->setDefault( 'notify_by_pmh', 1 );
+		//}
 
-		if ( $CFG->block_oai_target_pmh_channel == 1 ) {
-	 		$options = array();
-			for( $i=1; $i<25; ++$i ) {
-				$options[$i] = $i;
-			}
-        	$mform->addElement( 'select', 'update_frequency', get_string('update_frequency', 'block_oai_target'), $options );
-        	$mform->setDefault( 'update_frequency', $course_oai_target_setting->update_frequency/3600 );
-		}
+		//if ( $CFG->block_oai_target_pmh_channel == 1 ) {
+	 	//	$options = array();
+		//	for( $i=1; $i<25; ++$i ) {
+		//		$options[$i] = $i;
+		//	}
+        	//$mform->addElement( 'select', 'update_frequency', get_string('update_frequency', 'block_oai_target'), $options );
+        	//$mform->setDefault( 'update_frequency', $course_oai_target_setting->update_frequency/3600 );
+		//}
 
 
-        $mform->addElement( 'html', '<br /><div class="qheader">'.get_string('course_configuration_presets_comment', 'block_oai_target').'</div>' );
+        //$mform->addElement( 'html', '<br /><div class="qheader">'.get_string('course_configuration_presets_comment', 'block_oai_target').'</div>' );
 
     }
 
