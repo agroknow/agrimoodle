@@ -122,7 +122,7 @@ if ($granularity == 'YYYY-MM-DDThh:mm:ss:Z') {
 
 // MUST (multiple)
 // please adjust
-$adminEmail = array('mailto:webmaster@agrimoodle.org');
+$adminEmail = array('webmaster@agrimoodle.org');
 
 // MAY (multiple)
 // Comment out, if you do not want to use it.
