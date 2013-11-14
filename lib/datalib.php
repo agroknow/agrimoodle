@@ -42,8 +42,13 @@ define('MAX_COURSE_CATEGORIES', 10000);
 
 /**
  * Number of seconds to wait before updating lastaccess information in DB.
+ *
+ * We allow overwrites from config.php, useful to ensure coherence in performance
+ * tests results.
  */
-define('LASTACCESS_UPDATE_SECS', 60);
+if (!defined('LASTACCESS_UPDATE_SECS')) {
+    define('LASTACCESS_UPDATE_SECS', 60);
+}
 
 /**
  * Returns $user object of the main admin user
@@ -553,6 +558,30 @@ function get_site() {
         // course table exists, but the site is not there,
         // unfortunately there is no automatic way to recover
         throw new moodle_exception('nosite', 'error');
+    }
+}
+
+/**
+ * Gets a course object from database. If the course id corresponds to an
+ * already-loaded $COURSE or $SITE object, then the loaded object will be used,
+ * saving a database query.
+ *
+ * If it reuses an existing object, by default the object will be cloned. This
+ * means you can modify the object safely without affecting other code.
+ *
+ * @param int $courseid Course id
+ * @param bool $clone If true (default), makes a clone of the record
+ * @return stdClass A course object
+ * @throws dml_exception If not found in database
+ */
+function get_course($courseid, $clone = true) {
+    global $DB, $COURSE, $SITE;
+    if (!empty($COURSE->id) && $COURSE->id == $courseid) {
+        return $clone ? clone($COURSE) : $COURSE;
+    } else if (!empty($SITE->id) && $SITE->id == $courseid) {
+        return $clone ? clone($SITE) : $SITE;
+    } else {
+        return $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     }
 }
 

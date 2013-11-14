@@ -23,6 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Data generator class for unit tests and other tools that need to create fake test sites.
@@ -556,6 +557,35 @@ EOD;
     }
 
     /**
+     * Create an instance of a repository.
+     *
+     * @param string type of repository to create an instance for.
+     * @param array|stdClass $record data to use to up set the instance.
+     * @param array $options options
+     * @return stdClass repository instance record
+     * @since 2.5.1
+     */
+    public function create_repository($type, $record=null, array $options = null) {
+        $generator = $this->get_plugin_generator('repository_'.$type);
+        return $generator->create_instance($record, $options);
+    }
+
+    /**
+     * Create an instance of a repository.
+     *
+     * @param string type of repository to create an instance for.
+     * @param array|stdClass $record data to use to up set the instance.
+     * @param array $options options
+     * @return repository_type object
+     * @since 2.5.1
+     */
+    public function create_repository_type($type, $record=null, array $options = null) {
+        $generator = $this->get_plugin_generator('repository_'.$type);
+        return $generator->create_type($record, $options);
+    }
+
+
+    /**
      * Create a test scale
      * @param array|stdClass $record
      * @param array $options
@@ -660,6 +690,34 @@ EOD;
 
         return true;
     }
+
+    /**
+     * Assigns the specified role to a user in the context.
+     *
+     * @param int $roleid
+     * @param int $userid
+     * @param int $contextid Defaults to the system context
+     * @return int new/existing id of the assignment
+     */
+    public function role_assign($roleid, $userid, $contextid = false) {
+
+        // Default to the system context.
+        if (!$contextid) {
+            $context = context_system::instance();
+            $contextid = $context->id;
+        }
+
+        if (empty($roleid)) {
+            throw new coding_exception('roleid must be present in testing_data_generator::role_assign() arguments');
+        }
+
+        if (empty($userid)) {
+            throw new coding_exception('userid must be present in testing_data_generator::role_assign() arguments');
+        }
+
+        return role_assign($roleid, $userid, $contextid);
+    }
+
 }
 
 /**

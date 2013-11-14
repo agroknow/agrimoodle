@@ -112,7 +112,7 @@ class data_field_picture extends data_field_base {
                 array('invalidjson', 'repository'), array('popupblockeddownload', 'repository'),
                 array('unknownoriginal', 'repository'), array('confirmdeletefolder', 'repository'),
                 array('confirmdeletefilewithhref', 'repository'), array('confirmrenamefolder', 'repository'),
-                array('confirmrenamefile', 'repository')
+                array('confirmrenamefile', 'repository'), array('edit', 'moodle')
             )
         );
 
@@ -250,6 +250,13 @@ class data_field_picture extends data_field_base {
                             $content->content = $draftfile->get_filename();
 
                             $file = $fs->create_file_from_storedfile($file_record, $draftfile);
+
+                            // If the file is not a valid image, redirect back to the upload form.
+                            if ($file->get_imageinfo() === false) {
+                                $url = new moodle_url('/mod/data/edit.php', array('d' => $this->field->dataid));
+                                redirect($url, get_string('invalidfiletype', 'error', $file->get_filename()));
+                            }
+
                             $DB->update_record('data_content', $content);
                             $this->update_thumbnail($content, $file);
 

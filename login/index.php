@@ -26,6 +26,12 @@
 
 require('../config.php');
 
+// Try to prevent searching for sites that allow sign-up.
+if (!isset($CFG->additionalhtmlhead)) {
+    $CFG->additionalhtmlhead = '';
+}
+$CFG->additionalhtmlhead .= '<meta name="robots" content="noindex" />';
+
 redirect_if_major_upgrade_required();
 
 $testsession = optional_param('testsession', 0, PARAM_INT); // test session works properly
@@ -268,7 +274,8 @@ if (empty($SESSION->wantsurl)) {
                           $_SERVER["HTTP_REFERER"] != $CFG->wwwroot &&
                           $_SERVER["HTTP_REFERER"] != $CFG->wwwroot.'/' &&
                           $_SERVER["HTTP_REFERER"] != $CFG->httpswwwroot.'/login/' &&
-                          $_SERVER["HTTP_REFERER"] != $CFG->httpswwwroot.'/login/index.php')
+                          strpos($_SERVER["HTTP_REFERER"], $CFG->httpswwwroot.'/login/?') !== 0 &&
+                          strpos($_SERVER["HTTP_REFERER"], $CFG->httpswwwroot.'/login/index.php') !== 0) // There might be some extra params such as ?lang=.
         ? $_SERVER["HTTP_REFERER"] : NULL;
 }
 

@@ -28,7 +28,10 @@
 require_once(__DIR__ . '/../../behat/behat_base.php');
 
 use Behat\Mink\Exception\ExpectationException as ExpectationException,
-    Behat\Mink\Exception\ElementNotFoundException as ElementNotFoundException;
+    Behat\Mink\Exception\ElementNotFoundException as ElementNotFoundException,
+    Behat\Mink\Exception\DriverException as DriverException,
+    WebDriver\Exception\NoSuchElement as NoSuchElement,
+    WebDriver\Exception\StaleElementReference as StaleElementReference;
 
 /**
  * Cross component steps definitions.
@@ -64,6 +67,57 @@ class behat_general extends behat_base {
     }
 
     /**
+     * Follows the page redirection. Use this step after any action that shows a message and waits for a redirection
+     *
+     * @Given /^I wait to be redirected$/
+     */
+    public function i_wait_to_be_redirected() {
+
+        // Xpath and processes based on core_renderer::redirect_message(), core_renderer::$metarefreshtag and
+        // moodle_page::$periodicrefreshdelay possible values.
+        if (!$metarefresh = $this->getSession()->getPage()->find('xpath', "//head/descendant::meta[@http-equiv='refresh']")) {
+            // We don't fail the scenario if no redirection with message is found to avoid race condition false failures.
+            return false;
+        }
+
+        // Wrapped in try & catch in case the redirection has already been executed.
+        try {
+            $content = $metarefresh->getAttribute('content');
+        } catch (NoSuchElement $e) {
+            return false;
+        } catch (StaleElementReference $e) {
+            return false;
+        }
+
+        // Getting the refresh time and the url if present.
+        if (strstr($content, 'url') != false) {
+
+            list($waittime, $url) = explode(';', $content);
+
+            // Cleaning the URL value.
+            $url = trim(substr($url, strpos($url, 'http')));
+
+        } else {
+            // Just wait then.
+            $waittime = $content;
+        }
+
+
+        // Wait until the URL change is executed.
+        if ($this->running_javascript()) {
+            $this->getSession()->wait($waittime * 1000, false);
+
+        } else if (!empty($url)) {
+            // We redirect directly as we can not wait for an automatic redirection.
+            $this->getSession()->getDriver()->getClient()->request('get', $url);
+
+        } else {
+            // Reload the page if no URL was provided.
+            $this->getSession()->getDriver()->reload();
+        }
+    }
+
+    /**
      * Switches to the specified window. Useful when interacting with popup windows.
      *
      * @Given /^I switch to "(?P<window_name_string>(?:[^"]|\\")*)" window$/
@@ -83,7 +137,7 @@ class behat_general extends behat_base {
     }
 
     /**
-     * Accepts the currently displayed alert dialog.
+     * Accepts the currently displayed alert dialog. This step does not work in all the browsers, consider it experimental.
      * @Given /^I accept the currently displayed dialog$/
      */
     public function accept_currently_displayed_alert_dialog() {
@@ -110,6 +164,11 @@ class behat_general extends behat_base {
      * @param int $seconds
      */
     public function i_wait_seconds($seconds) {
+
+        if (!$this->running_javascript()) {
+            throw new DriverException('Waits are disabled in scenarios without Javascript support');
+        }
+
         $this->getSession()->wait($seconds * 1000, false);
     }
 
@@ -119,6 +178,11 @@ class behat_general extends behat_base {
      * @Given /^I wait until the page is ready$/
      */
     public function wait_until_the_page_is_ready() {
+
+        if (!$this->running_javascript()) {
+            throw new DriverException('Waits are disabled in scenarios without Javascript support');
+        }
+
         $this->getSession()->wait(self::TIMEOUT, '(document.readyState === "complete")');
     }
 
@@ -178,8 +242,8 @@ class behat_general extends behat_base {
 
         // The table row container.
         $nocontainerexception = new ElementNotFoundException($this->getSession(), '"' . $tablerowtext . '" row text ');
-        $tablerowtext = str_replace("'", "\'", $tablerowtext);
-        $rownode = $this->find('xpath', "//tr[contains(., '" . $tablerowtext . "')]", $nocontainerexception);
+        $tablerowtext = $this->getSession()->getSelectorsHandler()->xpathLiteral($tablerowtext);
+        $rownode = $this->find('xpath', "//tr[contains(., $tablerowtext)]", $nocontainerexception);
 
         // Looking for the element DOM node inside the specified row.
         list($selector, $locator) = $this->transform_selector($selectortype, $element);
@@ -188,7 +252,7 @@ class behat_general extends behat_base {
     }
 
     /**
-     * Drags and drops the specified element to the specified container. This step is experimental.
+     * Drags and drops the specified element to the specified container. This step does not work in all the browsers, consider it experimental.
      *
      * The steps definitions calling this step as part of them should
      * manage the wait times by themselves as the times and when the
@@ -212,55 +276,127 @@ class behat_general extends behat_base {
     }
 
     /**
-     * Checks, that page contains specified text.
+     * Checks, that page contains specified text. It also checks if the text is visible when running Javascript tests.
      *
-     * @see Behat\MinkExtension\Context\MinkContext
      * @Then /^I should see "(?P<text_string>(?:[^"]|\\")*)"$/
+     * @throws ExpectationException
      * @param string $text
      */
     public function assert_page_contains_text($text) {
-        $this->assertSession()->pageTextContains($text);
+
+        // Looking for all the matching nodes without any other descendant matching the
+        // same xpath (we are using contains(., ....).
+        $xpathliteral = $this->getSession()->getSelectorsHandler()->xpathLiteral($text);
+        $xpath = "/descendant-or-self::*[contains(., $xpathliteral)]" .
+            "[count(descendant::*[contains(., $xpathliteral)]) = 0]";
+
+        // Wait until it finds the text, otherwise custom exception.
+        try {
+            $nodes = $this->find_all('xpath', $xpath);
+
+            // We also check for the element visibility when running JS tests.
+            if ($this->running_javascript()) {
+                foreach ($nodes as $node) {
+                    if ($node->isVisible()) {
+                        return;
+                    }
+                }
+
+                throw new ExpectationException("'{$text}' text was found but was not visible", $this->getSession());
+            }
+
+        } catch (ElementNotFoundException $e) {
+            throw new ExpectationException('"' . $text . '" text was not found in the page', $this->getSession());
+        }
     }
 
     /**
-     * Checks, that page doesn't contain specified text.
+     * Checks, that page doesn't contain specified text. When running Javascript tests it also considers that texts may be hidden.
      *
-     * @see Behat\MinkExtension\Context\MinkContext
      * @Then /^I should not see "(?P<text_string>(?:[^"]|\\")*)"$/
+     * @throws ExpectationException
      * @param string $text
      */
     public function assert_page_not_contains_text($text) {
-        $this->assertSession()->pageTextNotContains($text);
+
+        // Delegating the process to assert_page_contains_text.
+        try {
+            $this->assert_page_contains_text($text);
+        } catch (ExpectationException $e) {
+            // It should not appear, so this is good.
+            return;
+        }
+
+        // If the page contains the text this is failing.
+        throw new ExpectationException('"' . $text . '" text was found in the page', $this->getSession());
     }
 
     /**
-     * Checks, that element with specified CSS selector or XPath contains specified text.
+     * Checks, that the specified element contains the specified text. When running Javascript tests it also considers that texts may be hidden.
      *
      * @Then /^I should see "(?P<text_string>(?:[^"]|\\")*)" in the "(?P<element_string>(?:[^"]|\\")*)" "(?P<text_selector_string>[^"]*)"$/
+     * @throws ElementNotFoundException
+     * @throws ExpectationException
      * @param string $text
      * @param string $element Element we look in.
      * @param string $selectortype The type of element where we are looking in.
      */
     public function assert_element_contains_text($text, $element, $selectortype) {
 
-        // Transforming from steps definitions selector/locator format to Mink format.
-        list($selector, $locator) = $this->transform_text_selector($selectortype, $element);
-        $this->assertSession()->elementTextContains($selector, $locator, $text);
+        // Getting the container where the text should be found.
+        $container = $this->get_selected_node($selectortype, $element);
+
+        // Looking for all the matching nodes without any other descendant matching the
+        // same xpath (we are using contains(., ....).
+        $xpathliteral = $this->getSession()->getSelectorsHandler()->xpathLiteral($text);
+        $xpath = "/descendant-or-self::*[contains(., $xpathliteral)]" .
+            "[count(descendant::*[contains(., $xpathliteral)]) = 0]";
+
+        // Wait until it finds the text inside the container, otherwise custom exception.
+        try {
+            $nodes = $this->find_all('xpath', $xpath, false, $container);
+
+            // We also check for the element visibility when running JS tests.
+            if ($this->running_javascript()) {
+                foreach ($nodes as $node) {
+                    if ($node->isVisible()) {
+                        return;
+                    }
+                }
+
+                throw new ExpectationException("'{$text}' text was found in the {$element} element but was not visible", $this->getSession());
+            }
+
+        } catch (ElementNotFoundException $e) {
+            throw new ExpectationException('"' . $text . '" text was not found in the ' . $element . ' element', $this->getSession());
+        }
+
     }
 
     /**
-     * Checks, that element with specified CSS selector or XPath doesn't contain specified text.
+     * Checks, that the specified element does not contain the specified text. When running Javascript tests it also considers that texts may be hidden.
      *
      * @Then /^I should not see "(?P<text_string>(?:[^"]|\\")*)" in the "(?P<element_string>(?:[^"]|\\")*)" "(?P<text_selector_string>[^"]*)"$/
+     * @throws ElementNotFoundException
+     * @throws ExpectationException
      * @param string $text
      * @param string $element Element we look in.
      * @param string $selectortype The type of element where we are looking in.
      */
     public function assert_element_not_contains_text($text, $element, $selectortype) {
 
-        // Transforming from steps definitions selector/locator format to mink format.
-        list($selector, $locator) = $this->transform_text_selector($selectortype, $element);
-        $this->assertSession()->elementTextNotContains($selector, $locator, $text);
+        // Delegating the process to assert_element_contains_text.
+        try {
+            $this->assert_element_contains_text($text, $element, $selectortype);
+        } catch (ExpectationException $e) {
+            // It should not appear, so this is good.
+            // We only catch ExpectationException as ElementNotFoundException
+            // will be thrown if the container does not exist.
+            return;
+        }
+
+        // If the element contains the text this is failing.
+        throw new ExpectationException('"' . $text . '" text was found in the ' . $element . ' element', $this->getSession());
     }
 
     /**
@@ -391,6 +527,15 @@ class behat_general extends behat_base {
             // It passes.
             return;
         }
+    }
+
+    /**
+     * This step triggers cron like a user would do going to admin/cron.php.
+     *
+     * @Given /^I trigger cron$/
+     */
+    public function i_trigger_cron() {
+        $this->getSession()->visit($this->locate_path('/admin/cron.php'));
     }
 
 }

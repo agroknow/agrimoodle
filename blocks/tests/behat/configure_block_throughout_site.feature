@@ -23,8 +23,8 @@ Feature: Add and configure blocks throughout the site
       | Page contexts | Display throughout the entire site |
     And I press "Save changes"
     When I follow "Course 1"
-    Then I should see "Comments"
-    And I should see "Save comment"
+    Then I should see "Comments" in the "Comments" "block"
+    And I should see "Save comment" in the "Comments" "block"
     And I am on homepage
     And I follow "Configure Comments block"
     And I fill the moodle form with:
@@ -32,4 +32,4 @@ Feature: Add and configure blocks throughout the site
     And I press "Save changes"
     And I follow "Course 1"
     # The first block matching the pattern should be top-left block
-    And I should see "Comments" in the "//*[@id='region-pre']/descendant::div[contains(concat(' ', @class, ' '), ' block ')]" "xpath_element"
+    And I should see "Comments" in the "//*[@id='region-pre']/descendant::div[contains(concat(' ', normalize-space(@class), ' '), ' block ')]" "xpath_element"

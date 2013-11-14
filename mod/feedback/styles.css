@@ -65,6 +65,10 @@ li.feedback_item_radio_v_right{
 	display:block;
 }
 
+div.feedback_items label{
+    display: inline;
+}
+
 div.feedback_item_captcha_text_left,
 div.feedback_item_captcha_img_left {
 	display:inline;
@@ -99,4 +103,8 @@ ul#feedback_draglist {
 
 div#feedback_dragarea {
     width:95%;
+}
+
+div img.feedback_bar_image {
+    height: 10px;
 }

@@ -72,11 +72,11 @@ class core_course_renderer extends plugin_renderer_base {
                 $this->page->course->id == SITEID ||
                 !$this->page->user_is_editing() ||
                 !($context = context_course::instance($this->page->course->id)) ||
-                !has_capability('moodle/course:update', $context) ||
+                !has_capability('moodle/course:manageactivities', $context) ||
                 !course_ajax_enabled($this->page->course) ||
                 !($coursenode = $this->page->settingsnav->find('courseadmin', navigation_node::TYPE_COURSE)) ||
-                !$coursenode->get('editsettings')) {
-            // too late or we are on site page or we could not find the course settings node
+                !($turneditingnode = $coursenode->get('turneditingonoff'))) {
+            // too late or we are on site page or we could not find the adjacent nodes in course settings menu
             // or we are not allowed to edit
             return;
         }
@@ -97,8 +97,13 @@ class core_course_renderer extends plugin_renderer_base {
             $modchoosertogglestring = get_string('modchooserenable', 'moodle');
             $modchoosertoggleurl->param('modchooser', 'on');
         }
-        $modchoosertoggle = navigation_node::create($modchoosertogglestring, $modchoosertoggleurl, navigation_node::TYPE_SETTING);
-        $coursenode->add_node($modchoosertoggle, 'editsettings');
+        $modchoosertoggle = navigation_node::create($modchoosertogglestring, $modchoosertoggleurl, navigation_node::TYPE_SETTING, null, 'modchoosertoggle');
+
+        // Insert the modchoosertoggle after the settings node 'turneditingonoff' (navigation_node only has function to insert before, so we insert before and then swap).
+        $coursenode->add_node($modchoosertoggle, 'turneditingonoff');
+        $turneditingnode->remove();
+        $coursenode->add_node($turneditingnode, 'modchoosertoggle');
+
         $modchoosertoggle->add_class('modchoosertoggle');
         $modchoosertoggle->add_class('visibleifjs');
         user_preference_allow_ajax_update('usemodchooser', PARAM_BOOL);
@@ -369,9 +374,7 @@ class core_course_renderer extends plugin_renderer_base {
         $activities = array(MOD_CLASS_ACTIVITY => array(), MOD_CLASS_RESOURCE => array());
 
         foreach ($modules as $module) {
-            if (!array_key_exists($module->archetype, $activities)) {
-                // System modules cannot be added by user, do not add to dropdown
-            } else if (isset($module->types)) {
+            if (isset($module->types)) {
                 // This module has a subtype
                 // NOTE: this is legacy stuff, module subtypes are very strongly discouraged!!
                 $subtypes = array();
@@ -381,17 +384,28 @@ class core_course_renderer extends plugin_renderer_base {
                 }
 
                 // Sort module subtypes into the list
+                $activityclass = MOD_CLASS_ACTIVITY;
+                if ($module->archetype == MOD_CLASS_RESOURCE) {
+                    $activityclass = MOD_CLASS_RESOURCE;
+                }
                 if (!empty($module->title)) {
                     // This grouping has a name
-                    $activities[$module->archetype][] = array($module->title => $subtypes);
+                    $activities[$activityclass][] = array($module->title => $subtypes);
                 } else {
                     // This grouping does not have a name
-                    $activities[$module->archetype] = array_merge($activities[$module->archetype], $subtypes);
+                    $activities[$activityclass] = array_merge($activities[$activityclass], $subtypes);
                 }
             } else {
                 // This module has no subtypes
+                $activityclass = MOD_CLASS_ACTIVITY;
+                if ($module->archetype == MOD_ARCHETYPE_RESOURCE) {
+                    $activityclass = MOD_CLASS_RESOURCE;
+                } else if ($module->archetype === MOD_ARCHETYPE_SYSTEM) {
+                    // System modules cannot be added by user, do not add to dropdown
+                    continue;
+                }
                 $link = $module->link->out(true, $urlparams);
-                $activities[$module->archetype][$link] = $module->title;
+                $activities[$activityclass][$link] = $module->title;
             }
         }
 
@@ -623,7 +637,8 @@ class core_course_renderer extends plugin_renderer_base {
             $conditionalhidden = $mod->availablefrom > time() ||
                 ($mod->availableuntil && $mod->availableuntil < time()) ||
                 count($mod->conditionsgrade) > 0 ||
-                count($mod->conditionscompletion) > 0;
+                count($mod->conditionscompletion) > 0 ||
+                count($mod->conditionsfield);
         }
         return $conditionalhidden;
     }
@@ -656,7 +671,6 @@ class core_course_renderer extends plugin_renderer_base {
 
         //Accessibility: for files get description via icon, this is very ugly hack!
         $instancename = $mod->get_formatted_name();
-        $altname = '';
         $altname = $mod->modfullname;
         // Avoid unnecessary duplication: if e.g. a forum name already
         // includes the word forum (or Forum, etc) then it is unhelpful
@@ -675,25 +689,27 @@ class core_course_renderer extends plugin_renderer_base {
         // viewhiddenactivities, so that teachers see 'items which might not
         // be available to some students' dimmed but students do not see 'item
         // which is actually available to current student' dimmed.
-        $conditionalhidden = $this->is_cm_conditionally_hidden($mod);
-        $accessiblebutdim = (!$mod->visible || $conditionalhidden) &&
-                (!$mod->uservisible || has_capability('moodle/course:viewhiddenactivities',
-                        context_course::instance($mod->course)));
-
         $linkclasses = '';
         $accesstext = '';
         $textclasses = '';
-        if ($accessiblebutdim) {
+        if ($mod->uservisible) {
+            $conditionalhidden = $this->is_cm_conditionally_hidden($mod);
+            $accessiblebutdim = (!$mod->visible || $conditionalhidden) &&
+                has_capability('moodle/course:viewhiddenactivities',
+                        context_course::instance($mod->course));
+            if ($accessiblebutdim) {
+                $linkclasses .= ' dimmed';
+                $textclasses .= ' dimmed_text';
+                if ($conditionalhidden) {
+                    $linkclasses .= ' conditionalhidden';
+                    $textclasses .= ' conditionalhidden';
+                }
+                // Show accessibility note only if user can access the module himself.
+                $accesstext = get_accesshide(get_string('hiddenfromstudents').':'. $mod->modfullname);
+            }
+        } else {
             $linkclasses .= ' dimmed';
             $textclasses .= ' dimmed_text';
-            if ($conditionalhidden) {
-                $linkclasses .= ' conditionalhidden';
-                $textclasses .= ' conditionalhidden';
-            }
-            if ($mod->uservisible) {
-                // show accessibility note only if user can access the module himself
-                $accesstext = get_accesshide(get_string('hiddenfromstudents').': ');
-            }
         }
 
         // Get on-click attribute value if specified and decode the onclick - it
@@ -709,7 +725,7 @@ class core_course_renderer extends plugin_renderer_base {
 
         // Display link itself.
         $activitylink = html_writer::empty_tag('img', array('src' => $mod->get_icon_url(),
-                'class' => 'iconlarge activityicon', 'alt' => $mod->modfullname)) . $accesstext .
+                'class' => 'iconlarge activityicon', 'alt' => ' ', 'role' => 'presentation')) . $accesstext .
                 html_writer::tag('span', $instancename . $altname, array('class' => 'instancename'));
         if ($mod->uservisible) {
             $output .= html_writer::link($url, $activitylink, array('class' => $linkclasses, 'onclick' => $onclick)) .
@@ -738,19 +754,23 @@ class core_course_renderer extends plugin_renderer_base {
             return $output;
         }
         $content = $mod->get_formatted_content(array('overflowdiv' => true, 'noclean' => true));
-        $conditionalhidden = $this->is_cm_conditionally_hidden($mod);
-        $accessiblebutdim = !$mod->visible || $conditionalhidden;
-        $textclasses = '';
         $accesstext = '';
-        if ($accessiblebutdim) {
+        $textclasses = '';
+        if ($mod->uservisible) {
+            $conditionalhidden = $this->is_cm_conditionally_hidden($mod);
+            $accessiblebutdim = (!$mod->visible || $conditionalhidden) &&
+                has_capability('moodle/course:viewhiddenactivities',
+                        context_course::instance($mod->course));
+            if ($accessiblebutdim) {
+                $textclasses .= ' dimmed_text';
+                if ($conditionalhidden) {
+                    $textclasses .= ' conditionalhidden';
+                }
+                // Show accessibility note only if user can access the module himself.
+                $accesstext = get_accesshide(get_string('hiddenfromstudents').':'. $mod->modfullname);
+            }
+        } else {
             $textclasses .= ' dimmed_text';
-            if ($conditionalhidden) {
-                $textclasses .= ' conditionalhidden';
-            }
-            if ($mod->uservisible) {
-                // show accessibility note only if user can access the module himself
-                $accesstext = get_accesshide(get_string('hiddenfromstudents').': ');
-            }
         }
         if ($mod->get_url()) {
             if ($content) {

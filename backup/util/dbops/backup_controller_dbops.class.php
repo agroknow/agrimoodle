@@ -164,8 +164,10 @@ abstract class backup_controller_dbops extends backup_dbops {
         $dbman = $DB->get_manager(); // We are going to use database_manager services
 
         $targettablename = 'backup_ids_temp';
-        $table = new xmldb_table($targettablename);
-        $dbman->drop_table($table); // And drop it
+        if ($dbman->table_exists($targettablename)) {
+            $table = new xmldb_table($targettablename);
+            $dbman->drop_table($table); // And drop it
+        }
     }
 
     /**
@@ -483,6 +485,7 @@ abstract class backup_controller_dbops extends backup_dbops {
             'backup_general_blocks'             => 'blocks',
             'backup_general_filters'            => 'filters',
             'backup_general_comments'           => 'comments',
+            'backup_general_badges'             => 'badges',
             'backup_general_userscompletion'    => 'userscompletion',
             'backup_general_logs'               => 'logs',
             'backup_general_histories'          => 'grade_histories'

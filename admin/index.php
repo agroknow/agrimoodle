@@ -47,10 +47,11 @@ if (!function_exists('iconv')) {
 
 define('NO_OUTPUT_BUFFERING', true);
 
-if (empty($_GET['cache']) and empty($_POST['cache'])) {
+if (empty($_GET['cache']) and empty($_POST['cache']) and empty($_GET['sesskey']) and empty($_POST['sesskey'])) {
     // Prevent caching at all cost when visiting this page directly,
     // we redirect to self once we known no upgrades are necessary.
     // Note: $_GET and $_POST are used here intentionally because our param cleaning is not loaded yet.
+    // Note2: the sesskey is present in all block editing hacks, we can not redirect there, so enable caching.
     define('CACHE_DISABLE_ALL', true);
 }
 
@@ -71,17 +72,24 @@ $cache          = optional_param('cache', 0, PARAM_BOOL);
 
 // Set up PAGE.
 $url = new moodle_url('/admin/index.php');
-if (!is_null($newaddonreq)) {
-    // We need to set the eventual add-on installation request in the $PAGE's URL
-    // so that it is stored in $SESSION->wantsurl and the admin is redirected
-    // correctly once they are logged-in.
-    $url->param('installaddonrequest', $newaddonreq);
-}
 if ($cache) {
     $url->param('cache', $cache);
 }
 $PAGE->set_url($url);
 unset($url);
+
+// Are we returning from an add-on installation request at moodle.org/plugins?
+if ($newaddonreq and !$cache and empty($CFG->disableonclickaddoninstall)) {
+    $target = new moodle_url('/admin/tool/installaddon/index.php', array(
+        'installaddonrequest' => $newaddonreq,
+        'confirm' => 0));
+    if (!isloggedin() or isguestuser()) {
+        // Login and go the the add-on tool page.
+        $SESSION->wantsurl = $target->out();
+        redirect(get_login_url());
+    }
+    redirect($target);
+}
 
 $PAGE->set_pagelayout('admin'); // Set a default pagelayout
 
@@ -222,6 +230,13 @@ if ($cache) {
 }
 
 if ($version > $CFG->version) {  // upgrade
+
+    // Warning about upgrading a test site.
+    $testsite = false;
+    if (defined('BEHAT_SITE_RUNNING')) {
+        $testsite = 'behat';
+    }
+
     // We purge all of MUC's caches here.
     // Caches are disabled for upgrade by CACHE_DISABLE_ALL so we must set the first arg to true.
     // This ensures a real config object is loaded and the stores will be purged.
@@ -254,7 +269,7 @@ if ($version > $CFG->version) {  // upgrade
         $PAGE->set_cacheable(false);
 
         $output = $PAGE->get_renderer('core', 'admin');
-        echo $output->upgrade_confirm_page($a->newversion, $maturity);
+        echo $output->upgrade_confirm_page($a->newversion, $maturity, $testsite);
         die();
 
     } else if (empty($confirmrelease)){
@@ -443,7 +458,7 @@ if (during_initial_install()) {
 
 // Now we can be sure everything was upgraded and caches work fine,
 // redirect if necessary to make sure caching is enabled.
-if (!$cache) {
+if (!$cache and !optional_param('sesskey', '', PARAM_RAW)) {
     redirect(new moodle_url($PAGE->url, array('cache' => 1)));
 }
 
@@ -464,17 +479,6 @@ if (empty($site->shortname)) {
 // Check if we are returning from moodle.org registration and if so, we mark that fact to remove reminders
 if (!empty($id) and $id == $CFG->siteidentifier) {
     set_config('registered', time());
-}
-
-// Check if we are returning from an add-on installation request at moodle.org/plugins
-if (!is_null($newaddonreq)) {
-    if (!empty($CFG->disableonclickaddoninstall)) {
-        // The feature is disabled in config.php, ignore the request.
-    } else {
-        redirect(new moodle_url('/admin/tool/installaddon/index.php', array(
-            'installaddonrequest' => $newaddonreq,
-            'confirm' => 0)));
-    }
 }
 
 // setup critical warnings before printing admin tree block

@@ -219,6 +219,28 @@ class core_phpunit_advanced_testcase extends advanced_testcase {
         $this->assertTrue(isset($CFG->admin));
         $this->assertEquals(1, $CFG->rolesactive);
 
+        // _GET change.
+        $_GET['__somethingthatwillnotnormallybepresent__'] = 'yy';
+        phpunit_util::reset_all_data(true);
+
+        $this->assertEquals(array(), $_GET);
+
+
+        // _POST change.
+        $_POST['__somethingthatwillnotnormallybepresent2__'] = 'yy';
+        phpunit_util::reset_all_data(true);
+        $this->assertEquals(array(), $_POST);
+
+        // _FILES change.
+        $_FILES['__somethingthatwillnotnormallybepresent3__'] = 'yy';
+        phpunit_util::reset_all_data(true);
+        $this->assertEquals(array(), $_FILES);
+
+        // _REQUEST change.
+        $_REQUEST['__somethingthatwillnotnormallybepresent4__'] = 'yy';
+        phpunit_util::reset_all_data(true);
+        $this->assertEquals(array(), $_REQUEST);
+
         //silent changes
         $_SERVER['xx'] = 'yy';
         phpunit_util::reset_all_data(true);
@@ -316,6 +338,33 @@ class core_phpunit_advanced_testcase extends advanced_testcase {
         $this->loadDataSet($dataset);
         $this->assertTrue($DB->record_exists('user', array('username'=>'noidea')));
         $this->assertTrue($DB->record_exists('user', array('username'=>'onemore')));
+    }
+
+    public function test_message_processors_reset() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+
+        // Get all processors first.
+        $processors1 = get_message_processors();
+
+        // Add a new message processor and get all processors again.
+        $processor = new stdClass();
+        $processor->name = 'test_processor';
+        $processor->enabled = 1;
+        $DB->insert_record('message_processors', $processor);
+
+        $processors2 = get_message_processors();
+
+        // Assert that new processor still haven't been added to the list.
+        $this->assertSame($processors1, $processors2);
+
+        // Reset message processors data.
+        $processors3 = get_message_processors(false, true);
+        // Now, list of processors should not be the same any more,
+        // And we should have one more message processor in the list.
+        $this->assertNotSame($processors1, $processors3);
+        $this->assertEquals(count($processors1) + 1, count($processors3));
     }
 
     public function test_message_redirection() {
