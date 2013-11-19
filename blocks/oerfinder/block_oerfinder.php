@@ -139,7 +139,9 @@ class block_oerfinder extends block_base {
         ////variable for experiment to inform the oerfinder js not to run functions for experiment
         $this->content->text .= "<div id='run_experiment' style='display:none;'>{$this->config->experiment}</div>";
         ////Finder's web service URL to inform the oerfinder js
-        $surl = get_config('oerfinder', 'service_url');
+        //$surl = get_config('oerfinder', 'service_url');
+        //Change in new version of Moodle setting urls are in CFG and not in get_config
+        $surl = $CFG -> oerfinder_config_service_url_default;
         $this->content->text .= "<div id='web_service_url' style='display:none;'>{$surl}</div>";
         $this->content->text .= $this->getUserInfoJSObject();
         return $this->content;
