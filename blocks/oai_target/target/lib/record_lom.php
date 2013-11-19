@@ -45,7 +45,7 @@ $output .= '</lom>';
 // if (isset($METADATAFORMATS[$prefix]['record_prefix'])) {
   // $output .= ':'.$METADATAFORMATS[$prefix]['record_prefix'];
 // }
-$output .= ">\n";
+$output .= "\n";
 $output .= 
 '   </metadata>'."\n";
 ?>
