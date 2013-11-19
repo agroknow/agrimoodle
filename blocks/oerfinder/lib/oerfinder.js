@@ -90,12 +90,27 @@ function sendJSONRequest(es_query) {
                 for(var i=0; i<searchResultList.length;i++)  {
                     var sr = searchResultList[i];
                     var title=sr.title;
-                    var body=sr.description;
+                    var body=sr.descriptions;
                     var location = sr.location;
                     var id= escape(searchIdResultList[i]);
-
-                    content+= '<li><a data-id="'+id+'" href="#" location="'+location+'" body="'+body+'" title="'+title+'" class="modal_show">';
-                    content+= title + '</a>';
+                    var titlevalue = title[0]['value'];
+                    for (t=0;t<title.length;t++){ 
+                        if(title[t]['lang']=='en'){
+                            titlevalue=title[t]['value'];
+                        } 
+                    }
+                    if(body!=null){
+                        var bodyvalue = ''; 
+                        for (t=0;t<body.length;t++){ 
+                            if(body[t]['lang']=='en'){
+                                bodyvalue=body[t]['value'];
+                            } 
+                        }
+                    }else{
+                        var bodyvalue = '';
+                    }
+                    content+= '<li><a data-id="'+id+'" href="#" location="'+location+'" body="'+bodyvalue+'" title="'+titlevalue+'" class="modal_show">';
+                    content+= titlevalue + '</a>';
                     //~ content+= '</a><div class="raty" id="'+id+'" data-startvalue="'+0+'"></div>' ;
                     content+= '</li>';
                 //                    console.log(sr);
@@ -193,24 +208,48 @@ function pagingRequest(es_query, start) {
         html='<table>  ';
         for (var i=0; i<searchResultList.length; i++) {
             var title=searchResultList[i].title;
-            var body=searchResultList[i].description;
+            var body=searchResultList[i].descriptions;
             var location = searchResultList[i].location;
-            var keywords= implode(',',searchResultList[i].keywords);
+            var keywordsvalue = new Array();
+            if(searchResultList[i].keywords!=null){
+                for (t=0;t<searchResultList[i].keywords.length;t++){ 
+                    if(searchResultList[i].keywords[t]['lang']=='en'){
+                        keywordsvalue[t]=searchResultList[i].keywords[t]['value'];
+                    }
+                }
+            }
+            var keywords= implode(',',keywordsvalue);
             var id= escape(searchIdResultList[i]);
-            html+='<tr ><td><a  href="#" data-id="'+id+'" location="'+location+'" body="'+body+'" title="'+title+'" class="modal_show">';
-
-            if( title.length > 100 ) {
-                html+=  ''+title.substr(0,100)+'...';
+            var titlevalue = title[0]['value'];
+            for (t=0;t<title.length;t++){ 
+                if(title[t]['lang']=='en'){
+                    titlevalue=title[t]['value'];
+                } 
+            }
+            if(body!=null){
+                var bodyvalue = ''; 
+                for (t=0;t<body.length;t++){ 
+                    if(body[t]['lang']=='en'){
+                        bodyvalue=body[t]['value'];
+                    } 
+                }
+            }else{
+                var bodyvalue = '';
+            }
+            html+='<tr ><td><a  href="#" data-id="'+id+'" location="'+location+'" body="'+bodyvalue+'" title="'+titlevalue+'" class="modal_show">';
+            
+            if( titlevalue.length > 100 ) {
+                html+=  ''+titlevalue.substr(0,100)+'...';
             } else {
-                html+=  ''+title ;
+                html+=  ''+titlevalue ;
             }
 
             //~ html+='</a><div class="raty_more" id="'+id+'" data-startvalue="'+0+'"></div>' ;
             html+='</a>' ;
-            if( body.length < 120 ) {
-                html+='<div>'+body.substr(0,120)+'</div>';
+            if( bodyvalue.length < 120 ) {
+                html+='<div>'+bodyvalue.substr(0,120)+'</div>';
             } else {
-                html+='<div>'+body.substr(0,100)+'<br/>'+body.substr(101,100)+'..</div>';
+                html+='<div>'+bodyvalue.substr(0,100)+'<br/>'+bodyvalue.substr(101,100)+'..</div>';
             }
 
             html+= '<div style="font-weight:bold;font-size:10px;"> Keywords : '+keywords.substr(0,100)+'..</div>';
@@ -228,7 +267,7 @@ function pagingRequest(es_query, start) {
         boxy_ref = new Boxy(html ,{
             draggable: true,
             modal:true,
-            title:'more_results',
+            title:M.util.get_string('more_results', 'block_oerfinder') ,
             y:10,
             unloadOnHide:true,
             closeText:'close'
