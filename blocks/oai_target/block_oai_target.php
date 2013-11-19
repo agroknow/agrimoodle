@@ -115,7 +115,7 @@ class block_oai_target extends block_base {
         $this->content->text.="<li><a target='_new' href='$CFG->wwwroot/blocks/oai_target/target/oai2.php?verb=GetRecord&identifier=http://www.foo.gr&metadataPrefix=oai_lom'>GetRecord</a></li>";
         $this->content->text.="</ol>";
 //		}
-        $this->content->footer = '<b>Note:</b> under construction!';
+        //$this->content->footer = '<b>Note:</b> under construction!';
         return $this->content;
     }
 
