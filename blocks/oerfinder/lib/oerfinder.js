@@ -267,7 +267,7 @@ function pagingRequest(es_query, start) {
         boxy_ref = new Boxy(html ,{
             draggable: true,
             modal:true,
-            title:'more_results',
+            title:M.util.get_string('more_results', 'block_oerfinder') ,
             y:10,
             unloadOnHide:true,
             closeText:'close'

@@ -78,6 +78,8 @@ class block_oerfinder extends block_base {
             $this->config->experiment = 0;
         }
 
+        // Send the langstring value to javascript
+        $PAGE->requires->string_for_js('more_results', 'block_oerfinder');
 
         $PAGE->requires->jquery();
         // added migrate in order to use allow the call to jQuery.browser() by boxy
