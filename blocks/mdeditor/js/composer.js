@@ -272,7 +272,7 @@ function block_mdeditor_compose_title(kit, data, fieldName, L10n) {
 }
 
 /**
- * Called by composeChecklist()
+ * Called by composeChecklist() and composeChecklistTranslation()
  *
  * @param widget: currently, only 'height' and 'width' is supported
  */
@@ -285,7 +285,7 @@ function block_mdeditor_compose_checklist(kit, data, fieldName, L10n, classRule,
     containerClass = kit.containerClass;
 
     var style = '';
-    // style += 'height: ' + (widget['height'] ? widget['height'] : '100px;');
+    style += 'height: ' + (widget['height'] ? widget['height'] : '100px;');
     style += 'width:  ' + (widget['width']  ? widget['width']  : '100%;');
 
     /*
@@ -4179,8 +4179,8 @@ function block_mdeditor_init_kit(target, L10n) {
         var value = data[prefix][fieldName];
 
         $(target).val(value);
-    }
-
+    } 
+    
     function composeChecklist(kit, data, fieldName, L10n, classes, widget) {
         var allLangs = $.extend(true, {}, L10n.element[fieldName].options);
 

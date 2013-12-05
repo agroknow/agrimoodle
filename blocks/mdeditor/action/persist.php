@@ -1,10 +1,12 @@
 <?php
 
-if (! defined('AJAX_SCRIPT')) define('AJAX_SCRIPT', true);
+if (!defined('AJAX_SCRIPT'))
+    define('AJAX_SCRIPT', true);
 
-if (! defined('DS')) define('DS', DIRECTORY_SEPARATOR);
+if (!defined('DS'))
+    define('DS', DIRECTORY_SEPARATOR);
 
-require_once(dirname(__FILE__).DS.'params_handler.php');
+require_once(dirname(__FILE__) . DS . 'params_handler.php');
 
 $params = block_mdeditor_get_action_params();
 extract($params);
@@ -20,7 +22,7 @@ extract($params);
 // error_log('POST is: ' . print_r($_POST, true));
 
 /* remove any previous data that have been stored under a different state */
-$previous = ($state == 'complete') ? 'partial' : 'complete';
+$previous = ($state == 'complete') ? 'complete' : 'partial';
 $previous .= DS;
 
 $previous = $base.$previous.$id.'.json';
@@ -30,13 +32,12 @@ if (file_exists($previous)) {
 
 $response = new object();
 try {
-	// We need to create the directory structure if it doesn't exist!
-	is_dir($base.$state) ||  mkdir($base.$state, 0755, true);
-	// Encode to json format and save to file
-    file_put_contents($base.$state.DS.$file, json_encode($_POST));
+    // We need to create the directory structure if it doesn't exist!
+    is_dir($base . $state) || mkdir($base . $state, 0755, true);
+    // Encode to json format and save to file
+    file_put_contents($base . $state . DS . $file, json_encode($_POST));
     $response->status = 200;
     $response->message = 'Changes have been saved.';
-
 } catch (Exception $e) {
     $response->status = 400;
     $response->message = 'An error has occured. Changes have not been saved!';
