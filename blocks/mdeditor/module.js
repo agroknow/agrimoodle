@@ -156,12 +156,13 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
      * element : DOM element to be converted into a dialog upon user-request
      * msg_error : a localized error to display to the user if course/resource
      *  could not be fetched
+     *  Diaog Box for translation!!
      */
     $(block).data('open_translate_dialog', function(requestParams, element, msg_error) {
         var base = M.cfg.wwwroot + '/blocks/mdeditor/action',
         sourceUrl = base + '/define.php';
 
-        console.log("Trying to translate data from url: ", sourceUrl, " With requestParams: ", requestParams);
+        //console.log("Trying to translate data from url: ", sourceUrl, " With requestParams: ", requestParams);
         $.get(sourceUrl, requestParams, "json")
         .success(function(response) {
             //	console.log("Parsing response for dialog JSON: ", response);
@@ -175,8 +176,9 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
             targetUrl = base + '/translate.php';
 
             requestParams['updateCallback'] = M.block_mdeditor.update_status;
+            //flag for which div to show in translation dialog box (checklist or perform translation)
             requestParams.performTranslation = false;
-            console.log(requestParams);
+            //console.log(requestParams);
             block_mdeditor_translate(element, resp_json, L10n, targetUrl, requestParams);
         })
         .error(function(err) {
@@ -328,6 +330,27 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
                         msg_error = local.error_fetching_data;
 
                         $(block).data('open_dialog')(params,
+                            element,
+                            msg_error);
+                    });
+                }
+            },
+            {
+                "type"  : "button",
+                "class" : "block_mdeditor-edit_course",
+                "style" : "margin-bottom: 10px; width: 100%",
+                "html"  : local.translate_course_button,
+                "post"  : function() {
+                    $(this).click(function() {
+
+                        var params = {
+                            "type" : "course",
+                            "id"   : course_id
+                        },
+                        element = $(block).data('edit_dialog'),
+                        msg_error = local.error_fetching_data;
+
+                        $(block).data('open_translate_dialog')(params,
                             element,
                             msg_error);
                     });

@@ -63,6 +63,7 @@ class block_mdeditor extends block_base {
 
         // them main javascript that actually "builds" the LOM editor
         $this->page->requires->js('/blocks/mdeditor/js/composer.js');
+        // them main javascript that actually "builds" the LOM editor in translation
         $this->page->requires->js('/blocks/mdeditor/js/translator.js');
     }
 
