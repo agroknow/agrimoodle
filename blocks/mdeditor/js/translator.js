@@ -453,6 +453,7 @@ function AMT_prepare(keywords_for_amt, descriptions_for_amt, titles_for_amt) {
 }
 
 // call AMT function its time when previous call has ended. In order to know when the calls to API has finished and close the loading div 
+//NOTE: In order to run succesfully the API for Aytomatic Translation your IP must be in the security check in the aglr.agroknow.gr
 function AMT(url, num, totalcount) {
     //console.log(num);
     var link = url[num]['url'];
