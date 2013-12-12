@@ -25,7 +25,7 @@ $L10n = array(
         'educational' => '4. Educational',
         'rights' => '5. Rights',
         'classification' => '6. Classification',
-        'selectelanguage' => 'Select language to translate'
+        'selectelanguage' => 'Select languages'
     ),
     'element' => array(
         'title' => array(
@@ -936,8 +936,8 @@ $L10n['element']['coverage'] = array(
     )
 );
 $L10n['element']['translationSelectLanguage'] = array(
-    'caption' => 'Language',
-    'seachtext' => 'Type here and press [TAB] to search list...',
+    'caption' => 'Check all the languages for which you will provide translations, with the assistance of Automatic Machine Translation services. ',
+    'searchtext' => 'Type here and press [TAB] to search list...',
     'options' => array(
         'en' => array('html' => 'English', 'class' => 'level_1'),
         'el' => array('html' => 'Greek', 'class' => 'level_1'),

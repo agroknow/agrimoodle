@@ -81,7 +81,7 @@ function block_mdeditor_translate(target, data, L10n, targetUrl, requestParams) 
                     "class"   : "block_mdeditor-element_heading",
                     "html"    : [
                     {
-                        "type"    : "a",
+                        "type"    : "button",
                         "href"    : "javascript:void(0)",
                         "html"    : "Proceed with Translation",
                         "onclick" : function() {
@@ -143,12 +143,6 @@ function block_mdeditor_translate(target, data, L10n, targetUrl, requestParams) 
                 "style" : "position:relative;",
                 "id"   : form,
                 "html" : [
-                {
-                    "type" : "div", 
-                    "id": "translate_loading",
-                    "style": "position:absolute; top:0px; left:0px; background-color:#ffffff; height:100%; width:100%; z-index:10;",
-                    "html" : "<img src='" + M.cfg.wwwroot + "/blocks/mdeditor/images/loading1.gif'>"
-                },
                 {
                     "type"    : "fieldset",
                     "caption" : L10n.category.general,
@@ -447,7 +441,7 @@ function AMT_prepare(keywords_for_amt, descriptions_for_amt, titles_for_amt) {
     }
 
     
-    console.log(url);
+    //console.log(url, newcount);
     AMT(url, 1, newcount);   
     
 }
@@ -456,69 +450,81 @@ function AMT_prepare(keywords_for_amt, descriptions_for_amt, titles_for_amt) {
 //NOTE: In order to run succesfully the API for Aytomatic Translation your IP must be in the security check in the aglr.agroknow.gr
 function AMT(url, num, totalcount) {
     //console.log(num);
-    var link = url[num]['url'];
-
-    link=escape(link);
-    //check if there is no link not to call the API
-    if(link.length!=0){
-        $.when( $.ajax({
-            url : '../blocks/mdeditor/proxy.php?url='+link,
-            dataType: 'json',
-            success : function(res){
-            //console.log(res.data.translation);
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR, textStatus, errorThrown);
-            }
+    if(totalcount!=0){
+        // Start the loading div
+        if(num == 1){            
+            $("#block_mdeditor-dialog").append("<div id='translate_loading' style='position:absolute; top:0px; left:0px; background-color:#ffffff; height:100%; width:100%; z-index:10;'><span id='status_trasnlation'>Starting translation</span><br><img src='" + M.cfg.wwwroot + "/blocks/mdeditor/images/loading1.gif'></div>");
+            $('#status_trasnlation').html('Translation Status:  1/'+totalcount+' ');    
+        }
+                  
+        var link = url[num]['url'];
+        // first status of translation
+        
+        link=escape(link);
+        //check if there is no link not to call the API
+        if(link.length!=0){
+            $.when( $.ajax({
+                url : '../blocks/mdeditor/proxy.php?url='+link,
+                dataType: 'json',
+                success : function(res){
+                //console.log(res.data.translation);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR, textStatus, errorThrown);
+                }
     
-        })
-        ).then(function( output ) {
-            if(output){    
-                //console.log('123',output.data.translation, count, t);         
-                // send variables to each element
-                if(url[num]['t']!=undefined ){
-                    if(url[num]['t']!=''){
+            })
+            ).then(function( output ) {
+                if(output){   
+                    // Status of translation
+                    //console.log('Translation Status:  '+num+'/'+totalcount+' '); 
+                    $('#status_trasnlation').html('Translation Status:  '+num+'/'+totalcount+' ');
+                    //console.log('123',output.data.translation, count, t);         
+                    // send variables to each element
+                    if(url[num]['t']!=undefined ){
+                        if(url[num]['t']!=''){
                         
-                        if(url[num]['type']=='keyword'){
-                            console.log('2');
-                            $('#block_mdeditor-edit_form  input[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').val(output.data.translation);
-                            $('#block_mdeditor-edit_form  input[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').css('background-color','#FFF8E7');
-                            $('#block_mdeditor-edit_form  input[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').css('border', '2px solid #A74C29');
-                        }else{
-                            console.log('1');
-                            $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').val(output.data.translation);
-                            $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').css('background-color','#FFF8E7');
-                            $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').css('border', '2px solid #A74C29');
+                            if(url[num]['type']=='keyword'){
+                                //console.log('2');
+                                $('#block_mdeditor-edit_form  input[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').val(output.data.translation);
+                                $('#block_mdeditor-edit_form  input[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').css('background-color','#FFF8E7');
+                                $('#block_mdeditor-edit_form  input[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').css('border', '2px solid #A74C29');
+                            }else{
+                                //console.log('1');
+                                $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').val(output.data.translation);
+                                $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').css('background-color','#FFF8E7');
+                                $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['t']+'\\]\\['+url[num]['count']+'\\]\\[value\\]]').css('border', '2px solid #A74C29');
   
+                            }
+                        }else{
+                            //console.log('3');
+                            $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['count']+'\\]\\[value\\]]').val(output.data.translation);  
+                            $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['count']+'\\]\\[value\\]]').css('background-color','#FFF8E7');
+                            $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['count']+'\\]\\[value\\]]').css('border', '2px solid #A74C29');
                         }
-                    }else{
-                        console.log('3');
-                        $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['count']+'\\]\\[value\\]]').val(output.data.translation);  
-                        $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['count']+'\\]\\[value\\]]').css('background-color','#FFF8E7');
-                        $('#block_mdeditor-edit_form  textarea[name='+url[num]['type']+'\\['+url[num]['count']+'\\]\\[value\\]]').css('border', '2px solid #A74C29');
                     }
-                }
-                //callback('3');
-                //check that was the last translation in order to close the loading div
-                if(num < totalcount){
-                    num+=1;
-                    AMT(url, num, totalcount);
-                }else{
-                    $( "#translate_loading" ).remove();
-                }
+                    //callback('3');
+                    //check that was the last translation in order to close the loading div
+                    if(num < totalcount){
+                        num+=1;
+                        AMT(url, num, totalcount);
+                    }else{
+                        $( "#translate_loading" ).remove();
+                    }
                  
-            //return output;
+                //return output;
                 
-            }
+                }
             
-        })  
+            })  
     
-    }else{
-        if(num < totalcount){
-            num+=1;
-            AMT(url, num, totalcount);
         }else{
-            $( "#translate_loading" ).remove();
+            if(num < totalcount){
+                num+=1;
+                AMT(url, num, totalcount);
+            }else{
+                $( "#translate_loading" ).remove();
+            }
         }
     }
 }
