@@ -6,22 +6,26 @@
  * @package   block_mdeditor
  */
 
-$string['pluginname'] = 'Metadata editor two';
-$string['mdeditor'] = 'Metadata editor';
+$string['pluginname'] = 'Μετασχολιασμός (LOM)';
+$string['mdeditor'] = 'Επεξεργαστής Μετασχολιασμού';
 
 // =============================================
 // strings that appear on the block itself
 // =============================================
 $string['block_edit_button'] = 'Επεξεργασία';
-$string['block_edit_resource_desc'] = 'Επιλέξτε κάποιον πόρο από την παρακάτω λίστα και πατήστε "Επεξεργασία πόρου"';
-$string['block_edit_resource_button'] = 'Επεξεργασία πόρου';
-$string['block_edit_course_button'] = 'Επεξεργασία μαθήματος';
+$string['block_edit_resource_desc'] = 'Επιλέξτε κάποιο μαθησιακό αντικείμενο από την παρακάτω λίστα και πατήστε "Μετασχολιασμός αντικειμένου"';
+$string['block_edit_resource_button'] = 'Μετασχολιασμός πόρου';
+$string['block_translate_resource_button'] = 'Μετάφραση μετασχολιασμού';
+$string['block_edit_course_button'] = 'Μετασχολιασμός μαθήματος';
+$string['block_translate_course_button'] = 'Μετάφραση μετασχολιασμού';
 $string['block_edit_no_resources'] = 'Δεν βρέθηκαν πόροι';
 $string['block_javascript_required'] = 'Απαιτείται Javascript';
 $string['block_msg_error_fetching_data'] = 'Προέκυψε κάποιο σφάλμα κατά την ανάκτηση των δεδομένων';
 $string['block_status_partial'] = 'Μερικώς συμπληρωμένο.';
 $string['block_status_complete'] = 'Έχουν συμπληρωθεί τα υποχρεωτικά πεδία.';
 $string['block_status_not_started'] = 'Δεν βρέθηκε εγγραφή.';
+
+$string['block_color_legend'] = '<span style="background-color: goldenrod;color:white">Πρόχειρα</span>, <span style="background-color:darkgoldenrod;color:white">Πλήρως</span> μετασχολιασμένα αντικείμενα';
 
 // =============================================
 // strings about metadata

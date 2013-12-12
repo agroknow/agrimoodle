@@ -41,15 +41,15 @@ M.block_mdeditor.update_status = function(params) {
 
     if (params.type == 'course') {
         var div = $(block).find('.course_status_div')[0],
-            caption = $(div).find('.course_status_caption')[0],
-            status = $(div).find('.course_status')[0];
+        caption = $(div).find('.course_status_caption')[0],
+        status = $(div).find('.course_status')[0];
 
         $(caption).html(L10n['message'].course_status_caption);
         $(status).html(L10n['message']['course_status_' + params.status]);
 
     } else {
         var select = $(block).find('.block_mdeditor-resource_select')[0],
-            item = $(select).children('[value=' + params.id + ']');
+        item = $(select).children('[value=' + params.id + ']');
 
         if (!item) return;
         $(item).attr('class', 'status_' + params.status );								
@@ -61,15 +61,17 @@ M.block_mdeditor.update_status = function(params) {
 /* L10n and local will be merged into one array */
 M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) {
 	
-	console.log("Starting JS initialisation!");
+    console.log("Starting JS initialisation!");
     var block = $('#block_mdeditor-block');
 
-    var url = {'persist' : M.cfg.wwwroot + '/blocks/mdeditor/action/persist.php'};
+    var url = {
+        'persist' : M.cfg.wwwroot + '/blocks/mdeditor/action/persist.php'
+        };
 
     if (! block) {
-		console.error("Could not find the mdeditor block. Exiting!");
-		return -1;
-	}
+        console.error("Could not find the mdeditor block. Exiting!");
+        return -1;
+    }
 
     M.block_mdeditor.block = block;
 
@@ -91,18 +93,22 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
             /* provide the course in the same format used by mods -- the key is
              * not really important any more */
             /* TODO: Provide a 'title' attribute as well */
-            templates['cource'] = {"html"  : L10n.dialog.copy_from_course,
-                                   "value" : course_id};
+            templates['cource'] = {
+                "html"  : L10n.dialog.copy_from_course,
+                "value" : course_id
+            };
             L10n.templates = $.extend(templates, resources);
 
             /* temporaty initialization hack */
             block_mdeditor_init_kit(M.block_mdeditor, L10n);
 
             /* initialize the status of the labels of the course */
-            M.block_mdeditor.update_status({"type" : "course",
-                                            "status" : course_status});
+            M.block_mdeditor.update_status({
+                "type" : "course",
+                "status" : course_status
+            });
         }
-        /* perhaps make the block inaccessible because, no L10n means no strings
+    /* perhaps make the block inaccessible because, no L10n means no strings
          * at all which in turn means no elements ! */
     });
 
@@ -118,160 +124,255 @@ M.block_mdeditor.init = function(Y, course_id, course_status, resources, local) 
      */
     $(block).data('open_dialog', function(requestParams, element, msg_error) {
         var base = M.cfg.wwwroot + '/blocks/mdeditor/action',
-            sourceUrl = base + '/define.php';
+        sourceUrl = base + '/define.php';
 
-//		console.log("Trying to get data from url: ", sourceUrl, " With requestParams: ", requestParams);
+        //		console.log("Trying to get data from url: ", sourceUrl, " With requestParams: ", requestParams);
         $.get(sourceUrl, requestParams, "json")
         .success(function(response) {
-//			console.log("Parsing response for dialog JSON: ", response);
-			if (response)
-				resp_json = $.parseJSON(response)
-			else
-				resp_json = "";
-//			console.log("Parsed! Result is:", response, resp_json);
+            //			console.log("Parsing response for dialog JSON: ", response);
+            if (response)
+                resp_json = $.parseJSON(response)
+            else
+                resp_json = "";
+            //			console.log("Parsed! Result is:", response, resp_json);
 
             /* response holds the data */
             var L10n = $(block).data('L10n'),                                   // ++++ TODO buggy?
-                targetUrl = base + '/persist.php';
+            targetUrl = base + '/persist.php';
 
             requestParams.updateCallback = M.block_mdeditor.update_status;
             block_mdeditor_compose(element, resp_json, L10n, targetUrl, requestParams);
         })
         .error(function(err) {
             alert(msg_error);
-			console.log(msg_error, err);
+            console.log(msg_error, err);
         });
     });
+    
+    /**
+     * url : points at the action to be executed for storing changes
+     * request_params : object with keys type and id; the define the target
+     * resource/course to retrieved/stored
+     * element : DOM element to be converted into a dialog upon user-request
+     * msg_error : a localized error to display to the user if course/resource
+     *  could not be fetched
+     *  Diaog Box for translation!!
+     */
+    $(block).data('open_translate_dialog', function(requestParams, element, msg_error) {
+        var base = M.cfg.wwwroot + '/blocks/mdeditor/action',
+        sourceUrl = base + '/define.php';
+
+        //console.log("Trying to translate data from url: ", sourceUrl, " With requestParams: ", requestParams);
+        $.get(sourceUrl, requestParams, "json")
+        .success(function(response) {
+            //	console.log("Parsing response for dialog JSON: ", response);
+            if (response)
+                resp_json = $.parseJSON(response)
+            else
+                resp_json = "";
+           
+            /* response holds the data */
+            var L10n = $(block).data('L10n'),                                   // ++++ TODO buggy?
+            targetUrl = base + '/translate.php';
+
+            requestParams['updateCallback'] = M.block_mdeditor.update_status;
+            //flag for which div to show in translation dialog box (checklist or perform translation)
+            requestParams.performTranslation = false;
+            //console.log(requestParams);
+            block_mdeditor_translate(element, resp_json, L10n, targetUrl, requestParams);
+        })
+        .error(function(err) {
+            alert(msg_error);
+            console.log(msg_error, err);
+        });
+    });
+    
 
     $.dform.options.prefix = null;
     $(block).dform({
         "type"  : "container",
         "class" : "ui-widget",
         "html"  : [
+        {
+            "type"  : "container",
+            "class" : "block_mdeditor-resources",
+            "html"  : [
             {
-                "type"  : "container",
-                "class" : "block_mdeditor-resources",
-                "html"  : [
-                    {
-                        "type"     : "select",
-                        "class"    : "block_mdeditor-resource_select",
-                        "multiple" : true,
-                        "style"    : "width: 100%; margin-bottom: 5px;",
-						"caption"  : {
-							"html" : local.edit_resource_desc,
-							"css"  : "font-size: 0.9em; color: #101010; line-height:0.9"
-						},
-                        "options"  : resources,
-                        "post"     : function() {
-                            $(block).data('resource_select', $(this));
-                        }
-                    },
-					{
-                            "type"  : "button",
-                            "class" : "block_mdeditor-edit_resource",
-							"style" : "margin-bottom: 2px; width: 100%",
-                            "html"  : local.edit_resource_button,
-                            "post"  : function() {
-                                $(this).click(function(){
-                                    var select = $(block).data('resource_select');
-
-                                    if (! select) return;
-
-                                    var option = $(select).children(':selected');
-                                    option = option[0];
-
-                                    if (! option) return;
-
-                                    var params = {"type" : "mod",
-                                                  "id"   : $(option).val()},
-                                        element = $(block).data('edit_dialog'),
-                                        msg_error = local.error_fetching_data;
-
-                                    $(block).data('open_dialog')(params,
-                                                                 element,
-                                                                 msg_error);
-                                });
-                        }
-                    }
-                ]
+                "type"     : "select",
+                "class"    : "block_mdeditor-resource_select",
+                "multiple" : true,
+                "style"    : "width: 100%; margin-bottom: 5px;",
+                "caption"  : {
+                    "html" : local.edit_resource_desc,
+                    "css"  : "font-size: 0.9em; color: #101010; line-height:0.9"
+                },
+                "options"  : resources,
+                "post"     : function() {
+                    $(block).data('resource_select', $(this));
+                }
             },
-//            {
-//                "type"  : "container",
-//                "style" : "margin-top: 1em;",
-//                "html"  : {
-//                    "type"  : "button",
-//                    "class" : "block_mdeditor_edit_course",
-//                    "html"  : local.edit_course_button,
-//                    "post"  : function() {
-//                        $(this).click(function(){
-//
-//                            var url = M.cfg.wwwroot + '/blocks/mdeditor/action/define_course.php',
-//                                data = {"course_id" : course_id},
-//                                element = $(block).data('edit_dialog'),
-//                                msg_error = local.error_fetching_data;
-//
-//                            $(block).data('open_dialog')(url,
-//                                                         data,
-//                                                         element,
-//                                                         msg_error);
-//                        });
-//                    }
-//                }
-//            },
             {
-                "type"  : "container",
-                "style" : "margin-top: 1em;",
-                "html"  : [
-                    {
-                        "type"  : "container",
-                        "class" : "course_status_div",
-                        "html"  : [
-                            {
-                                "type"  : "label",
-                                "class" : "course_status_caption"
+                "type"  : "button",
+                "class" : "block_mdeditor-edit_resource",
+                "style" : "margin-bottom: 2px; width: 100%",
+                "html"  : local.edit_resource_button,
+                "post"  : function() {
+                    $(this).click(function(){
+                        var select = $(block).data('resource_select');
+
+                        if (! select) return;
+
+                        var option = $(select).children(':selected');
+                        option = option[0];
+
+                        if (! option) return;
+
+                        var params = {
+                            "type" : "mod",
+                            "id"   : $(option).val()
                             },
-                            {
-                                "type"  : "label",
-                                "class" : "course_status"
-                            }
-                        ]
-                    },
-                    {
-                        "type"  : "button",
-                        "class" : "block_mdeditor-edit_course",
-						"style" : "margin-bottom: 10px; width: 100%",
-                        "html"  : local.edit_course_button,
-                        "post"  : function() {
-                            $(this).click(function() {
+                        element = $(block).data('edit_dialog'),
+                        msg_error = local.error_fetching_data;
 
-                                var params = {"type" : "course",
-                                              "id"   : course_id},
-                                    element = $(block).data('edit_dialog'),
-                                    msg_error = local.error_fetching_data;
-
-                                $(block).data('open_dialog')(params,
-                                                             element,
-                                                             msg_error);
-                            });
-                        }
-                    }
-                ]
+                        $(block).data('open_dialog')(params,
+                            element,
+                            msg_error);
+                    });
+                }
             },
             {
-                "type" : "span",
-                "id"   : "block_mdeditor-edit_dialog",
-                "post" : function(){
-                    $(block).data('edit_dialog', this);
+                "type"  : "button",
+                "class" : "block_mdeditor-edit_resource",
+                "style" : "margin-bottom: 2px; width: 100%",
+                "html"  : local.translate_resource_button,
+                "post"  : function() {
+                    $(this).click(function(){
+                        var select = $(block).data('resource_select');
+
+                        if (! select) return;
+                        
+
+                        var option = $(select).children(':selected');
+                        option = option[0];
+//                        console.log(option);
+
+                        if (! option) return;
+
+                        var params = {
+                            "type" : "mod",
+                            "id"   : $(option).val()
+                            },
+                        element = $(block).data('edit_dialog'),
+                        msg_error = local.error_fetching_data;
+
+                        $(block).data('open_translate_dialog')(params,
+                            element,
+                            msg_error);
+                    });
                 }
             }
+            ]
+        },
+        //            {
+        //                "type"  : "container",
+        //                "style" : "margin-top: 1em;",
+        //                "html"  : {
+        //                    "type"  : "button",
+        //                    "class" : "block_mdeditor_edit_course",
+        //                    "html"  : local.edit_course_button,
+        //                    "post"  : function() {
+        //                        $(this).click(function(){
+        //
+        //                            var url = M.cfg.wwwroot + '/blocks/mdeditor/action/define_course.php',
+        //                                data = {"course_id" : course_id},
+        //                                element = $(block).data('edit_dialog'),
+        //                                msg_error = local.error_fetching_data;
+        //
+        //                            $(block).data('open_dialog')(url,
+        //                                                         data,
+        //                                                         element,
+        //                                                         msg_error);
+        //                        });
+        //                    }
+        //                }
+        //            },
+        {
+            "type"  : "container",
+            "style" : "margin-top: 1em;",
+            "html"  : [
+            {
+                "type"  : "container",
+                "class" : "course_status_div",
+                "html"  : [
+                {
+                    "type"  : "label",
+                    "class" : "course_status_caption"
+                },
+                {
+                    "type"  : "label",
+                    "class" : "course_status"
+                }
+                ]
+            },
+            {
+                "type"  : "button",
+                "class" : "block_mdeditor-edit_course",
+                "style" : "margin-bottom: 10px; width: 100%",
+                "html"  : local.edit_course_button,
+                "post"  : function() {
+                    $(this).click(function() {
+
+                        var params = {
+                            "type" : "course",
+                            "id"   : course_id
+                        },
+                        element = $(block).data('edit_dialog'),
+                        msg_error = local.error_fetching_data;
+
+                        $(block).data('open_dialog')(params,
+                            element,
+                            msg_error);
+                    });
+                }
+            },
+            {
+                "type"  : "button",
+                "class" : "block_mdeditor-edit_course",
+                "style" : "margin-bottom: 10px; width: 100%",
+                "html"  : local.translate_course_button,
+                "post"  : function() {
+                    $(this).click(function() {
+
+                        var params = {
+                            "type" : "course",
+                            "id"   : course_id
+                        },
+                        element = $(block).data('edit_dialog'),
+                        msg_error = local.error_fetching_data;
+
+                        $(block).data('open_translate_dialog')(params,
+                            element,
+                            msg_error);
+                    });
+                }
+            }
+            ]
+        },
+        {
+            "type" : "span",
+            "id"   : "block_mdeditor-edit_dialog",
+            "post" : function(){
+                $(block).data('edit_dialog', this);
+            }
+        }
         ]
     });
 	
 
-    /* display a listbox that allows selection of one item at a time */
-                                                                                // This is not complete !!
-    // $($(block).find('select.block_mdeditor-resource_select option')).click(
-    //     function() {
-    //         $(this).siblings('option').prop('selected', false);
-    //     });
+/* display a listbox that allows selection of one item at a time */
+// This is not complete !!
+// $($(block).find('select.block_mdeditor-resource_select option')).click(
+//     function() {
+//         $(this).siblings('option').prop('selected', false);
+//     });
 };
