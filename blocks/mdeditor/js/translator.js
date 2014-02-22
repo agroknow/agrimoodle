@@ -402,7 +402,7 @@ function AMT_prepare(keywords_for_amt, descriptions_for_amt, titles_for_amt) {
         if(titles_for_amt[i]['keyword_to_send']['value'].length==0){
             url[newcount]['url'] = '';
         }else{
-            url[newcount]['url'] = 'http://aglr.agroknow.gr/translationapi/analytics/translate?text='+titles_for_amt[i]['keyword_to_send']['value']+'&to='+titles_for_amt[i]['lang']+'&from='+titles_for_amt[i]['keyword_to_send']['language']+'';
+            url[newcount]['url'] = 'http://oe-api.aglr.agroknow.gr/translationapi/analytics/translate?text='+titles_for_amt[i]['keyword_to_send']['value']+'&to='+titles_for_amt[i]['lang']+'&from='+titles_for_amt[i]['keyword_to_send']['language']+'';
         }
         url[newcount]['count'] = titles_for_amt[i]['count'];
         url[newcount]['type'] = titles_for_amt[i]['type'];
@@ -415,7 +415,7 @@ function AMT_prepare(keywords_for_amt, descriptions_for_amt, titles_for_amt) {
             if(descriptions_for_amt[i][k]['keyword_to_send']['value'].length==0){
                 url[newcount]['url'] = '';
             }else{
-                url[newcount]['url'] = 'http://aglr.agroknow.gr/translationapi/analytics/translate?text='+descriptions_for_amt[i][k]['keyword_to_send']['value']+'&to='+descriptions_for_amt[i][k]['lang']+'&from='+descriptions_for_amt[i][k]['keyword_to_send']['language']+'';
+                url[newcount]['url'] = 'http://oe-api.aglr.agroknow.gr/translationapi/analytics/translate?text='+descriptions_for_amt[i][k]['keyword_to_send']['value']+'&to='+descriptions_for_amt[i][k]['lang']+'&from='+descriptions_for_amt[i][k]['keyword_to_send']['language']+'';
             }
             
             url[newcount]['count'] = descriptions_for_amt[i][k]['count'];
@@ -431,7 +431,7 @@ function AMT_prepare(keywords_for_amt, descriptions_for_amt, titles_for_amt) {
             if(keywords_for_amt[i][k]['keyword_to_send']['value'].length==0){
                 url[newcount]['url'] = '';
             }else{
-                url[newcount]['url'] = 'http://aglr.agroknow.gr/translationapi/analytics/translate?text='+keywords_for_amt[i][k]['keyword_to_send']['value']+'&to='+keywords_for_amt[i][k]['lang']+'&from='+keywords_for_amt[i][k]['keyword_to_send']['language']+'';
+                url[newcount]['url'] = 'http://oe-api.aglr.agroknow.gr/translationapi/analytics/translate?text='+keywords_for_amt[i][k]['keyword_to_send']['value']+'&to='+keywords_for_amt[i][k]['lang']+'&from='+keywords_for_amt[i][k]['keyword_to_send']['language']+'';
             }
             url[newcount]['count'] = keywords_for_amt[i][k]['count'];
             url[newcount]['type'] = keywords_for_amt[i][k]['type'];
