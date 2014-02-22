@@ -1,0 +1,5 @@
+[30-Aug-2013 11:28:34 UTC] PHP Warning:  mysqli::mysqli(): (HY000/1045): Access denied for user 'root'@'localhost' (using password: YES) in C:\Program Files (x86)\EasyPHP-12.1\www\agriMoodle\lib\dml\mysqli_native_moodle_database.php on line 384
+[30-Aug-2013 11:28:35 UTC] PHP Warning:  mysqli::mysqli(): (HY000/1045): Access denied for user 'root'@'localhost' (using password: YES) in C:\Program Files (x86)\EasyPHP-12.1\www\agriMoodle\lib\dml\mysqli_native_moodle_database.php on line 76
+[30-Aug-2013 11:28:44 UTC] PHP Warning:  mysqli::mysqli(): (HY000/1045): Access denied for user 'root'@'localhost' (using password: YES) in C:\Program Files (x86)\EasyPHP-12.1\www\agriMoodle\lib\dml\mysqli_native_moodle_database.php on line 384
+[30-Aug-2013 11:28:45 UTC] PHP Warning:  mysqli::mysqli(): (HY000/1045): Access denied for user 'root'@'localhost' (using password: YES) in C:\Program Files (x86)\EasyPHP-12.1\www\agriMoodle\lib\dml\mysqli_native_moodle_database.php on line 76
+[31-Oct-2013 12:53:23 UTC] PHP Warning:  mysqli::mysqli():  in C:\Program Files (x86)\EasyPHP-12.1\www\agriMoodle\lib\dml\mysqli_native_moodle_database.php on line 384

@@ -1,0 +1,10 @@
+[30-Aug-2013 11:30:05 UTC] Default exception handler: Could not find a top-level course! Debug: 
+Error code: nosite
+* line 555 of \lib\datalib.php: moodle_exception thrown
+* line 717 of \lib\setup.php: call to get_site()
+* line 130 of \theme\image.php: call to require()
+
+[30-Aug-2013 11:56:21 UTC] PHP Warning:  rename(C:\Program Files (x86)\EasyPHP-12.1\www\moodledata/cache/cachestore_file/default_application/core_config/7c0/n7dMFNrKyh.52208865becdc7.83678482.temp,C:\Program Files (x86)\EasyPHP-12.1\www\moodledata/cache/cachestore_file/default_application/core_config/7c0/7c07d1ef837da3acb433119b12eb1dbe7bdc5df9.cache):  in C:\Program Files (x86)\EasyPHP-12.1\www\agriMoodle\cache\stores\file\lib.php on line 688
+[15-Nov-2013 10:15:25 UTC] PHP Warning:  mkdir(): File exists in C:\Program Files (x86)\EasyPHP-12.1\www\agriMoodle\lib\setuplib.php on line 1262
+[15-Nov-2013 10:15:25 UTC] PHP Warning:  mkdir(): File exists in C:\Program Files (x86)\EasyPHP-12.1\www\agriMoodle\lib\setuplib.php on line 1262
+[12-Dec-2013 11:08:17 UTC] PHP Warning:  rename(C:\Program Files (x86)\EasyPHP-12.1\www\moodledata/cache/cachestore_file/default_application/core_databasemeta/415-cache/M7I8epXunN.52a999212453d8.37287843.temp,C:\Program Files (x86)\EasyPHP-12.1\www\moodledata/cache/cachestore_file/default_application/core_databasemeta/415-cache/415240f29c8740c53eb22af5832530a2aab57b7e.cache):  in C:\Program Files (x86)\EasyPHP-12.1\www\agriMoodle\cache\stores\file\lib.php on line 721
