@@ -87,4 +87,5 @@ $string['msg_form-has-errors'] = 'The form has errors.';
 $string['instructions_title'] = "Instructions";
 $string['hdr_config'] = "Configuration";
 $string['dsc_config'] = "Configure the parameters for the Europeana widget";
+$string['mdeditor:addinstance'] = "Configure the parameters for the Europeana widget";
 
