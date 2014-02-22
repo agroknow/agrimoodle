@@ -98,7 +98,7 @@ $THEME->layouts = array(
     ),
     // The site home page.
     'frontpage' => array(
-        'file' => 'frontpage.php',
+        'file' => 'general.php',
         'regions' => array('side-pre', 'side-post'),
         'defaultregion' => 'side-pre',
     ),
@@ -141,7 +141,7 @@ $THEME->layouts = array(
     ),
     // Embeded pages, like iframe/object embeded in moodleform - it needs as much space as possible
     'embedded' => array(
-        'file' => 'embedded.php',
+        'file' => 'general.php',
         'regions' => array(),
         'options' => array('nofooter'=>true, 'nonavbar'=>true, 'nocustommenu'=>true, 'nocourseheaderfooter'=>true),
     ),
@@ -161,13 +161,13 @@ $THEME->layouts = array(
     ),
     // The pagelayout used when a redirection is occuring.
     'redirect' => array(
-        'file' => 'embedded.php',
+        'file' => 'general.php',
         'regions' => array(),
         'options' => array('nofooter'=>true, 'nonavbar'=>true, 'nocustommenu'=>true, 'nocourseheaderfooter'=>true),
     ),
     // The pagelayout used for reports.
     'report' => array(
-        'file' => 'report.php',
+        'file' => 'general.php',
         'regions' => array('side-pre'),
         'defaultregion' => 'side-pre',
     ),
