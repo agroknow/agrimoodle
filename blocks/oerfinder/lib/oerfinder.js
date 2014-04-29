@@ -546,7 +546,8 @@ function get_social_buttons(url) {
 function getLogo(learnObjectURL) {
     var logos ={
         'http://ariadne.cs.kuleuven.be' : base_url()+'images/ariadne.png',
-        'http://www.oercommons.org'     : base_url()+'images/oercommons.png'
+        'http://www.oercommons.org'     : base_url()+'images/oercommons.png',
+        'http://portal.organic-edunet.eu' : base_url()+'images/org_edunet.png'
     };
 
     for( key in logos ) {
@@ -554,5 +555,5 @@ function getLogo(learnObjectURL) {
         if( patt.test(learnObjectURL) )
             return '<br style="clear:both;"/><a href="http://'+key+'"><img style="float:right; margin:5px;height:90px;"  src="'+logos[key]+'"/></a>';
     }
-    return '<br style="clear:both;"/><a href="http://ariadne.cs.kuleuven.be"><img style="float:right; margin:5px;height:90px;" src="'+logos['http://ariadne.cs.kuleuven.be']+'"/></a>';
+    return '<br style="clear:both;"/><a href="http://portal.organic-edunet.eu" target="_blank"><img style="float:right; margin:5px;height:90px;" src="'+logos['http://portal.organic-edunet.eu']+'"/></a>';
 }
