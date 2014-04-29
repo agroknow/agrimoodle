@@ -555,5 +555,5 @@ function getLogo(learnObjectURL) {
         if( patt.test(learnObjectURL) )
             return '<br style="clear:both;"/><a href="http://'+key+'"><img style="float:right; margin:5px;height:90px;"  src="'+logos[key]+'"/></a>';
     }
-    return '<br style="clear:both;"/><a href="http://portal.organic-edunet.eu" target="_blank"><img style="float:right; margin:5px;height:90px;" src="'+logos['http://portal.organic-edunet.eu']+'"/></a>';
+    return '<br style="clear:both;"/><a href="javascript:void(0);"><img style="float:right; margin:5px;height:90px;" src="'+logos['http://portal.organic-edunet.eu']+'"/></a>';
 }
